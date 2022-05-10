@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 import random
 from typing import Tuple, Union
+import pickle
 
 import numpy as np
 import torch as th
@@ -9,6 +10,7 @@ from minerl3161.hyperparameters import DQNHyperparameters
 
 from minerl3161.models import DQNNet
 from minerl3161.utils import epsilon_decay
+from hyperparameters import DQNHyperparameters
 
 
 class BaseAgent(ABC):
@@ -22,7 +24,7 @@ class BaseAgent(ABC):
     
     @abstractmethod
     @staticmethod
-    def load(self, state):
+    def load(state):
         raise NotImplementedError()
 
 
@@ -31,7 +33,7 @@ class DQNAgent(BaseAgent):
         super().__init__()
         self.device = device
         self.hyperparams = hyperparams
-
+        
         self.state_shape = state_shape
         self.n_action = n_actions
 
@@ -71,9 +73,12 @@ class DQNAgent(BaseAgent):
         return action
     
     
-    def save(self, path):
-        raise NotImplementedError()
+    # TODO: Determine if pickle supports saving and loading of model weights
+    def save(self, path: str):
+        with open(path, 'wb') as writer:
+            pickle.dump(self, writer)
     
     @staticmethod
-    def load(self, state):
-        raise NotImplementedError()
+    def load(path: str):
+        with open(path, 'rb') as reader:
+            return pickle.load(reader)
