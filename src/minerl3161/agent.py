@@ -5,8 +5,10 @@ from typing import Tuple, Union
 
 import numpy as np
 import torch as th
+from minerl3161.hyperparameters import DQNHyperparameters
 
 from minerl3161.models import DQNNet
+from minerl3161.utils import epsilon_decay
 
 
 class BaseAgent(ABC):
@@ -25,12 +27,15 @@ class BaseAgent(ABC):
 
 
 class DQNAgent(BaseAgent):
-    def __init__(self, state_shape: Tuple[int], n_actions: int, device: str, hyperparams: Hyperparameters) -> None:  # FIXME @ Jade
+    def __init__(self, state_shape: Tuple[int], n_actions: int, device: str, hyperparams: DQNHyperparameters) -> None:
         super().__init__()
         self.device = device
         self.hyperparams = hyperparams
 
-        self.q1 = DQNNet(state_shape, n_actions, hyperparams.model_hidden_layer_size).to(device)  # FIXME @ Jade
+        self.state_shape = state_shape
+        self.n_action = n_actions
+
+        self.q1 = DQNNet(state_shape, n_actions, hyperparams.model_hidden_layer_size).to(device)
         
         self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
@@ -53,12 +58,12 @@ class DQNAgent(BaseAgent):
             was_np = False
         
 
-        eps = epsilon_decay()  # TODO
+        eps = epsilon_decay(step, self.hyperparams.eps_max, self.hyperparams.eps_min, self.hyperparams.eps_decay)
 
         if random.random() < eps:
-            pass
+            action = th.randint(self.n_action, device=self.device)
         else:
-            pass
+            action = self.q1.argmax()
 
         if was_np:
             action = action.detach().cpu().numpy()
