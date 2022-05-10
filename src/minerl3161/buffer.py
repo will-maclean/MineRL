@@ -1,6 +1,7 @@
 from collections import namedtuple
 import os
 import pickle
+from typing import Dict
 
 import numpy as np
 
@@ -76,3 +77,6 @@ class ReplayBuffer:
 
     def __getitem__(self, idx):
         return self.states[idx], self.actions[idx], self.next_states[idx], self.rewards[idx], self.dones[idx]
+    
+    def sample(self, batch_size: int) -> Dict[np.ndarray]:
+        raise NotImplementedError  # TODO
