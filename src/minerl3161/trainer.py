@@ -67,10 +67,8 @@ class DQNTrainer(BaseTrainer):
     def _train_step(self, step: int) -> None:
         batch = self.memory.sample(self.batch_size)
 
-        batch["states"] = torch.from_numpy(batch["states"]).to(self.device,
-                                                                                        dtype=torch.float32)
-        batch["next_states"] = torch.from_numpy(batch["next_states"]).to(self.device,
-                                                                                                  dtype=torch.float32)
+        batch["states"] = torch.from_numpy(batch["states"]).to(self.device, dtype=torch.float32)
+        batch["next_states"] = torch.from_numpy(batch["next_states"]).to(self.device, dtype=torch.float32)
         batch["actions"] = torch.tensor(batch["actions"], dtype=torch.long, device=self.device)
         batch["rewards"] = torch.tensor(batch["rewards"], dtype=torch.float32, device=self.device)
         batch["dones"] = torch.tensor(batch["dones"], dtype=torch.float32, device=self.device)
