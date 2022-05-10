@@ -12,7 +12,7 @@ class BaseHyperparameters:
 
 @dataclass
 class DQNHyperparameters(BaseHyperparameters):
-    eps_decay: float = 1e-5
+    eps_decay: float = 40000
     eps_min: float = 0.01
     eps_max: float = 1.0
     model_hidden_layer_size: int = 64
