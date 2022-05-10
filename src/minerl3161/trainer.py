@@ -33,6 +33,7 @@ class BaseTrainer:
 
 class DQNTrainer(BaseTrainer):
     def __init__(self, optim: Optimizer = None) -> None:
+        super().__init__()
         self.optim = optim if optim is not None else Adam(self.agent.q1.parameters(), lr=self.hp.lr)
     
     def _calc_loss(batch: dict) -> torch.Tensor:
