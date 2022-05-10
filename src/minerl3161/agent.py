@@ -76,10 +76,10 @@ class DQNAgent(BaseAgent):
     
     # TODO: Determine if pickle supports saving and loading of model weights
     def save(self, path: str):
-        with open(path, 'wb') as writer:
-            pickle.dump(self, writer)
+        with open(path, 'wb') as outfile:
+            pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
     
     @staticmethod
     def load(path: str):
-        with open(path, 'rb') as reader:
-            return pickle.load(reader)
+        with open(path, 'rb') as infile:
+            return pickle.load(infile)
