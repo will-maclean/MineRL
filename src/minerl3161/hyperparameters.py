@@ -11,7 +11,7 @@ class BaseHyperparameters:
     
 
 @dataclass
-class DQNHyperparameters:
+class DQNHyperparameters(BaseHyperparameters):
     eps_decay: float = 1e-5
     eps_min: float = 0.01
     eps_max: float = 1.0
