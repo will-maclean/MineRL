@@ -1,4 +1,6 @@
 from collections import namedtuple
+import os
+import pickle
 
 import numpy as np
 
@@ -39,40 +41,29 @@ class ReplayBuffer:
         return self.max_samples if self.full else self.counter
     
     def save(self, save_path):
-        np.savez(save_path, s=self.states, a=self.actions, s_=self.next_states, r=self.rewards, d=self.dones)
+        with open(save_path, 'wb') as outfile:
+            pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
     
     @staticmethod
-    def load(load_path):
-        load_dict = np.load(load_path)
-        
-        n = load_dict['s'].shape[0]
-        shape = load_dict['s'].shape[1:]
-        buffer = ReplayBuffer(n, shape)
-        
-        buffer.states = load_dict['s']
-        buffer.actions = load_dict['a']
-        buffer.next_states = load_dict['s_']
-        buffer.rewards = load_dict['r']
-        buffer.dones = load_dict['d']
-        
-        return buffer
+    def load(path):
+        with open(path, 'rb') as infile:
+            return pickle.load(infile)
     
     @staticmethod
     def load_from_paths(load_paths):
-        if type(load_paths) == str:
-            return ReplayBuffer.load(load_paths)
-        elif len(load_paths) == 1:
-            return ReplayBuffer.load(load_paths[0])
-        else:
-            buffer = ReplayBuffer.load(load_paths[0])
+        with open(load_paths[0], 'rb') as infile:
+                buffer = pickle.load(infile)
 
-            for i in range(1, len(load_paths)):
-                path = load_paths[i]
-                new_buffer = ReplayBuffer.load(path)
+        for path in load_paths[1:]:
+            with open(path, 'rb') as infile:
+                new_buffer = pickle.load(infile)
 
-                buffer.join(new_buffer)
-            
-            return buffer
+                assert buffer.state_shape == new_buffer.state_shape
+                assert buffer.action_shape == new_buffer.action_shape
+
+                buffer.memory += new_buffer.memory
+                buffer.samples += new_buffer.samples
+                buffer.max_samples += new_buffer.max_samples
     
     def join(self, b):
         self.states = np.concatenate([self.states, b.states], axis=0)
