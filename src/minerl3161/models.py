@@ -3,6 +3,7 @@ import torch as th
 from torch import nn
 
 
+# TODO: write tests
 class DQNNet(nn.Module):
     def __init__(self, state_shape: Tuple[int], n_actions: int, layer_size=64) -> None:
         super().__init__()
@@ -14,13 +15,13 @@ class DQNNet(nn.Module):
 
         # duelling architecture
         self.value = nn.Sequential(
-            nn.Linear(layer_size, layer_size, bias=True),
+            nn.Linear(n_hidden_features, layer_size, bias=True),
             nn.ReLU(),
             nn.Linear(layer_size, 1)
         )
 
         self.advantage = nn.Sequential(
-            nn.Linear(layer_size, layer_size, bias=True),
+            nn.Linear(n_hidden_features, layer_size, bias=True),
             nn.ReLU(),
             nn.Linear(layer_size, n_actions)
         )

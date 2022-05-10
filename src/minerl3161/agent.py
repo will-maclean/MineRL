@@ -28,6 +28,7 @@ class BaseAgent(ABC):
         raise NotImplementedError()
 
 
+# TODO: write tests
 class DQNAgent(BaseAgent):
     def __init__(self, state_shape: Tuple[int], n_actions: int, device: str, hyperparams: DQNHyperparameters) -> None:
         super().__init__()

@@ -1,6 +1,7 @@
 from minerl3161.agent import BaseAgent
 
 
+# TODO: write tests
 class Evaluator:
     def __init__(self, env) -> None:
         self.env = env

@@ -2,15 +2,18 @@ from torch import nn
 import numpy as np
 
 
+# TODO: write tests
 def linear_decay(step, start_val, final_val, final_steps):
     fraction = min(float(step) / final_steps, 1.0)
     return start_val + fraction * (final_val - start_val)
 
 
+# TODO: write tests
 def epsilon_decay(step, start_val, final_val, decay):
     return max(final_val + (start_val - final_val) * np.exp(-1 * step / decay), final_val)
 
 
+# TODO: write tests
 def copy_weights(copy_from: nn.Module, copy_to: nn.Module, polyak=None):
     """
     Copy weights from one network to another. Optionally copies with Polyak averaging.
