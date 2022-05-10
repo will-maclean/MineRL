@@ -9,7 +9,10 @@ def test_make():
     done = False
     net_reward = 0
 
-    while not done:
+    max_len = 50
+    t = 0
+
+    while not done and t < max_len:
         action = env.action_space.noop()
 
         action['camera'] = [0, 0.03*obs["compass"]["angle"]]
@@ -22,3 +25,5 @@ def test_make():
             action)
 
         net_reward += reward
+
+        t += 1
