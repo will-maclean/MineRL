@@ -3,13 +3,35 @@ import numpy as np
 
 
 # TODO: write tests
-def linear_decay(step, start_val, final_val, final_steps):
+def linear_decay(step: int, start_val: float, final_val: float, final_steps: int) -> float:
+    """linear decay function
+
+    Args:
+        step (int): current env step
+        start_val (float): start value for decay
+        final_val (float): final value for decay
+        final_steps (int): timestep to reach final decay value
+
+    Returns:
+        float: current value of linear decay, given the inputs
+    """
     fraction = min(float(step) / final_steps, 1.0)
     return start_val + fraction * (final_val - start_val)
 
 
 # TODO: write tests
-def epsilon_decay(step, start_val, final_val, decay):
+def epsilon_decay(step: int, start_val: float, final_val: float, decay: float) -> float:
+    """exponential decay function
+
+    Args:
+        step (int): current env step
+        start_val (float): start value for decay
+        final_val (float): final value for decay
+        decay (float): decay constant
+
+    Returns:
+        float: current value of epsilon decay, given inputs
+    """
     return max(final_val + (start_val - final_val) * np.exp(-1 * step / decay), final_val)
 
 

@@ -1,7 +1,7 @@
 from collections import namedtuple
 import os
 import pickle
-from typing import Dict
+from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -10,7 +10,16 @@ Transition = namedtuple("Transition", ["s", "a", "s_", "r", "d"])
 
 
 class ReplayBuffer:
-    def __init__(self, n, state_shape) -> None:
+    """Stores experience for agent training. Currently assumes that actions are scalars
+    """
+
+    def __init__(self, n: int, state_shape: Tuple[int]) -> None:
+        """Initialises a ReplayBuffer
+
+        Args:
+            n (int): size of ReplayBuffer
+            state_shape (Tuple[int]): state shape to be stored
+        """
         self.max_samples = n
         
         self.states = np.zeros((n, *state_shape), dtype=np.float32)
@@ -22,7 +31,22 @@ class ReplayBuffer:
         self.counter = 0
         self.full = False
     
-    def add(self, state, action, next_state, reward, done):
+    def add(self, 
+                state: np.ndarray, 
+                action: np.ndarray,
+                next_state: np.ndarray, 
+                reward: np.ndarray, 
+                done: np.ndarray
+            ) -> None:
+        """adds a single timestep of experience to the experience buffer
+
+        Args:
+            state (np.ndarray): environment state
+            action (np.ndarray): environment action
+            next_state (np.ndarray): environment next state
+            reward (np.ndarray): environment reward
+            done (np.ndarray): environment done flag
+        """
         self.states[self.counter] = state
         self.actions[self.counter] = action
         self.next_states[self.counter] = next_state
@@ -42,16 +66,34 @@ class ReplayBuffer:
         return self.max_samples if self.full else self.counter
     
     def save(self, save_path):
+        """Saves the current repla ybuffer
+
+        Args:
+            save_path (str): path to save to
+        """
         with open(save_path, 'wb') as outfile:
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
     
     @staticmethod
-    def load(path):
+    def load(path: str):
+        """Loads a ReplayBuffer from file
+
+        Args:
+            path (str): path to load from
+
+        Returns:
+            ReplayBuffer: loaded buffer
+        """
         with open(path, 'rb') as infile:
             return pickle.load(infile)
     
     @staticmethod
-    def load_from_paths(load_paths):
+    def load_from_paths(load_paths: List[str]):
+        """Loads a replaybuffer from a list of paths
+
+        Args:
+            load_paths (List[str]): list of paths to load from
+        """
         with open(load_paths[0], 'rb') as infile:
                 buffer = pickle.load(infile)
 
@@ -66,7 +108,12 @@ class ReplayBuffer:
                 buffer.samples += new_buffer.samples
                 buffer.max_samples += new_buffer.max_samples
     
-    def join(self, b):
+    def join(self, b: 'ReplayBuffer'):
+        """concatenation of b onto self
+
+        Args:
+            b (ReplayBuffer): other replay buffer to be added. Won't be modified by this function.
+        """
         self.states = np.concatenate([self.states, b.states], axis=0)
         self.actions = np.concatenate([self.actions, b.actions], axis=0)
         self.next_states = np.concatenate([self.next_states, b.next_states], axis=0)

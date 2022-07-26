@@ -1,3 +1,6 @@
+"""Stores all PyTorch models
+"""
+
 from typing import Tuple
 import torch as th
 from torch import nn
@@ -5,7 +8,17 @@ from torch import nn
 
 # TODO: write tests
 class DQNNet(nn.Module):
+    """stores the PyTorch neural network to be used as a DQN network.
+    """
+
     def __init__(self, state_shape: Tuple[int], n_actions: int, layer_size=64) -> None:
+        """intialiser for DQNNet
+
+        Args:
+            state_shape (Tuple[int]): state shape to be used. Will only work with 1D states for now
+            n_actions (int): number of actions available for the agent
+            layer_size (int, optional): width of all Linear layers. Defaults to 64.
+        """
         super().__init__()
 
         self.feature_extractor = lambda x: x  # TODO: create feature extractor based on state
@@ -28,6 +41,14 @@ class DQNNet(nn.Module):
 
     
     def forward(self, x: th.Tensor) -> th.Tensor:
+        """forward pass of the model
+
+        Args:
+            x (th.Tensor): state to pass forward
+
+        Returns:
+            th.Tensor: model output
+        """
         x = self.feature_extractor(x)
 
         v = self.value(x)

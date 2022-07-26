@@ -1,20 +1,32 @@
+""" BaseTrainer and implementations stored here
+"""
 from abc import abstractmethod
 import numpy as np
 import torch
 from torch.optim import Optimizer, Adam
 import gym
 
-from agent import BaseAgent
-from hyperparameters import BaseHyperparameters, DQNHyperparameters
-from buffer import ReplayBuffer
-from evaluator import Evaluator
+from .agent import BaseAgent
+from .hyperparameters import BaseHyperparameters, DQNHyperparameters
+from .buffer import ReplayBuffer
+from .evaluator import Evaluator
 
 from minerl3161.utils import copy_weights
 
 
 # TODO: write tests
 class BaseTrainer:
+    """Abstract class for Trainers. At the least, all implementations must have _train_step().
+    """
+
     def __init__(self, env: gym.Env, agent: BaseAgent, hyperparameters: BaseHyperparameters) -> None:
+        """Initialiser for BaseTrainer.
+
+        Args:
+            env (gym.Env): environmnet to train in
+            agent (BaseAgent): agent to train
+            hyperparameters (BaseHyperparameters): hyperparameters to train with
+        """
         self.env = env
         self.agent = agent
         self.hp = hyperparameters
@@ -24,7 +36,8 @@ class BaseTrainer:
         self.evaluator = Evaluator(env)
     
     def train(self) -> None:
-        # This basic training loop should be enough for most conventional RL algorithms
+        """main training function. This basic training loop should be enough for most conventional RL algorithms
+        """
 
         t = 0
         while t < self.hp.train_steps:
@@ -44,6 +57,11 @@ class BaseTrainer:
             self._log(log_dict)
 
     def _gather(self, steps: int) -> None:
+        """gathers steps of experience from the environment
+
+        Args:
+            steps (int): how many steps of experience to gather
+        """
         pass
 
     @abstractmethod
