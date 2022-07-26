@@ -1,18 +1,18 @@
 """Defines BaseAgent classes and all current implementations.
 """
 
+import pickle
+import random
 from abc import ABC, abstractmethod
 from copy import deepcopy
-import random
 from typing import Tuple, Union
-import pickle
 
 import numpy as np
 import torch as th
 from minerl3161.hyperparameters import DQNHyperparameters
-
 from minerl3161.models import DQNNet
 from minerl3161.utils import epsilon_decay
+
 from .hyperparameters import DQNHyperparameters
 
 
@@ -34,7 +34,7 @@ class BaseAgent(ABC):
             action (np.ndarray): the chosen action
         """
         raise NotImplementedError()
-    
+
     @abstractmethod
     def save(self, path: str):
         """save the current agent
@@ -43,8 +43,7 @@ class BaseAgent(ABC):
             path (str): path in which to save the agent.
         """
         raise NotImplementedError()
-    
-    @abstractmethod
+
     @staticmethod
     def load(path: str):
         """Loads an agent from a path
@@ -60,10 +59,15 @@ class BaseAgent(ABC):
 
 # TODO: write tests
 class DQNAgent(BaseAgent):
-    """BaseAgent implementation that implements a Deep Q Learning algorithm. This include a PyTorch neural network.
-    """
+    """BaseAgent implementation that implements a Deep Q Learning algorithm. This include a PyTorch neural network."""
 
-    def __init__(self, state_shape: Tuple[int], n_actions: int, device: str, hyperparams: DQNHyperparameters) -> None:
+    def __init__(
+        self,
+        state_shape: Tuple[int],
+        n_actions: int,
+        device: str,
+        hyperparams: DQNHyperparameters,
+    ) -> None:
         """Base agent initialiser
 
         Args:
@@ -75,16 +79,18 @@ class DQNAgent(BaseAgent):
         super().__init__()
         self.device = device
         self.hyperparams = hyperparams
-        
+
         self.state_shape = state_shape
         self.n_action = n_actions
 
-        self.q1 = DQNNet(state_shape, n_actions, hyperparams.model_hidden_layer_size).to(device)
-        
+        self.q1 = DQNNet(
+            state_shape, n_actions, hyperparams.model_hidden_layer_size
+        ).to(device)
+
         self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
         self.q2.eval()
-    
+
     def act(self, state: np.ndarray) -> np.ndarray:
         """chooses action from action space based on state
 
@@ -101,8 +107,10 @@ class DQNAgent(BaseAgent):
         action = q_vals.squeeze().argmax().detach().cpu().numpy()
 
         return action
-    
-    def eps_greedy_act(self, state: Union[np.ndarray, th.Tensor], step: int) -> Union[np.ndarray, th.Tensor]:
+
+    def eps_greedy_act(
+        self, state: Union[np.ndarray, th.Tensor], step: int
+    ) -> Union[np.ndarray, th.Tensor]:
         """Chooses an action under the epsilon greedy policy
 
         Args:
@@ -112,26 +120,29 @@ class DQNAgent(BaseAgent):
         Returns:
             Union[np.ndarray, th.Tensor]: chosen action
         """
-        if type(state) == np.np.ndarray:
+        if type(state) == np.ndarray:
             state = th.from_numpy(state).to(self.device).unsqueeze(0)
             was_np = True
         else:
             was_np = False
-        
 
-        eps = epsilon_decay(step, self.hyperparams.eps_max, self.hyperparams.eps_min, self.hyperparams.eps_decay)
+        eps = epsilon_decay(
+            step,
+            self.hyperparams.eps_max,
+            self.hyperparams.eps_min,
+            self.hyperparams.eps_decay,
+        )
 
         if random.random() < eps:
-            action = th.randint(self.n_action, device=self.device)
+            action = th.randint(high=self.n_action, size=(1,), device=self.device)
         else:
             action = self.q1.argmax()
 
         if was_np:
             action = action.detach().cpu().numpy()
-        
+
         return action
-    
-    
+
     # TODO: Determine if pickle supports saving and loading of model weights
     def save(self, path: str):
         """saves the current agent
@@ -139,12 +150,12 @@ class DQNAgent(BaseAgent):
         Args:
             path (str): path to save agent
         """
-        with open(path, 'wb') as outfile:
+        with open(path, "wb") as outfile:
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
-    
+
     @staticmethod
     def load(path: str):
-        """Load agent 
+        """Load agent
 
         Args:
             path (str): path to load from
@@ -152,5 +163,5 @@ class DQNAgent(BaseAgent):
         Returns:
             DQNAgent: loaded DQNAgent instance
         """
-        with open(path, 'rb') as infile:
+        with open(path, "rb") as infile:
             return pickle.load(infile)

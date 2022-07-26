@@ -1,9 +1,11 @@
-from torch import nn
 import numpy as np
+from torch import nn
 
 
 # TODO: write tests
-def linear_decay(step: int, start_val: float, final_val: float, final_steps: int) -> float:
+def linear_decay(
+    step: int, start_val: float, final_val: float, final_steps: int
+) -> float:
     """linear decay function
 
     Args:
@@ -32,7 +34,9 @@ def epsilon_decay(step: int, start_val: float, final_val: float, decay: float) -
     Returns:
         float: current value of epsilon decay, given inputs
     """
-    return max(final_val + (start_val - final_val) * np.exp(-1 * step / decay), final_val)
+    return max(
+        final_val + (start_val - final_val) * np.exp(-1 * step / decay), final_val
+    )
 
 
 # TODO: write tests

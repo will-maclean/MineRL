@@ -1,6 +1,6 @@
 import os
-import numpy as np
 
+import numpy as np
 from minerl3161.buffer import ReplayBuffer, Transition
 
 
@@ -53,7 +53,6 @@ def test_buffer_save_load():
     buffer.save(save_path=save_path)
 
     new_buffer = ReplayBuffer.load(save_path)
-
 
     # buffer and new_buffer should now be the same
 

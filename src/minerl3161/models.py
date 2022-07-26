@@ -2,14 +2,16 @@
 """
 
 from typing import Tuple
+
 import torch as th
 from torch import nn
+
+from .submodel import NothingNet
 
 
 # TODO: write tests
 class DQNNet(nn.Module):
-    """stores the PyTorch neural network to be used as a DQN network.
-    """
+    """stores the PyTorch neural network to be used as a DQN network."""
 
     def __init__(self, state_shape: Tuple[int], n_actions: int, layer_size=64) -> None:
         """intialiser for DQNNet
@@ -21,7 +23,9 @@ class DQNNet(nn.Module):
         """
         super().__init__()
 
-        self.feature_extractor = lambda x: x  # TODO: create feature extractor based on state
+        self.feature_extractor = (
+            NothingNet()
+        )  # TODO: create feature extractor based on state
 
         sample_input = th.ones((1, *state_shape))
         n_hidden_features = self.feature_extractor(sample_input).flatten(1).shape[1]
@@ -30,16 +34,15 @@ class DQNNet(nn.Module):
         self.value = nn.Sequential(
             nn.Linear(n_hidden_features, layer_size, bias=True),
             nn.ReLU(),
-            nn.Linear(layer_size, 1)
+            nn.Linear(layer_size, 1),
         )
 
         self.advantage = nn.Sequential(
             nn.Linear(n_hidden_features, layer_size, bias=True),
             nn.ReLU(),
-            nn.Linear(layer_size, n_actions)
+            nn.Linear(layer_size, n_actions),
         )
 
-    
     def forward(self, x: th.Tensor) -> th.Tensor:
         """forward pass of the model
 
