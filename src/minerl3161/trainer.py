@@ -136,7 +136,7 @@ class DQNTrainer(BaseTrainer):
     def _calc_loss(self, batch: dict) -> torch.Tensor:
         # estimate q values for current states/actions using q1 network
         q_values = self.q1(batch["states"])
-        actions = actions.unsqueeze(1)
+        actions = batch["actions"].unsqueeze(1)
         q_values = q_values.gather(1, actions).squeeze(1)
 
         # estimate q values for next states/actions using q2 network
