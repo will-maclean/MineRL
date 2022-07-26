@@ -11,7 +11,7 @@ dependencies:
   - pre-commit
   - pylint
   - pytest
-  - python=3.10.5
+  - python=3.8
   - pytorch
   - torchvision
   - wandb
