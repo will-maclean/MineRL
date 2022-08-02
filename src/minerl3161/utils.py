@@ -61,9 +61,14 @@ def copy_weights(copy_from: nn.Module, copy_to: nn.Module, polyak=None):
         copy_to.load_state_dict(copy_from.state_dict())
 
 
-def sample_pt_state(observation_space, features, device="cpu"):
+def sample_pt_state(observation_space, features, device="cpu", batch=None):
     state = {}
     for feature in features:
-        state[feature] = th.rand(observation_space[feature].shape, device=device)
+        if batch is None:
+            state[feature] = th.rand(observation_space[feature].shape, device=device)
+        else:
+            state[feature] = th.rand(
+                (batch, *observation_space[feature].shape), device=device
+            )
 
     return state

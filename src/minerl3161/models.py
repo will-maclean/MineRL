@@ -36,6 +36,9 @@ class DQNNet(nn.Module):
             feature_names=dqn_hyperparams.features
             if dqn_hyperparams is not None
             else None,
+            mlp_hidden_size=dqn_hyperparams.mlp_output_size
+            if dqn_hyperparams is not None
+            else None,
         )
 
         sample_input = sample_pt_state(

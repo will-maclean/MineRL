@@ -14,6 +14,7 @@ class CNN(nn.Module):
     def __init__(self, input_shape) -> None:
         super().__init__()
 
+        # TODO: modify for minerl pov
         self.cnn = nn.Sequential(
             nn.Conv2d(input_shape[0], 16, kernel_size=5),
             nn.ReLU(),
@@ -34,26 +35,27 @@ class CNN(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(self, input_size, output_size, layers=(), softmax=True) -> None:
+    def __init__(self, input_size, output_size, layers_size=(), softmax=True) -> None:
         super().__init__()
 
-        if len(layers) == 0:
+        if len(layers_size) == 0:
             self.layers = nn.Sequential(
                 nn.Linear(input_size, output_size),
-                nn.Softmax(output_size) if softmax else nn.Sigmoid(),
+                nn.Softmax(-1) if softmax else nn.Sigmoid(),
             )
 
         else:
             layers = []
-            layers.append(nn.Linear(input_size, layers[0]), nn.ReLU())
+            layers.append(nn.Linear(input_size, layers_size[0]))
+            layers.append(nn.ReLU())
 
-            for i in range(1, len(layers) - 1):
-                layers.append(nn.Linear(layers[i - 1], layers[i]))
+            for i in range(1, len(layers_size) - 1):
+                layers.append(nn.Linear(layers_size[i - 1], layers_size[i]))
                 layers.append(nn.ReLU())
 
-            layers.append(nn.Linear(layers[-1], output_size))
+            layers.append(nn.Linear(layers_size[-1], output_size))
             layers.append(
-                nn.Softmax(output_size) if softmax else nn.Sigmoid(),
+                nn.Softmax(-1) if softmax else nn.Sigmoid(),
             )
 
             self.layers = nn.Sequential(*layers)
@@ -63,7 +65,9 @@ class MLP(nn.Module):
 
 
 class MineRLFeatureExtraction(nn.Module):
-    def __init__(self, observation_space, feature_names=None) -> None:
+    def __init__(
+        self, observation_space, feature_names=None, mlp_hidden_size=64
+    ) -> None:
         super().__init__()
 
         self.layers = {}
@@ -80,7 +84,9 @@ class MineRLFeatureExtraction(nn.Module):
                 self.layers[feature] = CNN(observation_space[feature].shape)
             else:
                 # assume this needs a MLP
-                self.layers[feature]
+                self.layers[feature] = MLP(
+                    observation_space[feature].shape[0], mlp_hidden_size
+                )
 
         self.layers = nn.ModuleDict(self.layers)
 
@@ -91,6 +97,6 @@ class MineRLFeatureExtraction(nn.Module):
             processed_feature = self.layers[feature_name](x[feature_name])
             outputs.append(processed_feature)
 
-        output = th.concat(outputs)
+        output = th.concat(outputs, dim=1)
 
         return output
