@@ -1,6 +1,10 @@
+import pytest
+
 from copy import deepcopy
-from minerl3161.utils import linear_decay, epsilon_decay, copy_weights
+from minerl3161.utils import linear_decay, epsilon_decay, copy_weights, sample_pt_state
 from minerl3161.models import DQNNet
+import numpy as np
+import torch
 
 
 def nn_params_equal(model1, model2):
@@ -52,3 +56,24 @@ def test_copy_weights():
 
     assert nn_params_equal(n1, n1_copy)  # n1 should not have changed
     assert not nn_params_equal(n2, n2_copy)  # n2 should have changed
+
+
+def test_sample_pt_state():
+    sample_observation_space = {
+        "f1": np.zeros(3, 64, 64),
+        "f2": np.zeros(4),
+        "f2": np.zeros(6),
+    }
+
+    feature_names = ["f1", "f2"]
+
+    sample = sample_pt_state(sample_observation_space, feature_names)
+
+    assert type(sample) == dict
+    assert type(sample["f1"]) == torch.tensor
+    assert type(sample["f2"]) == torch.tensor
+    assert sample["f1"].shape == (3, 64, 64)
+    assert sample["f2"].shape == (4)
+
+    with pytest.raises(KeyError):
+        sample["f3"]

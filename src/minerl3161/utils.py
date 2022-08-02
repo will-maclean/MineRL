@@ -1,5 +1,6 @@
 import numpy as np
 from torch import nn
+import torch as th
 
 
 # TODO: write tests
@@ -58,3 +59,11 @@ def copy_weights(copy_from: nn.Module, copy_to: nn.Module, polyak=None):
             target_param.data.copy_(polyak * param + (1 - polyak) * target_param)
     else:
         copy_to.load_state_dict(copy_from.state_dict())
+
+
+def sample_pt_state(observation_space, features, device="cpu"):
+    state = {}
+    for feature in features:
+        state[feature] = th.rand(observation_space[feature].shape, device=device)
+
+    return state
