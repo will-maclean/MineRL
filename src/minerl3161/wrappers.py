@@ -1,13 +1,17 @@
-from typing import List
-
+from typing import List, Dict
+import numpy as np
 import gym
 
 
-# TODO: write tests
 class MineRLDiscreteActionWrapper(gym.ActionWrapper):
-    def __init__(self, env: gym.Env, action_set: List[dict]) -> None:
+    def __init__(self, env: gym.Env, filepath: str = "src/actions/actions.npy") -> None:
         super().__init__(env)
-        self.action_set = action_set
+        self.action_set = np.load(filepath)
 
-    def action(self, action):
-        pass
+    def get_action(self, action_idx) -> Dict[str, List[float]]:
+        return {
+                "vector": self.action_set[action_idx]
+            }
+    
+    def get_actions_count(self) -> int:
+        return len(self.action_set)
