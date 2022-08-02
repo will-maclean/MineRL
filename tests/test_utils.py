@@ -60,9 +60,9 @@ def test_copy_weights():
 
 def test_sample_pt_state():
     sample_observation_space = {
-        "f1": np.zeros(3, 64, 64),
+        "f1": np.zeros((3, 64, 64)),
         "f2": np.zeros(4),
-        "f2": np.zeros(6),
+        "f3": np.zeros(6),
     }
 
     feature_names = ["f1", "f2"]
@@ -70,10 +70,10 @@ def test_sample_pt_state():
     sample = sample_pt_state(sample_observation_space, feature_names)
 
     assert type(sample) == dict
-    assert type(sample["f1"]) == torch.tensor
-    assert type(sample["f2"]) == torch.tensor
+    assert type(sample["f1"]) == torch.Tensor
+    assert type(sample["f2"]) == torch.Tensor
     assert sample["f1"].shape == (3, 64, 64)
-    assert sample["f2"].shape == (4)
+    assert sample["f2"].shape == (4,)
 
     with pytest.raises(KeyError):
         sample["f3"]
