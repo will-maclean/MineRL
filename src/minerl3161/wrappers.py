@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 import gym
@@ -81,7 +81,7 @@ class StackImage(gym.Wrapper):
         super().__init__(env)
         self.feature_name = feature_name
         self.frame = frame
-        self.queue = np.zeros((self.frame, *self.env.observation_space[self.feature_name].shape))
+        self.queue = np.zeros((self.frame, *self.env.observation_space[self.feature_name].shape[1:]))
 
         self.observation_space.spaces[feature_name] = gym.spaces.Box(
             low=0,
@@ -108,19 +108,39 @@ class StackImage(gym.Wrapper):
             self.queue = np.zeros_like(self.queue)
         
         self.queue = np.roll(self.queue, shift=-1, axis=0)
-        self.queue[-1] = next_state
+        self.queue[-1] = np.squeeze(next_state, axis=0)
 
         return self.queue
 
 
+class DictFilter(gym.ObservationWrapper):
+    def __init__(self, env: gym.Env, features=()) -> None:
+        super().__init__(env)
+        self.features = features
+    
+    def observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+        obs = {}
+
+        for key in self.features:
+            obs[key] = observation[key]
+        
+        return obs
+
+
 def mineRLObservationSpaceWrapper(
             env: gym.Env, 
+            features: Optional[List[str]] = None,
             frame: int = 4, 
             camera_feature_name: str = 'pov',
             downsize_width: int = 64, 
             downsize_height: int = 64
             ):
     
+    if features is None:
+        # by default, just use the camera
+        features = ['pov']
+
+    env = DictFilter(env, features=features)
     env = Resize(env, feature_name=camera_feature_name, w=downsize_width, h=downsize_height)
     env = Grayscale(env, feature_name=camera_feature_name)
     env = PyTorchImage(env, feature_name=camera_feature_name)
