@@ -1,5 +1,9 @@
 from copy import deepcopy
-from minerl3161.utils import linear_decay, epsilon_decay, copy_weights
+
+import numpy as np
+import torch as th
+
+from minerl3161.utils import linear_decay, epsilon_decay, copy_weights, np_dict_to_pt
 from minerl3161.models import DQNNet
 
 
@@ -52,3 +56,21 @@ def test_copy_weights():
 
     assert nn_params_equal(n1, n1_copy)  # n1 should not have changed
     assert not nn_params_equal(n2, n2_copy)  # n2 should have changed
+
+
+def test_np_dict_to_pt():
+    test_dict = {"a1": np.zeros(4), "a2": np.ones((3, 4))}
+
+    converted_dict = np_dict_to_pt(test_dict)
+
+    assert converted_dict["a1"] == th.zeros(4)
+    assert converted_dict["a2"] == th.zeros((3, 4))
+
+
+def test_pt_dict_to_np():
+    test_dict = {"a1": th.zeros(4), "a2": th.ones((3, 4))}
+
+    converted_dict = np_dict_to_pt(test_dict)
+
+    assert converted_dict["a1"] == np.zeros(4)
+    assert converted_dict["a2"] == np.zeros((3, 4))
