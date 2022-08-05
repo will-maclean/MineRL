@@ -2,6 +2,7 @@ from typing import Dict, List
 
 import numpy as np
 import gym
+import cv2
 
 
 # TODO: write tests
@@ -15,39 +16,73 @@ class MineRLDiscreteActionWrapper(gym.ActionWrapper):
 
 
 class Grayscale(gym.ObservationWrapper):
-    def __init__(self, env: gym.Env, feature_name='camera') -> None:
+    def __init__(self, env: gym.Env, feature_name='pov') -> None:
         super().__init__(env)
         self.feature_name=feature_name
         self.rgb_weights = np.array([0.2989, 0.5870, 0.1140])
+        self.observation_space.spaces[feature_name] = gym.spaces.Box(
+            low=0,
+            high=255,
+            shape=(*self.observation_space[feature_name].shape[:-1], 1)
+        )
     
     def observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-        observation[self.feature_name] = self._process(observation)
-        return super().observation(observation)
+        observation[self.feature_name] = self._process(observation[self.feature_name])
+        return observation
     
     def _process(self, rgb: np.ndarray):
-        intermediate = np.dot(rgb, self.rgb_weights)
-        return np.sum(intermediate, axis = 2)
+        intermediate = rgb * self.rgb_weights
+        return np.expand_dims(np.sum(intermediate, axis = 2), 2)
+
+
+class Resize(gym.ObservationWrapper):
+    def __init__(self, env: gym.Env, feature_name='pov', w=64, h=64) -> None:
+        super().__init__(env)
+        self.w = w
+        self.h = h
+        self.feature_name = feature_name
+
+        self.observation_space.spaces[feature_name] = gym.spaces.Box(
+            low=0,
+            high=255,
+            shape=(self._height, self._width, 3),
+            dtype=self.observation_space.spaces[feature_name].dtype,
+        )
+    
+    def observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+        return super().observation(observation)
 
 
 class PyTorchImage(gym.ObservationWrapper):
-    def __init__(self, env: gym.Env, feature_name='rgb') -> None:
+    def __init__(self, env: gym.Env, feature_name='pov') -> None:
         super().__init__(env)
         self.feature_name=feature_name
+        self.observation_space.spaces[feature_name] = gym.spaces.Box(
+            low=0,
+            high=1,
+            shape=(self.observation_space[feature_name].shape[2], self.observation_space[feature_name].shape[1], self.observation_space[feature_name].shape[0])
+        )
     
     def observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-        observation[self.feature_name] = self._process(observation)
-        return super().observation(observation)
+        observation[self.feature_name] = self._process(observation[self.feature_name])
+        return observation
     
     def _process(self, feature: np.ndarray):
-        return np.swapaxes(feature, 0, 2)
+        return np.swapaxes(feature, 0, 2) / 255
 
 
 class StackImage(gym.Wrapper):
-    def __init__(self, env: gym.Env, feature_name='rgb', frame=4) -> None:
+    def __init__(self, env: gym.Env, feature_name='pov', frame=4) -> None:
         super().__init__(env)
         self.feature_name = feature_name
         self.frame = frame
         self.queue = np.zeros((self.frame, *self.env.observation_space[self.feature_name].shape))
+
+        self.observation_space.spaces[feature_name] = gym.spaces.Box(
+            low=0,
+            high=1,
+            shape=(frame, self.observation_space[feature_name].shape[1], self.observation_space[feature_name].shape[2])
+        )
     
     def step(self, action):
         next_state, reward, done, info = self.env.step(action)
