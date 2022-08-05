@@ -9,13 +9,14 @@ def test_env_wrapper():
 
     w = 16
     h = 16
-    camera_feature = 'pov'
+    features = ['stone_sword', 'stonecutter', 'stone_shovel']
     stack = 4
 
-    env = mineRLObservationSpaceWrapper(unwrapped_env, frame=stack, camera_feature_name=camera_feature, downsize_width=w, downsize_height=h)
+    env = mineRLObservationSpaceWrapper(unwrapped_env, frame=stack, features=features, downsize_width=w, downsize_height=h)
 
-    assert env.observation_space[camera_feature].shape == (stack, w, h)
+    assert env.observation_space['pov'].shape == (stack, w, h)
 
     state = env.reset()
 
-    assert state[camera_feature].shape == (stack, w, h)
+    assert state['pov'].shape == (stack, w, h)
+    assert state['inventory'].shape == (3,)

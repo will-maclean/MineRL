@@ -113,37 +113,51 @@ class StackImage(gym.Wrapper):
         return self.queue
 
 
-class DictFilter(gym.ObservationWrapper):
-    def __init__(self, env: gym.Env, features=()) -> None:
+class InventoryFilter(gym.ObservationWrapper):
+    def __init__(self, env: gym.Env, features, feature_max=16) -> None:
         super().__init__(env)
         self.features = features
+        self.feature_max = feature_max
+        self.observation_space.spaces['inventory'] = gym.spaces.Box(
+            low=0,
+            high=1,
+            shape=(len(features),)
+        )
     
     def observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-        obs = {}
+        observation['inventory'] = self._process(observation['inventory'])
+
+        return observation
+    
+    def _process(self, inv_obs):
+        inventory = []
 
         for key in self.features:
-            obs[key] = observation[key]
+            inventory.append(
+                min(inv_obs[key], self.feature_max) / self.feature_max
+                )
         
-        return obs
+        
+        return np.array(inventory)
 
 
 def mineRLObservationSpaceWrapper(
             env: gym.Env, 
             features: Optional[List[str]] = None,
             frame: int = 4, 
-            camera_feature_name: str = 'pov',
+            camera: bool = True,
             downsize_width: int = 64, 
             downsize_height: int = 64
             ):
-    
-    if features is None:
-        # by default, just use the camera
-        features = ['pov']
 
-    env = DictFilter(env, features=features)
-    env = Resize(env, feature_name=camera_feature_name, w=downsize_width, h=downsize_height)
-    env = Grayscale(env, feature_name=camera_feature_name)
-    env = PyTorchImage(env, feature_name=camera_feature_name)
-    env = StackImage(env, frame=frame, feature_name=camera_feature_name)
+    if features is not None:
+        env = InventoryFilter(env, features=features)
+
+    if camera:
+        camera_feature_name = 'pov'
+        env = Resize(env, feature_name=camera_feature_name, w=downsize_width, h=downsize_height)
+        env = Grayscale(env, feature_name=camera_feature_name)
+        env = PyTorchImage(env, feature_name=camera_feature_name)
+        env = StackImage(env, frame=frame, feature_name=camera_feature_name)
 
     return env
