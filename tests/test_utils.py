@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import torch as th
 
-from minerl3161.utils import linear_decay, epsilon_decay, copy_weights, np_dict_to_pt
+from minerl3161.utils import linear_decay, epsilon_decay, copy_weights, np_dict_to_pt, pt_dict_to_np
 from minerl3161.models import DQNNet
 
 
@@ -59,18 +59,24 @@ def test_copy_weights():
 
 
 def test_np_dict_to_pt():
-    test_dict = {"a1": np.zeros(4), "a2": np.ones((3, 4))}
+    test_dict = {
+        "a1": np.zeros(4).astype(np.float32), 
+        "a2": np.ones((3, 4)).astype(np.float32)
+        }
 
     converted_dict = np_dict_to_pt(test_dict)
 
-    assert converted_dict["a1"] == th.zeros(4)
-    assert converted_dict["a2"] == th.zeros((3, 4))
+    assert (converted_dict["a1"] == th.zeros(4, dtype=th.float32)).all()
+    assert (converted_dict["a2"] == th.ones((3, 4), dtype=th.float32)).all()
 
 
 def test_pt_dict_to_np():
-    test_dict = {"a1": th.zeros(4), "a2": th.ones((3, 4))}
+    test_dict = {
+        "a1": th.zeros(4), 
+        "a2": th.ones((3, 4))
+        }
 
-    converted_dict = np_dict_to_pt(test_dict)
+    converted_dict = pt_dict_to_np(test_dict)
 
-    assert converted_dict["a1"] == np.zeros(4)
-    assert converted_dict["a2"] == np.zeros((3, 4))
+    assert (converted_dict["a1"] == np.zeros(4)).all()
+    assert (converted_dict["a2"] == np.ones((3, 4))).all()

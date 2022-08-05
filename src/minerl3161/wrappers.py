@@ -45,12 +45,17 @@ class Resize(gym.ObservationWrapper):
         self.observation_space.spaces[feature_name] = gym.spaces.Box(
             low=0,
             high=255,
-            shape=(self._height, self._width, 3),
+            shape=(self.h, self.w, 3),
             dtype=self.observation_space.spaces[feature_name].dtype,
         )
     
     def observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-        return super().observation(observation)
+        observation[self.feature_name] = self._process(observation[self.feature_name])
+        return observation
+    
+    def _process(self, frame: np.ndarray):
+        frame = cv2.resize(frame, (self.w, self.h), interpolation=cv2.INTER_AREA)
+        return frame
 
 
 class PyTorchImage(gym.ObservationWrapper):
@@ -108,7 +113,15 @@ class StackImage(gym.Wrapper):
         return self.queue
 
 
-def mineRLObservationSpaceWrapper(env, frame=4, camera_feature_name='pov'):
+def mineRLObservationSpaceWrapper(
+            env: gym.Env, 
+            frame: int = 4, 
+            camera_feature_name: str = 'pov',
+            downsize_width: int = 64, 
+            downsize_height: int = 64
+            ):
+    
+    env = Resize(env, feature_name=camera_feature_name, w=downsize_width, h=downsize_height)
     env = Grayscale(env, feature_name=camera_feature_name)
     env = PyTorchImage(env, feature_name=camera_feature_name)
     env = StackImage(env, frame=frame, feature_name=camera_feature_name)

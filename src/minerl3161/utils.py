@@ -77,7 +77,7 @@ def np_dict_to_pt(
     out = {}
 
     for key in np_dict:
-        out[key] = th.from_numpy(np_dict[key], device=device)
+        out[key] = th.from_numpy(np_dict[key]).to(device)
 
     return out
 
