@@ -97,3 +97,15 @@ def pt_dict_to_np(pt_dict: Dict[str, th.Tensor]) -> Dict[str, np.ndarray]:
         out[key] = pt_dict[key].detach().cpu().numpy()
 
     return out
+
+def sample_pt_state(observation_space, features, device="cpu", batch=None):
+    state = {}
+    for feature in features:
+        if batch is None:
+            state[feature] = th.rand(observation_space[feature].shape, device=device)
+        else:
+            state[feature] = th.rand(
+                (batch, *observation_space[feature].shape), device=device
+            )
+
+    return state

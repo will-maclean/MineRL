@@ -1,9 +1,10 @@
-from copy import deepcopy
+import pytest
 
+from copy import deepcopy
 import numpy as np
 import torch as th
 
-from minerl3161.utils import linear_decay, epsilon_decay, copy_weights, np_dict_to_pt, pt_dict_to_np
+from minerl3161.utils import linear_decay, epsilon_decay, copy_weights, sample_pt_state, np_dict_to_pt, pt_dict_to_np
 from minerl3161.models import DQNNet
 
 
@@ -80,3 +81,24 @@ def test_pt_dict_to_np():
 
     assert (converted_dict["a1"] == np.zeros(4)).all()
     assert (converted_dict["a2"] == np.ones((3, 4))).all()
+
+
+def test_sample_pt_state():
+    sample_observation_space = {
+        "f1": np.zeros((3, 64, 64)),
+        "f2": np.zeros(4),
+        "f3": np.zeros(6),
+    }
+
+    feature_names = ["f1", "f2"]
+
+    sample = sample_pt_state(sample_observation_space, feature_names)
+
+    assert type(sample) == dict
+    assert type(sample["f1"]) == th.Tensor
+    assert type(sample["f2"]) == th.Tensor
+    assert sample["f1"].shape == (3, 64, 64)
+    assert sample["f2"].shape == (4,)
+
+    with pytest.raises(KeyError):
+        sample["f3"]
