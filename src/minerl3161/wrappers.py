@@ -145,10 +145,14 @@ def mineRLObservationSpaceWrapper(
             env: gym.Env, 
             features: Optional[List[str]] = None,
             frame: int = 4, 
-            camera: bool = True,
             downsize_width: int = 64, 
             downsize_height: int = 64
             ):
+    if 'pov' in features:
+        camera = True
+        features.remove('pov')
+    else:
+        camera = False
 
     if features is not None:
         env = InventoryFilter(env, features=features)

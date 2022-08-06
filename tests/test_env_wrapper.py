@@ -9,7 +9,7 @@ def test_env_wrapper():
 
     w = 16
     h = 16
-    features = ['stone_sword', 'stonecutter', 'stone_shovel']
+    features = ['pov', 'stone_sword', 'stonecutter', 'stone_shovel']
     stack = 4
 
     env = mineRLObservationSpaceWrapper(unwrapped_env, frame=stack, features=features, downsize_width=w, downsize_height=h)

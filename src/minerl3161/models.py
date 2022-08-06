@@ -19,7 +19,7 @@ class DQNNet(nn.Module):
         self,
         state_shape: Dict[str, Tuple[int]],
         n_actions: int,
-        dqn_hyperparams: DQNHyperparameters,
+        dqn_hyperparams: DQNHyperparameters = None,
         layer_size=64,
     ) -> None:
         """intialiser for DQNNet
@@ -33,7 +33,7 @@ class DQNNet(nn.Module):
 
         self.feature_extractor = MineRLFeatureExtraction(
             state_shape,
-            feature_names=dqn_hyperparams.features
+            feature_names=dqn_hyperparams.feature_names
             if dqn_hyperparams is not None
             else None,
             mlp_hidden_size=dqn_hyperparams.mlp_output_size
@@ -42,8 +42,14 @@ class DQNNet(nn.Module):
         )
 
         sample_input = sample_pt_state(
-            state_shape, dqn_hyperparams.feature_names, "cpu"
+            state_shape, 
+            dqn_hyperparams.feature_names
+            if dqn_hyperparams is not None
+            else state_shape.spaces.keys(), 
+            device="cpu",
+            batch=1,
         )
+
         n_hidden_features = self.feature_extractor(sample_input).shape[1]
 
         # duelling architecture

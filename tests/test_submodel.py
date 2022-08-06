@@ -1,9 +1,11 @@
 import torch as th
 import numpy as np
-import pytest
+import gym
+import minerl
 
 from minerl3161.submodel import CNN, MLP, MineRLFeatureExtraction
 from minerl3161.utils import sample_pt_state
+from minerl3161.wrappers import mineRLObservationSpaceWrapper
 
 
 def test_cnn():
@@ -28,7 +30,8 @@ def test_mlp():
         assert sample_output.shape[1] == output_size
 
 
-def test_minerl_feature_extraction_subnet():
+def test_minerl_feature_extraction_subnet_dummy():
+    # dummy data
     sample_observation_space = {
         "pov": np.zeros((3, 64, 64)),
         "f2": np.zeros(4),
@@ -47,3 +50,21 @@ def test_minerl_feature_extraction_subnet():
 
     assert len(sample_out.shape) == 2
     assert sample_out.shape[0] == 1
+
+
+def test_minerl_feature_extraction_subnet_real():
+    # real observation space
+    unwrapped_env = gym.make("MineRLObtainDiamondShovel-v0")
+    w = 16
+    h = 16
+    features = ['pov', 'stone_sword', 'stonecutter', 'stone_shovel']
+    stack = 4
+
+    env = mineRLObservationSpaceWrapper(unwrapped_env, frame=stack, features=features, downsize_width=w, downsize_height=h)
+
+    obs_space = env.observation_space
+
+
+    feature_extraction = MineRLFeatureExtraction(
+            obs_space, ['pov', 'inventory']
+        )

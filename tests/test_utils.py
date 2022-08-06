@@ -35,8 +35,13 @@ def test_epsilon_decay():
 
 def test_copy_weights():
     # hard copy
-    n1 = DQNNet((5,), 5, 5)
-    n2 = DQNNet((5,), 5, 5)
+    state_space = {
+        "a1": np.zeros(4),
+        "pov": np.zeros((3, 16, 16))
+    }
+
+    n1 = DQNNet(state_space, 5)
+    n2 = DQNNet(state_space, 5)
 
     assert not nn_params_equal(n1, n2)
 
@@ -45,8 +50,8 @@ def test_copy_weights():
     assert nn_params_equal(n1, n2)
 
     # soft copy
-    n1 = DQNNet((5,), 5, 5)
-    n2 = DQNNet((5,), 5, 5)
+    n1 = DQNNet(state_space, 5)
+    n2 = DQNNet(state_space, 5)
 
     n1_copy = deepcopy(n1)
     n2_copy = deepcopy(n2)

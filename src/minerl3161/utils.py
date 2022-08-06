@@ -63,7 +63,7 @@ def copy_weights(copy_from: nn.Module, copy_to: nn.Module, polyak=None):
 
 
 def np_dict_to_pt(
-    np_dict: Dict[str, np.ndarray], device: str = "cpu"
+    np_dict: Dict[str, np.ndarray], device: str = "cpu", unsqueeze = False
 ) -> Dict[str, th.Tensor]:
     """Convertes a dictionary of numpy arrays to a dictionary of pytorch tensors
 
@@ -77,7 +77,10 @@ def np_dict_to_pt(
     out = {}
 
     for key in np_dict:
-        out[key] = th.from_numpy(np_dict[key]).to(device)
+        if unsqueeze:
+            out[key] = th.from_numpy(np_dict[key]).unsqueeze(0).to(device)
+        else:
+            out[key] = th.from_numpy(np_dict[key]).to(device)
 
     return out
 
