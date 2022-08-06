@@ -1,3 +1,4 @@
+from typing import Dict
 import numpy as np
 from torch import nn
 import torch as th
@@ -60,6 +61,42 @@ def copy_weights(copy_from: nn.Module, copy_to: nn.Module, polyak=None):
     else:
         copy_to.load_state_dict(copy_from.state_dict())
 
+
+def np_dict_to_pt(
+    np_dict: Dict[str, np.ndarray], device: str = "cpu"
+) -> Dict[str, th.Tensor]:
+    """Convertes a dictionary of numpy arrays to a dictionary of pytorch tensors
+
+    Args:
+        np_dict (Dict[str, np.ndarray]): dictionary of np arrays
+        device (str, optional): which PyTorch device to store the tensors on. Defaults to "cpu".
+
+    Returns:
+        Dict[str, th.Tensor]: dictionary of converted data
+    """
+    out = {}
+
+    for key in np_dict:
+        out[key] = th.from_numpy(np_dict[key]).to(device)
+
+    return out
+
+
+def pt_dict_to_np(pt_dict: Dict[str, th.Tensor]) -> Dict[str, np.ndarray]:
+    """Convertes a dictionary of torch tensors to a dictionary of np arrays
+
+    Args:
+        pt_dict (Dict[str, th.Tensor]): dictionary of pytorch tensors
+
+    Returns:
+        Dict[str, np.ndarray]: dictionary of converted data
+    """
+    out = {}
+
+    for key in pt_dict:
+        out[key] = pt_dict[key].detach().cpu().numpy()
+
+    return out
 
 def sample_pt_state(observation_space, features, device="cpu", batch=None):
     state = {}

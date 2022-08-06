@@ -1,10 +1,11 @@
 import pytest
 
 from copy import deepcopy
-from minerl3161.utils import linear_decay, epsilon_decay, copy_weights, sample_pt_state
-from minerl3161.models import DQNNet
 import numpy as np
-import torch
+import torch as th
+
+from minerl3161.utils import linear_decay, epsilon_decay, copy_weights, sample_pt_state, np_dict_to_pt, pt_dict_to_np
+from minerl3161.models import DQNNet
 
 
 def nn_params_equal(model1, model2):
@@ -58,6 +59,30 @@ def test_copy_weights():
     assert not nn_params_equal(n2, n2_copy)  # n2 should have changed
 
 
+def test_np_dict_to_pt():
+    test_dict = {
+        "a1": np.zeros(4).astype(np.float32), 
+        "a2": np.ones((3, 4)).astype(np.float32)
+        }
+
+    converted_dict = np_dict_to_pt(test_dict)
+
+    assert (converted_dict["a1"] == th.zeros(4, dtype=th.float32)).all()
+    assert (converted_dict["a2"] == th.ones((3, 4), dtype=th.float32)).all()
+
+
+def test_pt_dict_to_np():
+    test_dict = {
+        "a1": th.zeros(4), 
+        "a2": th.ones((3, 4))
+        }
+
+    converted_dict = pt_dict_to_np(test_dict)
+
+    assert (converted_dict["a1"] == np.zeros(4)).all()
+    assert (converted_dict["a2"] == np.ones((3, 4))).all()
+
+
 def test_sample_pt_state():
     sample_observation_space = {
         "f1": np.zeros((3, 64, 64)),
@@ -70,8 +95,8 @@ def test_sample_pt_state():
     sample = sample_pt_state(sample_observation_space, feature_names)
 
     assert type(sample) == dict
-    assert type(sample["f1"]) == torch.Tensor
-    assert type(sample["f2"]) == torch.Tensor
+    assert type(sample["f1"]) == th.Tensor
+    assert type(sample["f2"]) == th.Tensor
     assert sample["f1"].shape == (3, 64, 64)
     assert sample["f2"].shape == (4,)
 
