@@ -1,19 +1,27 @@
 """Stores all PyTorch models
 """
 
-from typing import Tuple
+from typing import Dict, Tuple
 
 import torch as th
 from torch import nn
+from minerl3161.hyperparameters import DQNHyperparameters
 
-from .submodel import NothingNet
+from minerl3161.submodel import MineRLFeatureExtraction
+from minerl3161.utils import sample_pt_state
 
 
 # TODO: write tests
 class DQNNet(nn.Module):
     """stores the PyTorch neural network to be used as a DQN network."""
 
-    def __init__(self, state_shape: Tuple[int], n_actions: int, layer_size=64) -> None:
+    def __init__(
+        self,
+        state_shape: Dict[str, Tuple[int]],
+        n_actions: int,
+        dqn_hyperparams: DQNHyperparameters = None,
+        layer_size=64,
+    ) -> None:
         """intialiser for DQNNet
 
         Args:
@@ -23,12 +31,26 @@ class DQNNet(nn.Module):
         """
         super().__init__()
 
-        self.feature_extractor = (
-            NothingNet()
-        )  # TODO: create feature extractor based on state
+        self.feature_extractor = MineRLFeatureExtraction(
+            state_shape,
+            feature_names=dqn_hyperparams.feature_names
+            if dqn_hyperparams is not None
+            else None,
+            mlp_hidden_size=dqn_hyperparams.mlp_output_size
+            if dqn_hyperparams is not None
+            else None,
+        )
 
-        sample_input = th.ones((1, *state_shape))
-        n_hidden_features = self.feature_extractor(sample_input).flatten(1).shape[1]
+        sample_input = sample_pt_state(
+            state_shape, 
+            dqn_hyperparams.feature_names
+            if dqn_hyperparams is not None
+            else state_shape.spaces.keys(), 
+            device="cpu",
+            batch=1,
+        )
+
+        n_hidden_features = self.feature_extractor(sample_input).shape[1]
 
         # duelling architecture
         self.value = nn.Sequential(

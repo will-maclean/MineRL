@@ -33,3 +33,5 @@ class DQNHyperparameters(BaseHyperparameters):
         int, None
     ] = 1  # how often to do a soft update from q1 to q2
     polyak_tau: float = 0.01  # controls the weight of the soft update
+    feature_names = ["pov"]
+    mlp_output_size = 64
