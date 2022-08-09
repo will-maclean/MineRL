@@ -25,11 +25,6 @@ The following is all task environment strings
 """
 
 # Hyperparameters
-ENV_STRINGS = ['Treechop', 'Navigate', 'NavigateDense', 'NavigateExtreme', 'NavigateExtremeDense', 
-                'ObtainDiamond', 'ObtainDiamondDense', 'ObtainIronPickaxe', 'ObtainIronPickaxeDense']
-
-StringBuilder = lambda ENV_STRING: (f'MineRL{ENV_STRING}VectorObf-v0', f'src/actions/actions-{ENV_STRING}.npy')
-
 NUM_CLUSTERS = 12 # Number of Macro Actions we want to extract
 
 CHAIN_LEN = 10
@@ -39,6 +34,10 @@ MAX_ACTIONS = 100000
 NUM_EPOCHS = 2
 BATCH_SIZE = 10
 ACTION_SIZE = 64
+
+
+# Util function
+StringBuilder = lambda ENV_STRING: (f'MineRL{ENV_STRING}VectorObf-v0', f'src/actions/actions-{ENV_STRING}.npy')
 
 
 # Initial setup
@@ -66,33 +65,27 @@ def extract_n_clusters(num_clusters, data):
     return KMeans(n_clusters=num_clusters, random_state=0).fit(kmeans_acts)
 
 
-def download_data():
-    for ENV_STRING in ENV_STRINGS:
-        ENVIRONMENT, _ = StringBuilder(ENV_STRING)
+def download_data(ENV_STRING):
+    ENVIRONMENT, _ = StringBuilder(ENV_STRING)
 
-        # Downloading environment data if it doesn't exist
-        env_data_path = os.path.join(data_path, ENVIRONMENT)
-        if not os.path.exists(env_data_path):
-            os.mkdir(f'data/{ENVIRONMENT}')
-            minerl.data.download(data_path, environment = ENVIRONMENT)
+    # Downloading environment data if it doesn't exist
+    env_data_path = os.path.join(data_path, ENVIRONMENT)
+    if not os.path.exists(env_data_path):
+        os.mkdir(f'data/{ENVIRONMENT}')
+        minerl.data.download(data_path, environment = ENVIRONMENT)
+        
 
+def extract_actions(ENV_STRING):
+    ENVIRONMENT, SAVE_PATH = StringBuilder(ENV_STRING)
 
-def extract_actions():
-    ALL_ACTIONS = []
+    data = minerl.data.make(environment = ENVIRONMENT)
 
-    for ENV_STRING in ENV_STRINGS:
-        ENVIRONMENT, _ = StringBuilder(ENV_STRING)
+    kmeans = extract_n_clusters(NUM_CLUSTERS, data)
 
-        data = minerl.data.make(environment = ENVIRONMENT)
-
-        kmeans = extract_n_clusters(NUM_CLUSTERS, data)
-
-        ALL_ACTIONS.append(kmeans.cluster_centers_)
-
-    print(len(np.unique(ALL_ACTIONS)))
-
-    np.save("src/actions/all-actions.npy", ALL_ACTIONS)
+    np.save(SAVE_PATH, kmeans.cluster_centers_)    
 
 
-download_data()
-extract_actions()
+download_data("ObtainDiamond")
+extract_actions("ObtainDiamond")
+
+
