@@ -33,5 +33,25 @@ class DQNHyperparameters(BaseHyperparameters):
         int, None
     ] = 1  # how often to do a soft update from q1 to q2
     polyak_tau: float = 0.01  # controls the weight of the soft update
-    feature_names = ["pov"]
+    feature_names = [
+        "pov",
+        ## RAW MATERIALS
+        # woods
+        # stones
+        # coals
+        # ire ore
+        # iron
+        # diamond ore
+        # diamond
+        ## TOOLS
+        # crafting table
+        # furnace
+        # picks
+        # swords
+        # shovels
+        # shield
+        ## CONSUMABLES
+        # torches
+        # foods
+    ]
     mlp_output_size = 64
