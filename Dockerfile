@@ -36,4 +36,7 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
+# run tests
+RUN pytest
+
 CMD ["/bin/sh", "-c", "xvfb-run python3 -u ./src/minerl3161/main.py"]
