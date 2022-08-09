@@ -36,6 +36,7 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
+ENV PYTHONPATH "${PYTHONPATH}:/src"
 WORKDIR /tests/
 
 # run tests
