@@ -66,20 +66,29 @@ def extract_n_clusters(num_clusters, data):
 
 
 def download_data():
-    for ENV_STRING in ENV_STRINGS:
-        ENVIRONMENT, _ = StringBuilder(ENV_STRING)
+    ENVIRONMENT, _ = StringBuilder("ObtainDiamond")
 
-        # Downloading environment data if it doesn't exist
-        env_data_path = os.path.join(data_path, ENVIRONMENT)
-        if not os.path.exists(env_data_path):
-            os.mkdir(f'data/{ENVIRONMENT}')
-            minerl.data.download(data_path, environment = ENVIRONMENT)
+    # Downloading environment data if it doesn't exist
+    env_data_path = os.path.join(data_path, ENVIRONMENT)
+    if not os.path.exists(env_data_path):
+        os.mkdir(f'data/{ENVIRONMENT}')
+        minerl.data.download(data_path, environment = ENVIRONMENT)
+    
+
+    # for ENV_STRING in ENV_STRINGS:
+    #     ENVIRONMENT, _ = StringBuilder(ENV_STRING)
+
+    #     # Downloading environment data if it doesn't exist
+    #     env_data_path = os.path.join(data_path, ENVIRONMENT)
+    #     if not os.path.exists(env_data_path):
+    #         os.mkdir(f'data/{ENVIRONMENT}')
+    #         minerl.data.download(data_path, environment = ENVIRONMENT)
 
 
 def extract_actions():
     ALL_ACTIONS = []
 
-    ENVIRONMENT, SAVE_PATH = StringBuilder("ObtainDiamond")
+    ENVIRONMENT, _ = StringBuilder("ObtainDiamond")
 
     data = minerl.data.make(environment = ENVIRONMENT)
 
@@ -103,5 +112,5 @@ def extract_actions():
     # np.save(SAVE_PATH, kmeans.cluster_centers_)
 
 
-# download_data()
+download_data()
 extract_actions()
