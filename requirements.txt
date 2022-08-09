@@ -54,7 +54,7 @@ toml==0.10.2
 tomli==2.0.1
 tomlkit==0.11.2
 torch==1.12.0
-torchvision==0.13.0a0
+torchvision==0.13.0
 typing_extensions==4.3.0
 ukkonen==1.0.1
 urllib3==1.26.11
