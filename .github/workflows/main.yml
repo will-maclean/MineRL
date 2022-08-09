@@ -1,6 +1,9 @@
 name: Python Package using Conda
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-push-docker-image:
@@ -21,5 +24,5 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/minerl:${{ github.run_number }}
+        tags: ${{ secrets.DOCKER_USERNAME }}/minerl:latest
         
