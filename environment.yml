@@ -16,3 +16,5 @@ dependencies:
   - torchvision
   - wandb
   - wheel
+  - pip:
+    - git+https://github.com/minerllabs/minerl
