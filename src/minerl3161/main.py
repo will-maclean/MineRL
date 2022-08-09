@@ -1,6 +1,9 @@
 import gym
 import minerl
 import logging
+import torch
+
+print("cuda available: ", torch.cuda.is_available())
 logging.basicConfig(level=logging.DEBUG)
 
 env = gym.make('MineRLObtainDiamondShovel-v0')
