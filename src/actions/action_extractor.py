@@ -91,7 +91,7 @@ def extract_actions():
 
     print(len(np.unique(ALL_ACTIONS)))
 
-    np.save("src/actions/all-actions.npy", kmeans.cluster_centers_)
+    np.save("src/actions/all-actions.npy", ALL_ACTIONS)
 
 
 download_data()
