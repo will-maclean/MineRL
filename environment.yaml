@@ -1,0 +1,18 @@
+name: minerl_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - ffmpeg
+  - gym=0.21.0
+  - numpy=1.23
+  - pillow=9.2.0
+  - pip
+  - pre-commit
+  - pylint
+  - pytest
+  - python=3.10.5
+  - pytorch
+  - torchvision
+  - wandb
+  - wheel
