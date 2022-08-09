@@ -40,6 +40,6 @@ ENV PYTHONPATH "${PYTHONPATH}:/src"
 WORKDIR /tests/
 
 # run tests
-RUN pytest
+RUN xvfb-run pytest
 
 CMD ["/bin/sh", "-c", "xvfb-run python3 -u ./src/minerl3161/main.py"]
