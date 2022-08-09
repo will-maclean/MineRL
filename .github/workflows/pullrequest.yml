@@ -1,4 +1,4 @@
-name: Python Package using Conda
+name: pull-request workflow
 
 on:
   pull_request:
