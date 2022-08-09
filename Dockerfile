@@ -36,4 +36,4 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-CMD ["/bin/sh", "xvfb-run python3 -u ./src/minerl3161/main.py"]
+CMD ["/bin/sh", "-c", "xvfb-run python3 -u ./src/minerl3161/main.py"]
