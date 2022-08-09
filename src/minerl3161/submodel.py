@@ -72,12 +72,6 @@ class MineRLFeatureExtraction(nn.Module):
 
         self.layers = {}
 
-        if feature_names == None:
-            # set some useful defaults
-            feature_names = [
-                "pov",
-            ]
-
         for feature in feature_names:
             if feature == "pov":
                 # add the CNN

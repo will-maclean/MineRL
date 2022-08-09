@@ -31,21 +31,22 @@ class DQNNet(nn.Module):
         """
         super().__init__()
 
+        feature_names = self._feature_names(
+            state_shape=state_shape,
+            dqn_hyperparams=dqn_hyperparams
+        )             
+
         self.feature_extractor = MineRLFeatureExtraction(
-            state_shape,
-            feature_names=dqn_hyperparams.feature_names
-            if dqn_hyperparams is not None
-            else None,
+            observation_space=state_shape,
+            feature_names=feature_names,
             mlp_hidden_size=dqn_hyperparams.mlp_output_size
             if dqn_hyperparams is not None
-            else None,
+            else layer_size,
         )
 
         sample_input = sample_pt_state(
-            state_shape, 
-            dqn_hyperparams.feature_names
-            if dqn_hyperparams is not None
-            else state_shape.spaces.keys(), 
+            observation_space=state_shape, 
+            features=feature_names, 
             device="cpu",
             batch=1,
         )
@@ -81,3 +82,14 @@ class DQNNet(nn.Module):
         advantage = self.advantage(x)
 
         return v + (advantage - advantage.mean())
+    
+    def _feature_names(self, state_shape, dqn_hyperparams=None):
+        if dqn_hyperparams is not None:
+            feature_names = dqn_hyperparams.feature_names
+        else:
+            try:
+                feature_names = state_shape.spaces.keys()
+            except AttributeError:
+                feature_names = state_shape.keys()   
+        
+        return feature_names
