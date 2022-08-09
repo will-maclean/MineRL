@@ -4,7 +4,7 @@ import minerl
 from minerl3161.wrappers import MineRLDiscreteActionWrapper
 
 
-def test_actionwrapper_same_env():
+def test_actionwrapper():
     minerl_env = gym.make('MineRLObtainDiamondShovel-v0')
     minerl_env.reset()
 
@@ -25,11 +25,8 @@ def test_actionwrapper_same_env():
            minerl_env.close()
            raise InvalidActionException
 
-    minerl_env.close() 
+    minerl_env.close()
 
 
 class InvalidActionException(Exception):
     pass
-
-
-test_actionwrapper_same_env()

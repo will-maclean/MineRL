@@ -6,10 +6,11 @@ import minerl
 import gym
 import numpy as np
 import tqdm
-from minerl.data import BufferedBatchIter
 from sklearn.cluster import KMeans
 
 """
+WARNING: THIS FILE ONLY WORKS FOR MINERL VERSIONS <= 0.4.4, please install MineRL through pip before running
+
 This file is used to extract the n most used actions from the human priors dataset for each task.
 
 The following is all task environment strings
@@ -85,7 +86,24 @@ def extract_actions(ENV_STRING):
     np.save(SAVE_PATH, kmeans.cluster_centers_)    
 
 
-download_data("ObtainDiamond")
-extract_actions("ObtainDiamond")
+# download_data("ObtainDiamond")
+# extract_actions("ObtainDiamond")
 
 
+def merge_actions():
+    action_strings = ["Treechop", "Navigate", "ObtainIronPickaxe", "ObtainDiamond"]
+    actions = []
+    for action_string in action_strings:
+        _, SAVE_PATH = StringBuilder(action_string)
+        action_set = np.load(SAVE_PATH)
+        actions.extend(action_set)
+    
+    unique_actions = [list(tup) for tup in set(tuple(l) for l in actions)]
+
+    print(len(actions))
+    print(len(unique_actions))
+
+    np.save("src/actions/all-actions.npy", unique_actions) 
+
+
+merge_actions()
