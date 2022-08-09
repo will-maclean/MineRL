@@ -30,6 +30,10 @@ RUN apt install -y python3 && \
 RUN pip3 install pyyaml
 RUN pip3 install git+https://github.com/minerllabs/minerl@v1.0.0
 
+# Requirements
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
+
 COPY . .
 
 CMD ["/bin/sh", "xvfb-run python3 -u ./src/minerl3161/main.py"]
