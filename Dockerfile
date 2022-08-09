@@ -36,6 +36,8 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
+WORKDIR /tests/
+
 # run tests
 RUN pytest
 
