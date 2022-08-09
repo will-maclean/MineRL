@@ -5,7 +5,7 @@ from minerl3161.wrappers import MineRLDiscreteActionWrapper
 
 
 def test_actionwrapper_same_env():
-    minerl_env = gym.make('MineRLTreechopVectorObf-v0')
+    minerl_env = gym.make('MineRLObtainDiamondShovel-v0')
     minerl_env.reset()
 
     act_wrapper = MineRLDiscreteActionWrapper(minerl_env)
@@ -30,3 +30,6 @@ def test_actionwrapper_same_env():
 
 class InvalidActionException(Exception):
     pass
+
+
+test_actionwrapper_same_env()
