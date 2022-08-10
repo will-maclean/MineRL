@@ -18,6 +18,7 @@ class MineRLDiscreteActionWrapper(gym.ActionWrapper):
     def get_actions_count(self) -> int:
         return len(self.action_set)
 
+
 class Grayscale(gym.ObservationWrapper):
     def __init__(self, env: gym.Env, feature_name='pov') -> None:
         super().__init__(env)
