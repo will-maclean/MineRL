@@ -5,7 +5,7 @@ import pickle
 import random
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 
 import numpy as np
 import torch as th
@@ -63,7 +63,7 @@ class DQNAgent(BaseAgent):
 
     def __init__(
         self,
-        state_shape: Tuple[int],
+        state_space: Dict[str, np.ndarray],
         n_actions: int,
         device: str,
         hyperparams: DQNHyperparameters,
@@ -71,7 +71,7 @@ class DQNAgent(BaseAgent):
         """Base agent initialiser
 
         Args:
-            state_shape (Tuple[int]): shape of the state shape dimensions
+            state_space (Tuple[int]): shape of the state shape dimensions
             n_actions (int): number of actions in the action space
             device (str): PyTorch device to store agent on (generally either "cpu" for CPU training or "cuda:0" for GPU training)
             hyperparams (DQNHyperparameters): DQNHyperparameters instance stores specific hyperparameters for DQN training
@@ -80,11 +80,11 @@ class DQNAgent(BaseAgent):
         self.device = device
         self.hyperparams = hyperparams
 
-        self.state_shape = state_shape
+        self.state_shape = state_space
         self.n_action = n_actions
 
         self.q1 = DQNNet(
-            state_shape, n_actions, hyperparams.model_hidden_layer_size
+            state_space, n_actions, hyperparams.model_hidden_layer_size
         ).to(device)
 
         self.q2 = deepcopy(self.q1)

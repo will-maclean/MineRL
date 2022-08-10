@@ -32,8 +32,9 @@ class BaseTrainer:
         self.agent = agent
         self.hp = hyperparameters
 
-        self.gathered_transitions = ReplayBuffer(self.hp.buffer_size_gathered)
-        self.dataset_transitions = ReplayBuffer(self.hp.buffer_size_dataset)
+        # TODO: Fix state_space argument in ReplayBuffer class
+        # self.gathered_transitions = ReplayBuffer(self.hp.buffer_size_gathered, self.env.observation_space)
+        # self.dataset_transitions = ReplayBuffer(self.hp.buffer_size_dataset, self.env.observation_space)
         self.evaluator = Evaluator(env)
 
     def train(self) -> None:
