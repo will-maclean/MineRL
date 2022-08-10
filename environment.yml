@@ -11,8 +11,10 @@ dependencies:
   - pre-commit
   - pylint
   - pytest
-  - python=3.8
+  - python=3.10.5
   - pytorch
   - torchvision
   - wandb
   - wheel
+  - pip:
+    - git+https://github.com/minerllabs/minerl
