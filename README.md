@@ -1,4 +1,5 @@
 # MineRL
+![Build Passing](https://github.com/will-maclean/MineRL/workflows/main%20workflow/badge.svg)
 
 ## How to run with docker:
 <br />
@@ -13,7 +14,7 @@ docker run -d amirtoosi/minerl
 <br />
 
 ### pull the image from dockerhub
-``` 
+```
 docker pull amirtoosi/minerl
 ```
 ### Build the image locally
