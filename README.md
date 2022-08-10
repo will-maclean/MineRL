@@ -1,5 +1,5 @@
 # MineRL
-![Build Passing](https://github.com/will-maclean/MineRL/workflows/main-workflow./badge.svg)
+![Build Passing](https://github.com/will-maclean/MineRL/workflows/main&20workflow/badge.svg)
 
 ## How to run with docker:
 <br />
