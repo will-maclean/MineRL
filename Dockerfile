@@ -42,4 +42,4 @@ WORKDIR /tests/
 # run tests
 RUN xvfb-run pytest
 
-CMD ["/bin/sh", "-c", "xvfb-run python3 -u ./src/minerl3161/main.py"]
+CMD ["/bin/sh", "-c", "xvfb-run python3 -u /src/minerl3161/main.py"]
