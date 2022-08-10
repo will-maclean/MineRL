@@ -33,7 +33,15 @@ class DQNHyperparameters(BaseHyperparameters):
         int, None
     ] = 1  # how often to do a soft update from q1 to q2
     polyak_tau: float = 0.01  # controls the weight of the soft update
+    
+    # these are the feature names that are passed into the model to learn on
     feature_names = [
+        "pov",
+        "inventory"
+    ]
+
+    # these are the feature names that are passed into the observation wrapper.
+    inventory_feature_names = [
         # camera
         "pov",
         ## RAW MATERIALS
