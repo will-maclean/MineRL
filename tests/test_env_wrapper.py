@@ -28,9 +28,8 @@ def test_env_wrapper_full():
 
     w = 16
     h = 16
-    features = DQNHyperparameters.inventory_feature_names
+    features = DQNHyperparameters().inventory_feature_names
     stack = 4
-
     env = mineRLObservationSpaceWrapper(unwrapped_env, frame=stack, features=features, downsize_width=w, downsize_height=h)
 
     assert env.observation_space['pov'].shape == (stack, w, h)

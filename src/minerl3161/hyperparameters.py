@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Union
+from dataclasses import dataclass, field
+from typing import List, Union
 
 
 @dataclass
@@ -41,7 +41,7 @@ class DQNHyperparameters(BaseHyperparameters):
     ]
 
     # these are the feature names that are passed into the observation wrapper.
-    inventory_feature_names = [
+    inventory_feature_names: List = field(default_factory=lambda: [
         # camera
         "pov",
         ## RAW MATERIALS
@@ -134,5 +134,5 @@ class DQNHyperparameters(BaseHyperparameters):
         "hay_block",
         "sugar",
         "sugar_cane",
-    ]
+    ])
     mlp_output_size = 64
