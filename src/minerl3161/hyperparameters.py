@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Union
+from dataclasses import dataclass, field
+from typing import List, Union
 
 
 @dataclass
@@ -33,5 +33,106 @@ class DQNHyperparameters(BaseHyperparameters):
         int, None
     ] = 1  # how often to do a soft update from q1 to q2
     polyak_tau: float = 0.01  # controls the weight of the soft update
-    feature_names = ["pov"]
+    
+    # these are the feature names that are passed into the model to learn on
+    feature_names = [
+        "pov",
+        "inventory"
+    ]
+
+    # these are the feature names that are passed into the observation wrapper.
+    inventory_feature_names: List = field(default_factory=lambda: [
+        # camera
+        "pov",
+        ## RAW MATERIALS
+        # woods
+        "acacia_wood",
+        "birch_wood",
+        "dark_oak_wood",
+        "jungle_wood",
+        "oak_wood",
+        "spruce_wood",
+        "stripped_acacia_wood",
+        "stripped_birch_wood",
+        "stripped_dark_oak_wood",
+        "stripped_jungle_wood",
+        "stripped_oak_wood",
+        "stripped_spruce_wood",
+        # planks
+        "acacia_planks",
+        "birch_planks",
+        "crimson_planks",
+        "dark_oak_planks",
+        "jungle_planks",
+        "oak_planks",
+        "spruce_planks",
+        "warped_planks",
+        # stones
+        "cobblestone",
+        "mossy_cobblestone",
+        "smooth_stone",
+        "stone",
+        # coals
+        "charcoal",
+        "coal",
+        # ores
+        "diamond_ore",
+        "gold_ore",
+        "iron_ore",
+        # processed ores
+        "iron_bars",
+        "gold_ingot",
+        "diamond",
+        ## TOOLS
+        "crafting_table",
+        "furnace",
+        # picks
+        "diamond_pickaxe",
+        "golden_pickaxe",
+        "iron_pickaxe",
+        "netherite_pickaxe",
+        "stone_pickaxe",
+        "wooden_pickaxe",
+        # swords
+        "diamond_sword",
+        "golden_sword",
+        "iron_sword",
+        "netherite_sword",
+        "stone_sword",
+        "wooden_sword",
+        # shovels
+        "diamond_shovel",
+        "golden_shovel",
+        "iron_shovel",
+        "netherite_shovel",
+        "stone_shovel",
+        "wooden_shovel",
+        ## CONSUMABLES
+        "torch",
+        # foods
+        "beef",
+        "chicken",
+        "cod",
+        "mutton",
+        "porkchop",
+        "rabbit",
+        "salmon",
+        "cooked_beef",
+        "cooked_chicken",
+        "cooked_cod",
+        "cooked_mutton",
+        "cooked_porkchop",
+        "cooked_rabbit",
+        "cooked_salmon",
+        "beetroot_soup",
+        "mushroom_stew",
+        "rabbit_stew",
+        "bread",
+        ## MISC
+        "shield",
+        "wheat",
+        "hay_block",
+        "sugar",
+        "sugar_cane",
+    ])
     mlp_output_size = 64
