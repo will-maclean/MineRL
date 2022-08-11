@@ -119,8 +119,8 @@ def sample_np_state(observation_space, features, batch=None):
     state = {}
     for feature in features:
         if batch is None:
-            state[feature] = np.random.rand(observation_space[feature].shape)
+            state[feature] = np.random.rand(*observation_space[feature].shape).astype(np.float32)
         else:
-            state[feature] = np.random.rand((batch, *observation_space[feature].shape))
+            state[feature] = np.random.rand(*(batch, *observation_space[feature].shape)).astype(np.float32)
 
     return state

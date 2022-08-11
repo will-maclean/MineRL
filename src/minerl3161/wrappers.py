@@ -6,11 +6,11 @@ import cv2
 
 
 class MineRLDiscreteActionWrapper(gym.ActionWrapper):
-    def __init__(self, env: gym.Env, filepath: str = "/src/actions/all-actions.npy") -> None:
+    def __init__(self, env: gym.Env, filepath: str = "/home/will/code/MineRL/src/actions/all-actions.npy") -> None:
         super().__init__(env)
         self.action_set = np.load(filepath)
 
-    def get_action(self, action_idx) -> Dict[str, List[float]]:
+    def get_action(self, action_idx: int) -> Dict[str, List[float]]:
         return {
                 "vector": self.action_set[action_idx]
             }

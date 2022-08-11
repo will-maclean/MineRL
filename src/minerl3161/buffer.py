@@ -21,9 +21,9 @@ class ReplayBuffer:
         self.max_samples = n
 
         try:
-            self.feature_names = obs_space.keys()
+            self.feature_names = list(obs_space.keys())
         except AttributeError:
-            self.feature_names = obs_space.spaces.keys()
+            self.feature_names = list(obs_space.spaces.keys())
 
         self.states = self._create_state_buffer(n, obs_space)
         self.actions = np.zeros((n, 1), dtype=np.float32)
@@ -134,8 +134,8 @@ class ReplayBuffer:
         next_state = {}
 
         for key in self.feature_names:
-            state[key] = self.states[key][i]
-            next_state[key] = self.next_state[key][i]
+            state[key] = self.states[key][idx]
+            next_state[key] = self.next_states[key][idx]
 
         return (
             state,
