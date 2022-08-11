@@ -40,15 +40,19 @@ def test_create_buffer():
 
 def test_buffer_save_load():
     n = 10
-    state_shape = (3, 4)
+    state_space = {
+        "pov": np.zeros((3, 64, 64)),
+        "f2": np.zeros(4),
+        "f3": np.zeros(6),
+    }
 
     save_path = "test_buffer.pickle"
 
-    buffer = ReplayBuffer(n=n, state_shape=state_shape)
+    buffer = ReplayBuffer(n=n, obs_space=state_space)
 
-    state = np.ones((3, 4))
+    state = sample_np_state(state_space, features=state_space.keys())
     action = np.ones(1)
-    next_state = np.ones((3, 4))
+    next_state = sample_np_state(state_space, features=state_space.keys())
     reward = 1
     done = False
 
@@ -64,10 +68,10 @@ def test_buffer_save_load():
 
     assert len(buffer) == len(new_buffer)
 
-    s, a, *_ = buffer[0]
-    s_, a_, *_ = new_buffer[0]
+    s, *_ = buffer[0]
+    s_, *_ = new_buffer[0]
 
-    assert (s == s_).all()
-    assert (a == a_).all()
+    for feature in state_space.keys():
+        assert (s[feature] == s_[feature]).all()
 
     os.remove(save_path)
