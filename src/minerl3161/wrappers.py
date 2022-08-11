@@ -6,7 +6,7 @@ import cv2
 
 
 class MineRLDiscreteActionWrapper(gym.ActionWrapper):
-    def __init__(self, env: gym.Env, filepath: str = "/home/will/code/MineRL/src/actions/all-actions.npy") -> None:
+    def __init__(self, env: gym.Env, filepath: str = "/src/actions/all-actions.npy") -> None:
         super().__init__(env)
         self.action_set = np.load(filepath)
 
