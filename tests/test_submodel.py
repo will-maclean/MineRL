@@ -8,6 +8,7 @@ from minerl3161.utils import sample_pt_state
 from minerl3161.wrappers import mineRLObservationSpaceWrapper
 
 
+
 def test_cnn():
     input_shape = (3, 64, 64)
 
@@ -15,7 +16,7 @@ def test_cnn():
 
     sample_input = th.randn((1, *input_shape))
 
-    sample_output = cnn(sample_input)
+    _ = cnn(sample_input)
 
 
 def test_mlp():
@@ -52,15 +53,14 @@ def test_minerl_feature_extraction_subnet_dummy():
     assert sample_out.shape[0] == 1
 
 
-def test_minerl_feature_extraction_subnet_real():
+def test_minerl_feature_extraction_subnet_real(minerl_env):
     # real observation space
-    unwrapped_env = gym.make("MineRLObtainDiamondShovel-v0")
     w = 16
     h = 16
     features = ['pov', 'stone_sword', 'stonecutter', 'stone_shovel']
     stack = 4
 
-    env = mineRLObservationSpaceWrapper(unwrapped_env, frame=stack, features=features, downsize_width=w, downsize_height=h)
+    env = mineRLObservationSpaceWrapper(minerl_env, frame=stack, features=features, downsize_width=w, downsize_height=h)
 
     obs_space = env.observation_space
 

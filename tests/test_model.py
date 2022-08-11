@@ -10,6 +10,7 @@ from minerl3161.utils import np_dict_to_pt, sample_pt_state
 from minerl3161.wrappers import mineRLObservationSpaceWrapper
 
 
+
 def test_dqnnet_dummy():
     state_space = {
         'a': np.zeros(3), 
@@ -36,9 +37,8 @@ def test_dqnnet_dummy():
     optim.step()
 
 
-def test_dqnnet_real():
+def test_dqnnet_real(minerl_env):
     # real observation space
-    unwrapped_env = gym.make("MineRLObtainDiamondShovel-v0")
     w = 16
     h = 16
     features = ['pov', 'stone_sword', 'stonecutter', 'stone_shovel']
@@ -47,7 +47,7 @@ def test_dqnnet_real():
     device="cpu"
     layer_size = 8
 
-    env = mineRLObservationSpaceWrapper(unwrapped_env, frame=stack, features=features, downsize_width=w, downsize_height=h)
+    env = mineRLObservationSpaceWrapper(minerl_env, frame=stack, features=features, downsize_width=w, downsize_height=h)
 
     obs_space = env.observation_space
 

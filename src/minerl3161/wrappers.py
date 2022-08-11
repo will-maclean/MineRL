@@ -3,11 +3,15 @@ from typing import Dict, List, Optional
 import numpy as np
 import gym
 import cv2
+import os
+
+import minerl3161
 
 
 class MineRLDiscreteActionWrapper(gym.ActionWrapper):
-    def __init__(self, env: gym.Env, filepath: str = "/src/actions/all-actions.npy") -> None:
+    def __init__(self, env: gym.Env, filename: str = "all-actions.npy") -> None:
         super().__init__(env)
+        filepath = os.path.join(minerl3161.actions_path, filename)
         self.action_set = np.load(filepath)
 
     def get_action(self, action_idx: int) -> Dict[str, List[float]]:
