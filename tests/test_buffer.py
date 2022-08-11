@@ -2,17 +2,22 @@ import os
 
 import numpy as np
 from minerl3161.buffer import ReplayBuffer, Transition
+from minerl3161.utils import sample_np_state
 
 
 def test_create_buffer():
     n = 10
-    state_shape = (3, 4)
+    state_space = {
+        "pov": np.zeros((3, 64, 64)),
+        "f2": np.zeros(4),
+        "f3": np.zeros(6),
+    }
 
-    buffer = ReplayBuffer(n=n, state_shape=state_shape)
+    buffer = ReplayBuffer(n=n, obs_space=state_space)
 
-    state = np.ones((3, 4))
+    state = sample_np_state(state_space, features=state_space.keys())
     action = np.ones(1)
-    next_state = np.ones((3, 4))
+    next_state = sample_np_state(state_space, features=state_space.keys())
     reward = 1
     done = False
 
@@ -23,9 +28,10 @@ def test_create_buffer():
 
     s, a, s_, r, d = buffer[0]
 
-    assert (s == state).all()
+    for feature in state_space.keys():
+        assert (s[feature] == state[feature]).all()
+        assert (s_[feature] == next_state[feature]).all()
     assert (a == action).all()
-    assert (s_ == next_state).all()
     assert r == reward
     assert d == done
 

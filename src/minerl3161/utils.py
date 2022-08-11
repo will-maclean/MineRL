@@ -63,7 +63,7 @@ def copy_weights(copy_from: nn.Module, copy_to: nn.Module, polyak=None):
 
 
 def np_dict_to_pt(
-    np_dict: Dict[str, np.ndarray], device: str = "cpu", unsqueeze = False
+    np_dict: Dict[str, np.ndarray], device: str = "cpu", unsqueeze=False
 ) -> Dict[str, th.Tensor]:
     """Convertes a dictionary of numpy arrays to a dictionary of pytorch tensors
 
@@ -101,6 +101,7 @@ def pt_dict_to_np(pt_dict: Dict[str, th.Tensor]) -> Dict[str, np.ndarray]:
 
     return out
 
+
 def sample_pt_state(observation_space, features, device="cpu", batch=None):
     state = {}
     for feature in features:
@@ -110,5 +111,16 @@ def sample_pt_state(observation_space, features, device="cpu", batch=None):
             state[feature] = th.rand(
                 (batch, *observation_space[feature].shape), device=device
             )
+
+    return state
+
+
+def sample_np_state(observation_space, features, batch=None):
+    state = {}
+    for feature in features:
+        if batch is None:
+            state[feature] = np.random.rand(observation_space[feature].shape)
+        else:
+            state[feature] = np.random.rand((batch, *observation_space[feature].shape))
 
     return state
