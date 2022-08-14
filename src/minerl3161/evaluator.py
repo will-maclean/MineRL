@@ -7,7 +7,7 @@ class Evaluator:
         self.env = env
 
     def evaluate(self, agent: BaseAgent, episodes: int) -> dict:
-        pass
+        return {}
 
     def create_media(self, agent: BaseAgent) -> dict:
-        pass
+        return {}
