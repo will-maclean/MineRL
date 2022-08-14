@@ -78,9 +78,9 @@ def np_dict_to_pt(
 
     for key in np_dict:
         if unsqueeze:
-            out[key] = th.from_numpy(np_dict[key]).unsqueeze(0).to(device)
+            out[key] = th.from_numpy(np_dict[key]).unsqueeze(0).to(device, dtype=th.float32)
         else:
-            out[key] = th.from_numpy(np_dict[key]).to(device)
+            out[key] = th.from_numpy(np_dict[key]).to(device, dtype=th.float32)
 
     return out
 

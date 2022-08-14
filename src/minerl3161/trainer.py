@@ -1,9 +1,12 @@
 """ BaseTrainer and implementations stored here
 """
 from abc import abstractmethod
+from typing import Any, Dict
+import time
 
 import gym
 import numpy as np
+import wandb
 import torch
 from minerl3161.utils import copy_weights
 from torch.optim import Adam, Optimizer
@@ -19,7 +22,7 @@ class BaseTrainer:
     """Abstract class for Trainers. At the least, all implementations must have _train_step()."""
 
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: BaseHyperparameters
+        self, env: gym.Env, agent: BaseAgent, hyperparameters: BaseHyperparameters, use_wandb: bool =False
     ) -> None:
         """Initialiser for BaseTrainer.
 
@@ -28,11 +31,11 @@ class BaseTrainer:
             agent (BaseAgent): agent to train
             hyperparameters (BaseHyperparameters): hyperparameters to train with
         """
-        self.env = env
-        self.agent = agent
-        self.hp = hyperparameters
+        self.env: gym.Env = env
+        self.agent: BaseAgent = agent
+        self.hp: BaseHyperparameters = hyperparameters
+        self.use_wandb = use_wandb
 
-        # TODO: Fix state_space argument in ReplayBuffer class
         self.gathered_transitions = ReplayBuffer(
             self.hp.buffer_size_gathered, self.env.observation_space
         )
@@ -40,6 +43,15 @@ class BaseTrainer:
             self.hp.buffer_size_dataset, self.env.observation_space
         )
         self.evaluator = Evaluator(env)
+
+        # store stuff used to interact with the environment here i.e. anything that 
+        # would normally be a loop variable in a normal RL training script should
+        # be in here.
+        self.env_interaction = {
+            "needs_reset": True,
+            "last_state": None,
+            "episode_return": 0,
+        }
 
     def train(self) -> None:
         """main training function. This basic training loop should be enough for most conventional RL algorithms"""
@@ -49,46 +61,78 @@ class BaseTrainer:
             log_dict = {"step": t}
 
             if t % self.hp.gather_every == 0:
-                log_dict += self._gather(self.hp.gather_n)
+                log_dict.update(self._gather(self.hp.gather_n))
 
             if t > self.hp.burn_in and t % self.hp.train_every == 0:
-                log_dict += self._train_step(t)
+                log_dict.update(self._train_step(t))
 
             if t % self.hp.evaluate_every == 0:
-                log_dict += self.evaluator.evaluate(
+                log_dict.update(self.evaluator.evaluate(
                     self.agent, self.hp.evaluate_episodes
-                )
+                ))
 
-            log_dict += self._housekeeping(t)
+            log_dict.update(self._housekeeping(t))
 
             self._log(log_dict)
 
-    def _gather(self, steps: int) -> None:
+    def _gather(self, steps: int) -> Dict[str, Any]:
         """gathers steps of experience from the environment
 
         Args:
             steps (int): how many steps of experience to gather
         """
-        pass
+        log_dict = {}
+
+        start_time = time.perf_counter()
+
+        for _ in range(steps):
+            if self.env_interaction['needs_reset']:
+                state = self.env.reset()
+            else:
+                state = self.env["last_state"]
+            
+            action = self.agent.act(state=state)
+
+            next_state, reward, done, info = self.env.step(action)
+
+            self.gathered_transitions.add(state, action, next_state, reward, done)
+
+            self.env_interaction["episode_return"] += reward
+            self.env_interaction["last_state"] = state
+
+            if done:
+                log_dict["episode_return"] = self.env_interaction["episode_return"]
+                
+                self.env_interaction["episode_return"] = 0
+                self.env_interaction["needs_reset"] = True
+                self.env["last_state"] = None
+        
+        end_time = time.perf_counter()
+
+        log_dict["gather_fps"] = steps / (end_time - start_time)
+
+        return log_dict
 
     @abstractmethod
     def _train_step(self, step: int) -> None:
         raise NotImplementedError()
 
     def _housekeeping(self, step: int) -> None:
-        # TODO: Better name for this method
-        pass
+        #TODO: implement
+        return {}
+
 
     def _log(self, log_dict: dict) -> None:
-        pass
+        if self.use_wandb:
+            wandb.log(log_dict)
 
 
 # TODO: write tests
 class DQNTrainer(BaseTrainer):
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters
+        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, use_wandb: bool = False
     ) -> None:
-        super().__init__(env=env, agent=agent, hyperparameters=hyperparameters)
+        super().__init__(env=env, agent=agent, hyperparameters=hyperparameters, use_wandb=use_wandb)
 
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)

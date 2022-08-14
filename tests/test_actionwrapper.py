@@ -8,10 +8,10 @@ def test_actionwrapper(minerl_env):
 
     act_wrapper = MineRLDiscreteActionWrapper(minerl_env)
 
-    action_count = act_wrapper.get_actions_count()
+    action_count = act_wrapper.action_space.n
 
     for action_idx in range(action_count):
-        action = act_wrapper.get_action(action_idx)
+        action = act_wrapper.action(action_idx)
 
         try: 
             _, _, done, _ = minerl_env.step(action)

@@ -14,7 +14,9 @@ class MineRLDiscreteActionWrapper(gym.ActionWrapper):
         filepath = os.path.join(minerl3161.actions_path, filename)
         self.action_set = np.load(filepath)
 
-    def get_action(self, action_idx: int) -> Dict[str, List[float]]:
+        self.action_space = gym.spaces.Discrete(len(self.action_set))
+
+    def action(self, action_idx: int) -> Dict[str, List[float]]:
         return {
                 "vector": self.action_set[action_idx]
             }
@@ -171,5 +173,7 @@ def mineRLObservationSpaceWrapper(
         env = Grayscale(env, feature_name=camera_feature_name)
         env = PyTorchImage(env, feature_name=camera_feature_name)
         env = StackImage(env, frame=frame, feature_name=camera_feature_name)
+    
+    env = MineRLDiscreteActionWrapper(env)
 
     return env
