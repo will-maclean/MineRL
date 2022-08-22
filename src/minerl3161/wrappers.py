@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -30,6 +31,11 @@ class Grayscale(gym.ObservationWrapper):
         super().__init__(env)
         self.feature_name=feature_name
         self.rgb_weights = np.array([0.2989, 0.5870, 0.1140])
+
+        # note - if we don't take a deepcopy of the observation, we
+        # will override the original observation space (not desirable)
+        self.observation_space = deepcopy(env.observation_space)
+
         self.observation_space.spaces[feature_name] = gym.spaces.Box(
             low=0,
             high=255,
@@ -72,6 +78,11 @@ class PyTorchImage(gym.ObservationWrapper):
     def __init__(self, env: gym.Env, feature_name='pov') -> None:
         super().__init__(env)
         self.feature_name=feature_name
+
+        # note - if we don't take a deepcopy of the observation, we
+        # will override the original observation space (not desirable)
+        self.observation_space = deepcopy(env.observation_space)
+
         self.observation_space.spaces[feature_name] = gym.spaces.Box(
             low=0,
             high=1,
@@ -92,6 +103,10 @@ class StackImage(gym.Wrapper):
         self.feature_name = feature_name
         self.frame = frame
         self.queue = np.zeros((self.frame, *self.env.observation_space[self.feature_name].shape[1:]))
+
+        # note - if we don't take a deepcopy of the observation, we
+        # will override the original observation space (not desirable)
+        self.observation_space = deepcopy(env.observation_space)
 
         self.observation_space.spaces[feature_name] = gym.spaces.Box(
             low=0,
@@ -128,11 +143,25 @@ class InventoryFilter(gym.ObservationWrapper):
         super().__init__(env)
         self.features = features
         self.feature_max = feature_max
-        self.observation_space.spaces['inventory'] = gym.spaces.Box(
-            low=0,
-            high=1,
-            shape=(len(features),)
-        )
+
+        # note - if we don't take a deepcopy of the observation, we
+        # will override the original observation space (not desirable)
+        self.observation_space = deepcopy(env.observation_space)
+
+        if len(features) == 1 and features[0] == "all":
+            self.observation_space.spaces['inventory'] = gym.spaces.Box(
+                low=0,
+                high=1,
+                shape=(len(list(env.observation_space.spaces['inventory'].spaces.keys())),)
+            )
+        elif len(features) > 0 and "all" not in features:
+            self.observation_space.spaces['inventory'] = gym.spaces.Box(
+                low=0,
+                high=1,
+                shape=(len(features),)
+            )
+        else:
+            raise ValueError(f"features must be either ['all'] or a list of features not containing 'all'. Features is: {features}")
     
     def observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
         observation['inventory'] = self._process(observation['inventory'])
@@ -142,11 +171,22 @@ class InventoryFilter(gym.ObservationWrapper):
     def _process(self, inv_obs):
         inventory = []
 
-        for key in self.features:
-            inventory.append(
-                min(inv_obs[key], self.feature_max) / self.feature_max
-                )
-        
+        if len(self.features) == 1 and self.features[0] == "all":
+            # return all the items
+            for key in inv_obs:
+                inventory.append(
+                    min(inv_obs[key], self.feature_max) / self.feature_max
+                    )
+            
+        elif len(self.features) > 0 and "all" not in self.features:
+            # return a specified set of features
+            for key in self.features:
+                inventory.append(
+                    min(inv_obs[key], self.feature_max) / self.feature_max
+                    )
+            
+        else:
+            raise ValueError(f"features must be either ['all'] or a list of features not containing 'all'. Features is: {self.features}")
         
         return np.array(inventory)
 
