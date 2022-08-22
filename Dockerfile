@@ -28,7 +28,7 @@ RUN apt install -y python3 && \
 
 # MineRL
 RUN pip3 install pyyaml
-RUN pip3 install git+https://github.com/minerllabs/minerl@v1.0.0
+RUN pip3 install minerl==0.4.4
 
 # Requirements
 COPY requirements.txt .
