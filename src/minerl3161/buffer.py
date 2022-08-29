@@ -145,6 +145,26 @@ class ReplayBuffer:
             self.dones[idx],
         )
 
+
+    @staticmethod
+    def create_batch_sample(rewards, dones, actions, states, next_states):
+        # return the sample in a dictionary
+        batch_sample = {}
+        batch_sample["reward"] = rewards
+        batch_sample["done"] = dones
+        batch_sample["action"] = actions
+        # state and next state are dictionaries, so init them here and then fill them down below
+        batch_sample["state"] = {}
+        batch_sample["next_state"] = {}
+
+        # fill in state and next state dictionaries
+        for key in states:
+            batch_sample["state"][key] = states[key]
+            batch_sample["next_state"][key] = next_states[key]
+
+        return batch_sample
+
+
     def sample(self, batch_size: int) -> Dict[str, np.ndarray]:
 
         # create list of IDs to sample from our experience
@@ -154,18 +174,9 @@ class ReplayBuffer:
             size=batch_size,
         )
 
-        # we will return the sample in a dictionary
-        batch_sample = {}
-        batch_sample["rewards"] = self.rewards[idxs]
-        batch_sample["dones"] = self.dones[idxs]
-        batch_sample["actions"] = self.actions[idxs]
-        # state and next state are dictionaries, so init them here and then fill them down below
-        batch_sample["state"] = {}
-        batch_sample["next_states"] = {}
-
-        # fill in state and next state dictionaries
-        for key in self.feature_names:
-            batch_sample["state"][key] = self.states[key][idxs]
-            batch_sample["next_states"][key] = self.next_states[key][idxs]
-
-        return batch_sample
+        return self.create_batch_sample(
+            self.rewards[idxs],
+            self.dones[idxs],
+            self.actions[idxs],
+            {key: self.states[key][idxs] for key in self.feature_names},
+            {key: self.next_states[key][idxs] for key in self.feature_names})

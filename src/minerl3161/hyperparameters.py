@@ -16,6 +16,7 @@ class BaseHyperparameters:
     )
     gather_every: int = 1  # how often we collect transition data
     gather_n: int = 1  # how many transitions we collect at once
+    sampling_step: int = 1 # sampling strategy: batch includes one less human data item every time
 
 
 @dataclass

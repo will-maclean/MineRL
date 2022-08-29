@@ -16,6 +16,7 @@ from .buffer import ReplayBuffer
 from .evaluator import Evaluator
 from .hyperparameters import BaseHyperparameters, DQNHyperparameters
 
+from minerl.data import BufferedBatchIter
 
 # TODO: write tests
 class BaseTrainer:
@@ -39,9 +40,12 @@ class BaseTrainer:
         self.gathered_transitions = ReplayBuffer(
             self.hp.buffer_size_gathered, self.env.observation_space
         )
-        self.dataset_transitions = ReplayBuffer(
-            self.hp.buffer_size_dataset, self.env.observation_space
-        )
+
+        data = minerl.data.make('MineRLObtainDiamond-v0')
+        self.dataset_iter = BufferedBatchIter(data)
+        self.human_dataset_batch_size = self.hp.batch_size 
+        self.gathered_xp_batch_size = 0
+
         self.evaluator = Evaluator(env)
 
         # store stuff used to interact with the environment here i.e. anything that 
@@ -52,6 +56,39 @@ class BaseTrainer:
             "last_state": None,
             "episode_return": 0,
         }
+    
+    def sample(self, strategy: callable)-> Dict[str, np.ndarray]:
+        if len(self.gathered_transitions) >= self.gathered_xp_batch_size + self.hp.sampling_step: 
+            self.human_dataset_batch_size, self.gathered_xp_batch_size = \
+                strategy(self.human_dataset_batch_size, self.gathered_xp_batch_size, self.hp.sampling_step)
+        
+        dataset_batch = self._get_dataset_batches(self.human_dataset_batch_size)[0]
+        gathered_batch = self.gathered_transitions.sample(self.gathered_xp_batch_size)
+        
+        return ReplayBuffer.create_batch_sample(
+            np.concatenate((dataset_batch['reward'], gathered_batch['reward'])),
+            np.concatenate((dataset_batch['done'], gathered_batch['done'])),
+            np.concatenate((dataset_batch['action'], gathered_batch['action'])),
+            {key: np.concatenate(
+                (dataset_batch['state'][key], gathered_batch['state'][key])
+                ) for key in dataset_batch['state']},
+            {key: np.concatenate(
+                (dataset_batch['next_state'][key], gathered_batch['state'][key])
+                ) for key in dataset_batch['next_state']}
+        )
+
+
+    def _get_dataset_batches(self, batch_size: int, num_batches: int = 1) -> Dict[str, np.ndarray]:
+        batches = []
+        for current_state, action, reward, next_state, done \
+            in self.dataset_iter.buffered_batch_iter(batch_size=batch_size, num_batches=num_batches):
+            batches.append(
+                ReplayBuffer.create_batch_sample(
+                    reward, done, action, current_state, next_state
+                )
+            )
+        return batches
+
 
     def train(self) -> None:
         """main training function. This basic training loop should be enough for most conventional RL algorithms"""
@@ -139,25 +176,23 @@ class DQNTrainer(BaseTrainer):
 
     def _train_step(self, step: int) -> None:
         # Get a batch of experience from the gathered transitions
-        batch = self.gathered_transitions.sample(
-            self.batch_size
-        )  # TODO: implement strategy to sample from both buffers
+        batch = self.sample()
 
         # convert np transitions into torch tensors
-        batch["states"] = torch.from_numpy(batch["states"]).to(
+        batch["state"] = torch.from_numpy(batch["state"]).to(
             self.device, dtype=torch.float32
         )
-        batch["next_states"] = torch.from_numpy(batch["next_states"]).to(
+        batch["next_state"] = torch.from_numpy(batch["next_state"]).to(
             self.device, dtype=torch.float32
         )
-        batch["actions"] = torch.tensor(
-            batch["actions"], dtype=torch.long, device=self.device
+        batch["action"] = torch.tensor(
+            batch["action"], dtype=torch.long, device=self.device
         )
-        batch["rewards"] = torch.tensor(
-            batch["rewards"], dtype=torch.float32, device=self.device
+        batch["reward"] = torch.tensor(
+            batch["reward"], dtype=torch.float32, device=self.device
         )
-        batch["dones"] = torch.tensor(
-            batch["dones"], dtype=torch.float32, device=self.device
+        batch["done"] = torch.tensor(
+            batch["done"], dtype=torch.float32, device=self.device
         )
 
         # calculate loss signal
@@ -184,18 +219,18 @@ class DQNTrainer(BaseTrainer):
 
     def _calc_loss(self, batch: dict) -> torch.Tensor:
         # estimate q values for current states/actions using q1 network
-        q_values = self.q1(batch["states"])
-        actions = batch["actions"].unsqueeze(1)
+        q_values = self.q1(batch["state"])
+        actions = batch["action"].unsqueeze(1)
         q_values = q_values.gather(1, actions).squeeze(1)
 
         # estimate q values for next states/actions using q2 network
-        next_actions = self.q2(batch["next_states"]).argmax(dim=1).unsqueeze(1)
-        next_q_values = self.q2(batch["next_states"]).gather(1, next_actions).squeeze(1)
+        next_actions = self.q2(batch["next_state"]).argmax(dim=1).unsqueeze(1)
+        next_q_values = self.q2(batch["next_state"]).gather(1, next_actions).squeeze(1)
 
         # calculate TD target for Bellman Equation
         td_target = self.reward_scale * batch[
-            "rewards"
-        ] + self.gamma * next_q_values * (1 - batch["dones"])
+            "reward"
+        ] + self.gamma * next_q_values * (1 - batch["done"])
 
         # Calculate loss for Bellman Equation
         # Note that we use smooth_l1_loss instead of MSE as it is more stable for larger loss signals. RL problems

@@ -21,7 +21,7 @@ POLICIES = {
 def main():
     parser = argparse.ArgumentParser('Parse configuration file')
     parser.add_argument('--policy', type=str, default='vanilla-dqn')
-    parser.add_argument('--env', type=str, default="MineRLObtainDiamondShovel-v0")
+    parser.add_argument('--env', type=str, default="MineRLObtainDiamond-v0")
 
     # Why can't argparse read bools from the command line? Who knows. Workaround:
     parser.add_argument('--wandb', action='store_true', default=True,
