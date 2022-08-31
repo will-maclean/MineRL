@@ -75,3 +75,24 @@ def test_buffer_save_load():
         assert (s[feature] == s_[feature]).all()
 
     os.remove(save_path)
+
+
+def test_create_batch_sample():
+    n = 10
+    state_space = {
+        "pov": np.zeros((3, 64, 64)),
+        "f2": np.zeros(4),
+        "f3": np.zeros(6),
+    }
+
+    buffer = ReplayBuffer(n=n, obs_space=state_space)
+
+    rewards = [1, 2, 3, 4, 5]
+    dones = [1, 1, 0, 0, 0]
+    actions = []
+    states = {'pov':[[1],[2],[3],[4],[5]], 'inventory':{'coal':[]}, 'equipped_items':{'main_hand':{'damage':{}}}}
+    next_states = {'pov':[[1],[2],[3],[4],[5]], 'inventory':{'coal':[]}, 'equipped_items':{'main_hand':{'damage':{}}}}
+
+    sample = buffer.sample(rewards, dones, actions, states, next_states)
+    for key in ['reward', 'done', 'action', 'state', 'next_state']:
+        assert key in sample

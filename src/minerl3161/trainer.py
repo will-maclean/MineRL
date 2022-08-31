@@ -58,7 +58,7 @@ class BaseTrainer:
         }
     
     def sample(self, strategy: callable)-> Dict[str, np.ndarray]:
-        if len(self.gathered_transitions) >= self.gathered_xp_batch_size + self.hp.sampling_step: 
+        if len(self.gathered_transitions) >= strategy(self.human_dataset_batch_size, self.gathered_xp_batch_size, self.hp.sampling_step)[1]: 
             self.human_dataset_batch_size, self.gathered_xp_batch_size = \
                 strategy(self.human_dataset_batch_size, self.gathered_xp_batch_size, self.hp.sampling_step)
         
