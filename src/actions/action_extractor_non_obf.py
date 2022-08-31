@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import tqdm
 from kmodes.kprototypes import KPrototypes
+from sklearn.cluster import KMeans
 from minerl.data import BufferedBatchIter
 from numpy import array, float32
 
@@ -28,6 +29,7 @@ The following is all task environment strings
 """
 
 # Hyperparameters
+RANDOM_STATE = 123
 NUM_CLUSTERS = 12 # Number of Macro Actions we want to extract
 
 NUM_EPOCHS = 2
@@ -99,8 +101,47 @@ def encode_action(obj):
     proc['camera'] = array([obj.get('camera0'), obj.get('camera1')], dtype=float32)
     return proc
 
+def run_kprototypes(df):
+    """Running Kprototypes on a dataset of actions"""
+    log("Running KPrototypes...")
 
-def extract_n_clusters(num_clusters, data):
+    mark_array = df.values
+    categorical_features_idx = [col for col in df.columns if 'camera' not in col]
+
+    kproto = KPrototypes(n_clusters=NUM_CLUSTERS, max_iter=200).fit(
+        mark_array, categorical=categorical_features_idx)
+    
+    actions_list = ['attack', 'back', 'camera0', 'camera1', 
+        'forward', 'jump', 'left',  'right', 'sneak','sprint', 
+        'craft', 'equip', 'nearbyCraft', 'nearbySmelt', 'place']
+
+    extracted_actions = []
+    for cluster in kproto.cluster_centroids_:
+        action = {actions_list[i]: cluster[i] for i in range(len(cluster))}
+        extracted_actions.append(encode_action(action))
+
+    log("Extracted Actions", level="SUCCESS")
+
+    return extracted_actions
+
+def run_kmeans(df):
+    """Running Kmeans on a dataset of actions"""
+    log("Running KMeans...")
+    kmeans = KMeans(n_clusters=NUM_CLUSTERS, random_state=RANDOM_STATE).fit(df.values)
+
+    actions_list = ['attack', 'back', 'camera0', 'camera1', 
+    'forward', 'jump', 'left',  'right', 'sneak','sprint']
+
+    extracted_actions = []
+    for cluster in kmeans.cluster_centers_:
+        action = NULL_ACTION.copy()
+        action.update({actions_list[i]: cluster[i] for i in range(len(cluster))})
+        extracted_actions.append(encode_action(action))
+    
+    log("Extracted Actions", level="SUCCESS")
+    return extracted_actions
+
+def extract_n_clusters(data):
     # Load the dataset storing NUM_BATCHES batches of actions
     iterator = BufferedBatchIter(data)
     i = 0
@@ -116,23 +157,7 @@ def extract_n_clusters(num_clusters, data):
     df = pd.DataFrame(collected_actions)
     log("Actions Collected", level="SUCCESS")
 
-    mark_array = df.values
-    categorical_features_idx = [col for col in df.columns if 'camera' not in col] if BIN_AS_CAT else [4, 5, 9, 10, 11]
-
-    log("Running KPrototypes...")
-    kproto = KPrototypes(n_clusters=num_clusters, max_iter=200).fit(mark_array, categorical=categorical_features_idx)
-    
-    actions_list = ['attack', 'back', 'camera0', 'camera1', 
-        'forward', 'jump', 'left',  'right', 'sneak','sprint', 
-        'craft', 'equip', 'nearbyCraft', 'nearbySmelt', 'place']
-
-    extracted_actions = []
-    for cluster in kproto.cluster_centroids_:
-        extracted_actions.append(encode_action({actions_list[i]: cluster[i] for i in range(len(cluster))}))
-
-    log("Extracted Actions", level="SUCCESS")
-
-    return extracted_actions
+    return run_kprototypes(df) if BIN_AS_CAT else run_kmeans(df)
 
 def check_download(environment):
     # Downloading environment data if it doesn't exist
@@ -156,7 +181,7 @@ def extract_actions(ENV_STRING):
 
     data = minerl.data.make(environment = environment)
 
-    actions = extract_n_clusters(NUM_CLUSTERS, data)
+    actions = extract_n_clusters(data)
 
     save(actions, save_path)    
 
@@ -174,7 +199,7 @@ def merge_actions():
     
     log(f'Merged Actions, Final action set length: {len(actions)}', level="SUCCESS")
 
-    np.save("src/actions/all-actions.pickle", actions) 
+    save(actions, "src/actions/all-actions.pickle") 
 
 if __name__ == "__main__":
     # Initial setup
@@ -185,9 +210,10 @@ if __name__ == "__main__":
 
     os.environ['MINERL_DATA_ROOT'] = data_path # Important
 
-    # extract_actions("Treechop")
-    # extract_actions("Navigate")
+    extract_actions("Treechop")
+    extract_actions("Navigate")
     extract_actions("ObtainIronPickaxe")
+    extract_actions("ObtainDiamond")
     merge_actions()
 
 
