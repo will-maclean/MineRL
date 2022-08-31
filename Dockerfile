@@ -204,6 +204,9 @@ ENV VGL_REFRESHRATE 60
 ENV VGL_ISACTIVE 1
 ENV VGL_DISPLAY egl
 ENV VGL_WM 1
+ENV MINERL_DATA_ROOT /opt/project/data/human-xp
+
+RUN python3 -m minerl.data.download
 
 COPY . /opt/project
 WORKDIR /opt/project
