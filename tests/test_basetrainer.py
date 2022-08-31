@@ -1,14 +1,29 @@
 from abc import ABC
-from minerl3161.agent import BaseAgent
-from minerl3161.hyperparameters import BaseHyperparameters
+from minerl3161.agent import BaseAgent, DQNAgent
+from minerl3161.hyperparameters import BaseHyperparameters, DQNHyperparameters
 from minerl3161.trainer import BaseTrainer
 import os
 
 def test_get_dataset_batches(minerl_env):
     
     # os.environ['MINERL_DATA_ROOT'] = '../../../data/human-xp'
+    state_space_shape = {
+        "pov": np.zeros((3, 64, 64)),
+        "f2": np.zeros(4),
+        "f3": np.zeros(6),
+    }
+    n_actions = 32
+    hyperparams = DQNHyperparameters()
+    hyperparams.feature_names = list(state_space_shape.keys())
+    device = "cpu"
 
-    base_trainer = BaseTrainer(minerl_env, BaseAgent(), BaseHyperparameters(), False)
+    agent = DQNAgent(
+        obs_space=state_space_shape, 
+        n_actions=n_actions, 
+        device=device, 
+        hyperparams=hyperparams)
+    
+    base_trainer = BaseTrainer(minerl_env, agent, BaseHyperparameters(), False)
     batches =base_trainer._get_dataset_batches(batch_size=10, num_batches=5)
 
     assert len(batches) == 5
@@ -17,9 +32,24 @@ def test_get_dataset_batches(minerl_env):
 def test_sampling(minerl_env):
 
     # os.environ['MINERL_DATA_ROOT'] = '../../../data/human-xp'
+    state_space_shape = {
+        "pov": np.zeros((3, 64, 64)),
+        "f2": np.zeros(4),
+        "f3": np.zeros(6),
+    }
+    n_actions = 32
+    hyperparams = DQNHyperparameters()
+    hyperparams.feature_names = list(state_space_shape.keys())
+    device = "cpu"
+
+    agent = DQNAgent(
+        obs_space=state_space_shape, 
+        n_actions=n_actions, 
+        device=device, 
+        hyperparams=hyperparams)
 
     base_hyper_params = BaseHyperparameters()
-    base_trainer = BaseTrainer(minerl_env, BaseAgent(), base_hyper_params, False)
+    base_trainer = BaseTrainer(minerl_env, agent, base_hyper_params, False)
 
     def strategy(dataset_size, gathered_size, step):
         dataset_size -= step
