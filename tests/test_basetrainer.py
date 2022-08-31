@@ -1,7 +1,7 @@
 from abc import ABC
 from minerl3161.agent import BaseAgent
 from minerl3161.hyperparameters import BaseHyperparameters
-from ..src.minerl3161.trainer import BaseTrainer
+from minerl3161.trainer import BaseTrainer
 import os
 
 def test_get_dataset_batches(minerl_env):
