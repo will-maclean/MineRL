@@ -57,8 +57,14 @@ NULL_ACTION = {
     'sprint': 0
 }
 
+# Paths
+ROOT_PATH = Path(__file__).absolute().parent.parent.parent
+SRC_PATH = ROOT_PATH.joinpath('src')
+DATA_PATH = ROOT_PATH.joinpath('data')
+ACTIONS_PATH = SRC_PATH.joinpath('actions')
+
 # Util functions
-StringBuilder = lambda ENV_STRING: (f'MineRL{ENV_STRING}-v0', f'src/actions/actions-{ENV_STRING}.pickle')
+StringBuilder = lambda ENV_STRING: (f'MineRL{ENV_STRING}-v0', str(ACTIONS_PATH.joinpath(f'actions-{ENV_STRING}.pickle')))
 
 def log(msg, level="INFO"):
     format_dict = {
@@ -127,6 +133,8 @@ def run_kprototypes(df):
 def run_kmeans(df):
     """Running Kmeans on a dataset of actions"""
     log("Running KMeans...")
+    df = df.drop(['craft', 'equip', 'nearbyCraft', 'nearbySmelt', 'place'], axis = 1)
+
     kmeans = KMeans(n_clusters=NUM_CLUSTERS, random_state=RANDOM_STATE).fit(df.values)
 
     actions_list = ['attack', 'back', 'camera0', 'camera1', 
@@ -155,6 +163,7 @@ def extract_n_clusters(data):
             break
 
     df = pd.DataFrame(collected_actions)
+
     log("Actions Collected", level="SUCCESS")
 
     return run_kprototypes(df) if BIN_AS_CAT else run_kmeans(df)
@@ -199,11 +208,11 @@ def merge_actions():
     
     log(f'Merged Actions, Final action set length: {len(actions)}', level="SUCCESS")
 
-    save(actions, "src/actions/all-actions.pickle") 
+    save(actions, str(ACTIONS_PATH.joinpath("all-actions.pickle")))
 
 if __name__ == "__main__":
     # Initial setup
-    data_path = str(Path(__file__).absolute().parent.parent.parent.joinpath('data'))
+    data_path = str(DATA_PATH)
 
     if not os.path.exists(data_path):
         os.mkdir(data_path)
