@@ -93,6 +93,6 @@ def test_create_batch_sample():
     states = {'pov':[[1],[2],[3],[4],[5]], 'inventory':{'coal':[]}, 'equipped_items':{'main_hand':{'damage':{}}}}
     next_states = {'pov':[[1],[2],[3],[4],[5]], 'inventory':{'coal':[]}, 'equipped_items':{'main_hand':{'damage':{}}}}
 
-    sample = buffer.sample(rewards, dones, actions, states, next_states)
+    sample = buffer.create_batch_sample(rewards, dones, actions, states, next_states)
     for key in ['reward', 'done', 'action', 'state', 'next_state']:
         assert key in sample
