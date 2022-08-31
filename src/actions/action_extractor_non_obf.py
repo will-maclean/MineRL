@@ -174,7 +174,8 @@ def merge_actions():
     
     log(f'Merged Actions, Final action set length: {len(actions)}', level="SUCCESS")
 
-    np.save("src/actions/all-actions.pickle", actions) 
+    with open("src/actions/all-actions.pickle", 'wb') as f:
+        pickle.dump(actions, f)
 
 if __name__ == "__main__":
     # Initial setup
@@ -187,7 +188,7 @@ if __name__ == "__main__":
 
     # extract_actions("Treechop")
     # extract_actions("Navigate")
-    extract_actions("ObtainIronPickaxe")
+    # extract_actions("ObtainIronPickaxe")
     merge_actions()
 
 

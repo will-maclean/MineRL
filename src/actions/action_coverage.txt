@@ -1,0 +1,78 @@
+Coverage of Extracted Actions
+-----------------------------
+ATTACK: [1, 0]
+BACK: [0]
+FORWARD: [1, 0]
+JUMP: [0, 1]
+LEFT: [0]
+RIGHT: [0, 1]
+SNEAK: [0]
+SPRINT: [0, 1]
+CRAFT: ['none']
+EQUIP: ['none']
+NEARBYCRAFT: ['none']
+NEARBYSMELT: ['none']
+PLACE: ['none']
+
+Coverage of Treechop Actions
+-----------------------------
+ATTACK: [[1], [0]]
+BACK: [[0], [1]]
+FORWARD: [[0], [1]]
+JUMP: [[0], [1]]
+LEFT: [[0], [1]]
+RIGHT: [[0], [1]]
+SNEAK: [[0], [1]]
+SPRINT: [[0], [1]]
+
+Coverage of Navigate Actions
+-----------------------------
+ATTACK: [[0], [1]]
+BACK: [[0], [1]]
+FORWARD: [[1], [0]]
+JUMP: [[0], [1]]
+LEFT: [[0], [1]]
+PLACE: [['none'], ['dirt']]
+RIGHT: [[0], [1]]
+SNEAK: [[0], [1]]
+SPRINT: [[1], [0]]
+
+Coverage of ObtainIronPickaxe Actions
+-----------------------------
+ATTACK: [[1], [0]]
+BACK: [[0], [1]]
+CRAFT: [['none'], ['planks'], ['stick'], ['crafting_table'], ['torch']]
+EQUIP: [['none'], ['stone_pickaxe'], ['wooden_pickaxe'], ['wooden_axe'], ['stone_axe'], ['iron_pickaxe']]
+FORWARD: [[0], [1]]
+JUMP: [[0], [1]]
+LEFT: [[0], [1]]
+NEARBYCRAFT: [['none'], ['stone_pickaxe'], ['furnace'], ['iron_pickaxe'], ['wooden_pickaxe'], ['wooden_axe'], ['stone_axe']]
+NEARBYSMELT: [['none'], ['iron_ingot'], ['coal']]
+PLACE: [['none'], ['stone'], ['crafting_table'], ['torch'], ['cobblestone'], ['furnace'], ['dirt']]
+RIGHT: [[0], [1]]
+SNEAK: [[0], [1]]
+SPRINT: [[0], [1]]
+
+Coverage of ObtainDiamond Actions
+-----------------------------
+ATTACK: [[0], [1]]
+BACK: [[0], [1]]
+CRAFT: [['none'], ['stick'], ['planks'], ['crafting_table'], ['torch']]
+EQUIP: [['none'], ['stone_pickaxe'], ['iron_pickaxe'], ['wooden_pickaxe'], ['wooden_axe'], ['stone_axe'], ['iron_axe']]
+FORWARD: [[0], [1]]
+JUMP: [[0], [1]]
+LEFT: [[0], [1]]
+NEARBYCRAFT: [['none'], ['furnace'], ['iron_pickaxe'], ['stone_pickaxe'], ['wooden_pickaxe'], ['wooden_axe'], ['stone_axe'], ['iron_axe']]
+NEARBYSMELT: [['none'], ['iron_ingot'], ['coal']]
+PLACE: [['none'], ['torch'], ['crafting_table'], ['furnace'], ['dirt'], ['cobblestone'], ['stone']]
+RIGHT: [[0], [1]]
+SNEAK: [[0], [1]]
+SPRINT: [[0], [1]]
+
+Necessary Key Value Pairs
+-----------------------------
+CRAFT: [['none'], ['stick'], ['planks'], ['crafting_table'], ['torch']]
+EQUIP: [['none'], ['stone_pickaxe'], ['iron_pickaxe'], ['wooden_pickaxe']]
+NEARBYCRAFT: [['none'], ['furnace'], ['iron_pickaxe'], ['stone_pickaxe'], ['wooden_pickaxe']]
+NEARBYSMELT: [['none'], ['iron_ingot'], ['coal']]
+PLACE: [['none'], ['torch'], ['crafting_table'], ['furnace'], ['cobblestone']]

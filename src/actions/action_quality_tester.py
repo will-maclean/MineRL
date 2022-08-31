@@ -3,11 +3,12 @@ import minerl
 import os
 import numpy as np
 import pickle
+from tqdm import tqdm
 
 import minerl3161
 
 
-ITERS = 25000
+ITERS = 100000
 NUM_ACTIONS = 12
 
 
@@ -32,7 +33,7 @@ def test_actions(obf: bool):
 
     actions = get_actions(obf)
 
-    for _ in range(ITERS):
+    for _ in tqdm(range(ITERS)):
         action = actions[np.random.choice(NUM_ACTIONS)]
         _, reward, done, _ = env.step(action)
 
@@ -47,3 +48,4 @@ def test_actions(obf: bool):
 
 test_actions(obf=True)
 test_actions(obf=False)
+
