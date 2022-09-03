@@ -31,9 +31,8 @@ def test_dqnagent_dummy():
     sample_state = sample_pt_state(state_space_shape, state_space_shape.keys())
     sample_state = pt_dict_to_np(sample_state)
 
-    _ = agent.act(sample_state)
-
-    _ = agent.eps_greedy_act(sample_state, 500)
+    _ = agent.act(sample_state, train=True, step = 500)  # test epsilon greedy
+    _ = agent.act(sample_state, train=False, step = None)  # test greedy act
 
     agent.save(save_path)
 
@@ -66,9 +65,8 @@ def test_dqnagent_full(minerl_env):
     sample_state = sample_pt_state(env.observation_space, hyperparams.feature_names)
     sample_state = pt_dict_to_np(sample_state)
 
-    _ = agent.act(sample_state)
-
-    _ = agent.eps_greedy_act(sample_state, 500)
+    _ = agent.act(sample_state, train=True, step = 500)  # test epsilon greedy
+    _ = agent.act(sample_state, train=False, step = None)  # test greedy act
 
     agent.save(save_path)
 
