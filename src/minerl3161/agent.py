@@ -24,14 +24,16 @@ class BaseAgent(ABC):
     """
 
     @abstractmethod
-    def act(self, state: np.ndarray) -> np.ndarray:
+    def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:
         """Chooses an action based on the given state
 
         Args:
             state (np.ndarray): the environment state
+            train (bool): whether or not we are currently training
+            step (Any): can store an environment step
 
         Returns:
-            action (np.ndarray): the chosen action
+            (np.ndarray, dict): the chosen action, info dictionary
         """
         raise NotImplementedError()
 
@@ -78,7 +80,7 @@ class DQNAgent(BaseAgent):
         """
         super().__init__()
         self.device = device
-        self.hyperparams = hyperparams
+        self.hp = hyperparams
 
         self.obs_space = obs_space
         self.n_action = n_actions
@@ -94,57 +96,39 @@ class DQNAgent(BaseAgent):
         self.q2.requires_grad_(False)
         self.q2.eval()
 
-    def act(self, state: np.ndarray) -> np.ndarray:
+    def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:
         """chooses action from action space based on state
 
         Args:
             state (np.ndarray): environment state
 
         Returns:
-            np.ndarray: chosen action
+            np.ndarray, dict: chosen action, log dictionary
         """
         state = np_dict_to_pt(state, device=self.device, unsqueeze=True)
 
-        q_vals = self.q1(state)
+        if train:
+            eps = epsilon_decay(
+                step,
+                self.hp.eps_max,
+                self.hp.eps_min,
+                self.hp.eps_decay,
+            )
 
-        action = q_vals.squeeze().argmax().detach().cpu().numpy()
+            if random.random() < eps:
+                action = th.randint(high=self.n_action, size=(1,), device=self.device)
+            else:
+                action = self.q1(state).argmax()
 
-        return action
-
-    def eps_greedy_act(
-        self, state: Union[np.ndarray, th.Tensor], step: int
-    ) -> Union[np.ndarray, th.Tensor]:
-        """Chooses an action under the epsilon greedy policy
-
-        Args:
-            state (Union[np.ndarray, th.Tensor]): environment
-            step (int): training step
-
-        Returns:
-            Union[np.ndarray, th.Tensor]: chosen action
-        """
-        if type(state) == np.ndarray:
-            state = th.from_numpy(state).to(self.device).unsqueeze(0)
-            was_np = True
+            return action, {"epsilon": eps}
         else:
-            was_np = False
+            with th.no_grad():
+                q_vals = self.q1(state)
 
-        eps = epsilon_decay(
-            step,
-            self.hyperparams.eps_max,
-            self.hyperparams.eps_min,
-            self.hyperparams.eps_decay,
-        )
+                action = q_vals.squeeze().argmax().detach().cpu().numpy()
 
-        if random.random() < eps:
-            action = th.randint(high=self.n_action, size=(1,), device=self.device)
-        else:
-            action = self.q1.argmax()
+                return action, {}
 
-        if was_np:
-            action = action.detach().cpu().numpy()
-
-        return action
 
     # TODO: Determine if pickle supports saving and loading of model weights
     def save(self, path: str):

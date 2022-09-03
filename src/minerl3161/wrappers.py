@@ -191,12 +191,29 @@ class InventoryFilter(gym.ObservationWrapper):
         return np.array(inventory)
 
 
+class ToggleEquippedItemsWrapper(gym.ObservationWrapper):
+    def __init__(self, env, include_equipped_items=False) -> None:
+        super().__init__(env)
+        self.include_equipped_items = include_equipped_items
+
+        if not self.include_equipped_items:
+            del self.observation_space.spaces["equipped_items"]
+
+    
+    def observation(self, observation):
+        if not self.include_equipped_items:
+            del observation["equipped_items"]
+        
+        return observation
+
+
 def mineRLObservationSpaceWrapper(
             env: gym.Env, 
             features: Optional[List[str]] = None,
             frame: int = 4, 
             downsize_width: int = 64, 
-            downsize_height: int = 64
+            downsize_height: int = 64,
+            include_equipped_items = False,
             ):
     if 'pov' in features:
         camera = True
@@ -206,6 +223,8 @@ def mineRLObservationSpaceWrapper(
 
     if features is not None:
         env = InventoryFilter(env, features=features)
+    
+    env = ToggleEquippedItemsWrapper(env=env, include_equipped_items=include_equipped_items)
 
     if camera:
         camera_feature_name = 'pov'
