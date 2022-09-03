@@ -77,10 +77,17 @@ class MineRLFeatureExtraction(nn.Module):
                 # add the CNN
                 self.layers[feature] = CNN(observation_space[feature].shape)
             else:
-                # assume this needs a MLP
-                self.layers[feature] = MLP(
-                    observation_space[feature].shape[0], mlp_hidden_size
-                )
+                try:
+                    # assume this needs a MLP
+                    self.layers[feature] = MLP(
+                        observation_space[feature].shape[0], mlp_hidden_size
+                    )
+                except TypeError as e:
+                    # we aren't equipped to handle dictionary observation spaces
+                    # therefore, we'll skip this observation
+                    # if you want to be able to use this observation, convert it to 
+                    # an array with an ObservationWrapper
+                    continue
 
         self.layers = nn.ModuleDict(self.layers)
 

@@ -105,12 +105,15 @@ def pt_dict_to_np(pt_dict: Dict[str, th.Tensor]) -> Dict[str, np.ndarray]:
 def sample_pt_state(observation_space, features, device="cpu", batch=None):
     state = {}
     for feature in features:
-        if batch is None:
-            state[feature] = th.rand(observation_space[feature].shape, device=device)
-        else:
-            state[feature] = th.rand(
-                (batch, *observation_space[feature].shape), device=device
-            )
+        try:
+            if batch is None:
+                state[feature] = th.rand(observation_space[feature].shape, device=device)
+            else:
+                state[feature] = th.rand(
+                    (batch, *observation_space[feature].shape), device=device
+                )
+        except TypeError:
+            continue
 
     return state
 
@@ -118,9 +121,12 @@ def sample_pt_state(observation_space, features, device="cpu", batch=None):
 def sample_np_state(observation_space, features, batch=None):
     state = {}
     for feature in features:
-        if batch is None:
-            state[feature] = np.random.rand(*observation_space[feature].shape).astype(np.float32)
-        else:
-            state[feature] = np.random.rand(*(batch, *observation_space[feature].shape)).astype(np.float32)
+        try:
+            if batch is None:
+                state[feature] = np.random.rand(*observation_space[feature].shape).astype(np.float32)
+            else:
+                state[feature] = np.random.rand(*(batch, *observation_space[feature].shape)).astype(np.float32)
+        except TypeError:
+            continue
 
     return state
