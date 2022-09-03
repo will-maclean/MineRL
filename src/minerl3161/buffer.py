@@ -160,12 +160,12 @@ class ReplayBuffer:
         batch_sample["dones"] = self.dones[idxs]
         batch_sample["actions"] = self.actions[idxs]
         # state and next state are dictionaries, so init them here and then fill them down below
-        batch_sample["state"] = {}
+        batch_sample["states"] = {}
         batch_sample["next_states"] = {}
 
         # fill in state and next state dictionaries
         for key in self.feature_names:
-            batch_sample["state"][key] = self.states[key][idxs]
+            batch_sample["states"][key] = self.states[key][idxs]
             batch_sample["next_states"][key] = self.next_states[key][idxs]
 
         return batch_sample
