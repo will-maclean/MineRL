@@ -4,22 +4,32 @@ import numpy as np
 import gym
 import cv2
 import os
+import pickle
 
 import minerl3161
 
 
 class MineRLDiscreteActionWrapper(gym.ActionWrapper):
-    def __init__(self, env: gym.Env, filename: str = "all-actions.npy") -> None:
+    def __init__(self, env: gym.Env, functional_acts: bool = True, extracted_acts: bool = True) -> None:
         super().__init__(env)
-        filepath = os.path.join(minerl3161.actions_path, filename)
-        self.action_set = np.load(filepath)
+        extracted_acts_filename = "extracted-actions.pickle"
+        functional_acts_filename = "functional-actions.pickle"
+        self.action_set = []
 
+        if extracted_acts:
+            e_filepath = os.path.join(minerl3161.actions_path, extracted_acts_filename)
+            with open(e_filepath, "rb") as f:
+                self.action_set.extend(pickle.load(f))
+
+        if functional_acts:
+            f_filepath = os.path.join(minerl3161.actions_path, functional_acts_filename)
+            with open(f_filepath, "rb") as f:
+                self.action_set.extend(pickle.load(f))
+        
         self.action_space = gym.spaces.Discrete(len(self.action_set))
 
-    def action(self, action_idx: int) -> Dict[str, List[float]]:
-        return {
-                "vector": self.action_set[action_idx]
-            }
+    def action(self, action_idx: int) -> Dict[str, str]:
+        return self.action_set[action_idx]
     
     def get_actions_count(self) -> int:
         return len(self.action_set)
