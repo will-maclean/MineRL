@@ -69,6 +69,15 @@ class BaseTrainer:
         
         dataset_batch = self._get_dataset_batches(self.human_dataset_batch_size)[0]
         gathered_batch = self.gathered_transitions.sample(self.gathered_xp_batch_size)
+
+        if gathered_batch['reward'].size == 0:
+            return ReplayBuffer.create_batch_sample(
+                dataset_batch['reward'],
+                dataset_batch['done'],
+                dataset_batch['action'],
+                dataset_batch['state'],
+                dataset_batch['next_state']
+            )
         
         return ReplayBuffer.create_batch_sample(
             np.concatenate((dataset_batch['reward'], gathered_batch['reward'])),

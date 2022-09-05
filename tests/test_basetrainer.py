@@ -57,6 +57,6 @@ def test_sampling(wrapped_minerl_env):
 
     sample = base_trainer.sample(strategy)
 
-    assert len(sample) == base_hyper_params.batch_size
+    assert len(sample['reward']) == base_hyper_params.batch_size
     for key in ['reward', 'done', 'action', 'state', 'next_state']:
         assert key in sample
