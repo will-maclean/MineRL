@@ -5,9 +5,7 @@ from minerl3161.wrappers import MineRLDiscreteActionWrapper
 
 
 def test_actionwrapper(minerl_env):
-
     act_wrapper = MineRLDiscreteActionWrapper(minerl_env)
-
     action_count = act_wrapper.action_space.n
 
     for action_idx in range(action_count):
@@ -20,8 +18,7 @@ def test_actionwrapper(minerl_env):
                 minerl_env.reset()
 
         except Exception:
-           raise InvalidActionException
-
+            raise InvalidActionException
 
 
 class InvalidActionException(Exception):

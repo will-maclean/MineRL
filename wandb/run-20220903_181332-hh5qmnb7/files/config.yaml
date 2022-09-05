@@ -1,0 +1,91 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    cli_version: 0.13.1
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    python_version: 3.8.13
+    start_time: 1662192812.535507
+    t:
+      1:
+      - 1
+      - 55
+      2:
+      - 1
+      - 55
+      3:
+      - 16
+      - 23
+      4: 3.8.13
+      5: 0.13.1
+      8:
+      - 5
+batch_size:
+  desc: null
+  value: 8
+buffer_size_dataset:
+  desc: null
+  value: 100000
+buffer_size_gathered:
+  desc: null
+  value: 100000
+burn_in:
+  desc: null
+  value: 50
+eps_decay:
+  desc: null
+  value: 40000
+eps_max:
+  desc: null
+  value: 1.0
+eps_min:
+  desc: null
+  value: 0.01
+evaluate_episodes:
+  desc: null
+  value: 5
+evaluate_every:
+  desc: null
+  value: 10000
+feature_names:
+  desc: null
+  value:
+  - pov
+  - inventory
+gamma:
+  desc: null
+  value: 0.99
+gather_every:
+  desc: null
+  value: 1
+gather_n:
+  desc: null
+  value: 1
+hard_update_freq:
+  desc: null
+  value: 1000
+inventory_feature_names:
+  desc: null
+  value:
+  - all
+lr:
+  desc: null
+  value: 0.00025
+model_hidden_layer_size:
+  desc: null
+  value: 64
+polyak_tau:
+  desc: null
+  value: 0.01
+soft_update_freq:
+  desc: null
+  value: 1
+train_every:
+  desc: null
+  value: 1
+train_steps:
+  desc: null
+  value: 100000
