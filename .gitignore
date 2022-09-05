@@ -134,3 +134,4 @@ dmypy.json
 logs
 data/*
 **/wandb
+wandb
