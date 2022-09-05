@@ -2,6 +2,7 @@ from abc import ABC
 from minerl3161.agent import BaseAgent, DQNAgent
 from minerl3161.hyperparameters import BaseHyperparameters, DQNHyperparameters
 from minerl3161.trainer import BaseTrainer
+import numpy as np
 import os
 
 def test_get_dataset_batches(minerl_env):

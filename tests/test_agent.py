@@ -44,25 +44,21 @@ def test_dqnagent_dummy():
     os.remove(save_path)
 
 
-def test_dqnagent_full(minerl_env):
+def test_dqnagent_full(wrapped_minerl_env):
 
-    w = 16
-    h = 16
-    stack = 4
     n_actions = 16
 
     hyperparams = DQNHyperparameters()
-    env = mineRLObservationSpaceWrapper(minerl_env, frame=stack, features=hyperparams.inventory_feature_names, downsize_width=w, downsize_height=h)
     device = "cpu"
     save_path = "test.pt"
 
     agent = DQNAgent(
-        obs_space=env.observation_space, 
+        obs_space=wrapped_minerl_env.observation_space, 
         n_actions=n_actions, 
         device=device, 
         hyperparams=hyperparams)
 
-    sample_state = sample_pt_state(env.observation_space, hyperparams.feature_names)
+    sample_state = sample_pt_state(wrapped_minerl_env.observation_space, hyperparams.feature_names)
     sample_state = pt_dict_to_np(sample_state)
 
     _ = agent.act(sample_state, train=True, step = 500)  # test epsilon greedy
