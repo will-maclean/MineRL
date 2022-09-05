@@ -5,7 +5,7 @@ from minerl3161.trainer import BaseTrainer
 import numpy as np
 import os
 
-def test_get_dataset_batches(minerl_env):
+def test_get_dataset_batches(wrapped_minerl_env):
     
     # os.environ['MINERL_DATA_ROOT'] = '../../../data/human-xp'
     state_space_shape = {
@@ -24,13 +24,13 @@ def test_get_dataset_batches(minerl_env):
         device=device, 
         hyperparams=hyperparams)
     
-    base_trainer = BaseTrainer(minerl_env, agent, BaseHyperparameters(), False)
+    base_trainer = BaseTrainer(wrapped_minerl_env, agent, BaseHyperparameters(), False)
     batches =base_trainer._get_dataset_batches(batch_size=10, num_batches=5)
 
     assert len(batches) == 5
     assert len(batches[0]['state']['pov']) == 10
 
-def test_sampling(minerl_env):
+def test_sampling(wrapped_minerl_env):
 
     # os.environ['MINERL_DATA_ROOT'] = '../../../data/human-xp'
     state_space_shape = {
@@ -50,7 +50,7 @@ def test_sampling(minerl_env):
         hyperparams=hyperparams)
 
     base_hyper_params = BaseHyperparameters()
-    base_trainer = BaseTrainer(minerl_env, agent, base_hyper_params, False)
+    base_trainer = BaseTrainer(wrapped_minerl_env, agent, base_hyper_params, False)
 
     def strategy(dataset_size, gathered_size, step):
         dataset_size -= step

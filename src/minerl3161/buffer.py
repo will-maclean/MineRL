@@ -36,7 +36,8 @@ class ReplayBuffer:
 
     def _create_state_buffer(self, n, obs_space):
         buf = {}
-
+        print(obs_space)
+        print(self.feature_names)
         for feature in self.feature_names:
             buf[feature] = np.zeros((n, *obs_space[feature].shape), dtype=np.float32)
 
