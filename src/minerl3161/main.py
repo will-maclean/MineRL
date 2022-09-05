@@ -67,7 +67,7 @@ def main():
         )
 
     # Initialise trainer and start training
-    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, hyperparameters=hp, use_wandb=args.wandb)
+    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, hyperparameters=hp, use_wandb=args.wandb, device=device)
     trainer.train()
 
    

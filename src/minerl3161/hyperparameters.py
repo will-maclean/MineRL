@@ -34,12 +34,13 @@ class DQNHyperparameters(BaseHyperparameters):
         int, None
     ] = 1  # how often to do a soft update from q1 to q2
     polyak_tau: float = 0.01  # controls the weight of the soft update
+    reward_scale: float = 1.0  # controls whether we want to scale the rewards in the loss function
     
     # these are the feature names that are passed into the model to learn on
-    feature_names = [
+    feature_names: List = field(default_factory=lambda:[
         "pov",
         "inventory"
-    ]
+    ])
 
     # these are the feature names that are passed into the observation wrapper.
     inventory_feature_names: List = field(default_factory=lambda: [

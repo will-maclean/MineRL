@@ -7,6 +7,7 @@ import time
 import gym
 import numpy as np
 import wandb
+from tqdm import tqdm
 import torch
 from minerl3161.utils import copy_weights
 from torch.optim import Adam, Optimizer
@@ -15,6 +16,7 @@ from .agent import BaseAgent
 from .buffer import ReplayBuffer
 from .evaluator import Evaluator
 from .hyperparameters import BaseHyperparameters, DQNHyperparameters
+from.utils import np_dict_to_pt
 
 from minerl.data import BufferedBatchIter
 
@@ -23,7 +25,8 @@ class BaseTrainer:
     """Abstract class for Trainers. At the least, all implementations must have _train_step()."""
 
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: BaseHyperparameters, use_wandb: bool =False
+        self, env: gym.Env, agent: BaseAgent, hyperparameters: BaseHyperparameters, use_wandb: bool =False,
+        device="cpu"
     ) -> None:
         """Initialiser for BaseTrainer.
 
@@ -36,6 +39,7 @@ class BaseTrainer:
         self.agent: BaseAgent = agent
         self.hp: BaseHyperparameters = hyperparameters
         self.use_wandb = use_wandb
+        self.device = device
 
         self.gathered_transitions = ReplayBuffer(
             self.hp.buffer_size_gathered, self.env.observation_space
@@ -93,8 +97,9 @@ class BaseTrainer:
     def train(self) -> None:
         """main training function. This basic training loop should be enough for most conventional RL algorithms"""
 
-        t = 0
-        while t < self.hp.train_steps:
+        for t in tqdm(range(self.hp.train_steps)):
+            self.t = t
+
             log_dict = {"step": t}
 
             if t % self.hp.gather_every == 0:
@@ -125,10 +130,15 @@ class BaseTrainer:
         for _ in range(steps):
             if self.env_interaction['needs_reset']:
                 state = self.env.reset()
+                self.env_interaction['needs_reset'] = False
             else:
-                state = self.env["last_state"]
+                state = self.env_interaction["last_state"]
             
-            action = self.agent.act(state=state)
+            action, act_log_dict = self.agent.act(state=state, train=True, step=self.t)
+
+            action = action.detach().cpu().numpy()
+
+            log_dict.update(act_log_dict)
 
             next_state, reward, done, info = self.env.step(action)
 
@@ -142,7 +152,7 @@ class BaseTrainer:
                 
                 self.env_interaction["episode_return"] = 0
                 self.env_interaction["needs_reset"] = True
-                self.env["last_state"] = None
+                self.env_interaction["last_state"] = None
         
         end_time = time.perf_counter()
 
@@ -167,9 +177,9 @@ class BaseTrainer:
 # TODO: write tests
 class DQNTrainer(BaseTrainer):
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, use_wandb: bool = False
+        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, use_wandb: bool = False, device: str = "cpu"
     ) -> None:
-        super().__init__(env=env, agent=agent, hyperparameters=hyperparameters, use_wandb=use_wandb)
+        super().__init__(env=env, agent=agent, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device)
 
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
@@ -179,12 +189,10 @@ class DQNTrainer(BaseTrainer):
         batch = self.sample()
 
         # convert np transitions into torch tensors
-        batch["state"] = torch.from_numpy(batch["state"]).to(
-            self.device, dtype=torch.float32
-        )
-        batch["next_state"] = torch.from_numpy(batch["next_state"]).to(
-            self.device, dtype=torch.float32
-        )
+        batch["state"] = np_dict_to_pt(batch["state"], device=self.device)
+
+        batch["next_state"] = np_dict_to_pt(batch["next_state"], device=self.device)
+
         batch["action"] = torch.tensor(
             batch["action"], dtype=torch.long, device=self.device
         )
@@ -208,29 +216,28 @@ class DQNTrainer(BaseTrainer):
             self.hp.hard_update_freq is not None
             and step % self.hp.hard_update_freq == 0
         ):
-            copy_weights(self.net, self.target_net, polyak=None)
+            copy_weights(copy_from=self.agent.q1, copy_to=self.agent.q2, polyak=None)
         if (
             self.hp.soft_update_freq is not None
             and step % self.hp.soft_update_freq == 0
         ):
-            copy_weights(self.q1, self.q2, polyak=self.hp.polyak_tau)
+            copy_weights(copy_from=self.agent.q1, copy_to=self.agent.q2, polyak=self.hp.polyak_tau)
 
         return {"loss": loss.detach().cpu().item()}
 
     def _calc_loss(self, batch: dict) -> torch.Tensor:
         # estimate q values for current states/actions using q1 network
-        q_values = self.q1(batch["state"])
-        actions = batch["action"].unsqueeze(1)
-        q_values = q_values.gather(1, actions).squeeze(1)
+        q_values = self.agent.q1(batch["state"])
+        q_values = q_values.gather(1, batch["action"])
 
         # estimate q values for next states/actions using q2 network
-        next_actions = self.q2(batch["next_state"]).argmax(dim=1).unsqueeze(1)
-        next_q_values = self.q2(batch["next_state"]).gather(1, next_actions).squeeze(1)
+        next_actions = self.agent.q2(batch["next_state"]).argmax(dim=1).unsqueeze(1)
+        next_q_values = self.agent.q2(batch["next_state"]).gather(1, next_actions)
 
         # calculate TD target for Bellman Equation
-        td_target = self.reward_scale * batch[
+        td_target = self.hp.reward_scale * batch[
             "reward"
-        ] + self.gamma * next_q_values * (1 - batch["done"])
+        ] + self.hp.gamma * next_q_values * (1 - batch["done"])
 
         # Calculate loss for Bellman Equation
         # Note that we use smooth_l1_loss instead of MSE as it is more stable for larger loss signals. RL problems
