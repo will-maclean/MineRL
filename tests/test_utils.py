@@ -4,7 +4,7 @@ from copy import deepcopy
 import numpy as np
 import torch as th
 
-from minerl3161.utils import linear_decay, epsilon_decay, copy_weights, sample_pt_state, np_dict_to_pt, pt_dict_to_np
+from minerl3161.utils import linear_decay, epsilon_decay, copy_weights, linear_sampling_strategy, sample_pt_state, np_dict_to_pt, pt_dict_to_np
 from minerl3161.models import DQNNet
 
 
@@ -107,3 +107,13 @@ def test_sample_pt_state():
 
     with pytest.raises(KeyError):
         sample["f3"]
+
+
+def test_linear_sampling_strategy():
+    dataset_size = 10
+    gathered_size = 43
+    step = 3
+    new_dataset_size, new_gathered_size = linear_sampling_strategy(dataset_size, gathered_size, step)
+
+    assert new_dataset_size == 7
+    assert new_gathered_size == 46

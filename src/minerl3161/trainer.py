@@ -19,6 +19,7 @@ from .hyperparameters import BaseHyperparameters, DQNHyperparameters
 from.utils import np_dict_to_pt
 
 from minerl.data import BufferedBatchIter
+import minerl
 
 # TODO: write tests
 class BaseTrainer:

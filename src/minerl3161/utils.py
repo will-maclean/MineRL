@@ -133,5 +133,4 @@ def sample_np_state(observation_space, features, batch=None):
 
 
 def linear_sampling_strategy(dataset_size, gathered_size, step):
-    dataset_size -= step
-    gathered_size += step
+    return dataset_size-step, gathered_size+step

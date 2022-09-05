@@ -53,8 +53,7 @@ def test_sampling(wrapped_minerl_env):
     base_trainer = BaseTrainer(wrapped_minerl_env, agent, base_hyper_params, False)
 
     def strategy(dataset_size, gathered_size, step):
-        dataset_size -= step
-        gathered_size += step
+        return dataset_size-step, gathered_size+step
 
     sample = base_trainer.sample(strategy)
 
