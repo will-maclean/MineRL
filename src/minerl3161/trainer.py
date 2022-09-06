@@ -83,6 +83,8 @@ class BaseTrainer:
             log_dict.update(self._housekeeping(t))
 
             self._log(log_dict)
+        
+        self.close()
 
     def _gather(self, steps: int) -> Dict[str, Any]:
         """gathers steps of experience from the environment
@@ -103,7 +105,7 @@ class BaseTrainer:
             
             action, act_log_dict = self.agent.act(state=state, train=True, step=self.t)
 
-            action = action.detach().cpu().numpy()
+            action = action.detach().cpu().numpy().item()
 
             log_dict.update(act_log_dict)
 
@@ -145,7 +147,9 @@ class BaseTrainer:
     def _log(self, log_dict: dict) -> None:
         if self.use_wandb:
             wandb.log(log_dict)
-
+    
+    def close(self):
+        pass
 
 # TODO: write tests
 class DQNTrainer(BaseTrainer):

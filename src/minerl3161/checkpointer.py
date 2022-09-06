@@ -2,6 +2,9 @@ from multiprocessing.sharedctypes import Value
 import os
 import wandb
 
+from pathlib import Path
+
+
 class Checkpointer:
     def __init__(self, agent, checkpoint_every: int = None, use_wandb: bool = True) -> None:
         """Checkpointer class manager agent checkpointing. Currently only checkpointing with wandb is supported.
@@ -44,6 +47,7 @@ class Checkpointer:
         
         if timestep % self.checkpoint_every == 0:
             pth = os.path.join(wandb.run.dir, "checkpoints")
+            Path(pth).mkdir(parents=True, exist_ok=True)
             pth = os.path.join(pth, f"ckpt_{timestep}.zip")
             self.make_checkpoint(pth)
 
