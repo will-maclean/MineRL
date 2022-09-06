@@ -9,6 +9,7 @@ import numpy as np
 import wandb
 from tqdm import tqdm
 import torch
+from minerl3161.checkpointer import Checkpointer
 from minerl3161.utils import copy_weights
 from torch.optim import Adam, Optimizer
 
@@ -39,6 +40,8 @@ class BaseTrainer:
         self.hp: BaseHyperparameters = hyperparameters
         self.use_wandb = use_wandb
         self.device = device
+
+        self.checkpointer = Checkpointer(agent, checkpoint_every=self.hp.checkpoint_every, use_wandb=use_wandb)
 
         self.gathered_transitions = ReplayBuffer(
             self.hp.buffer_size_gathered, self.env.observation_space
@@ -129,8 +132,14 @@ class BaseTrainer:
         raise NotImplementedError()
 
     def _housekeeping(self, step: int) -> None:
-        #TODO: implement
-        return {}
+        log_dict = {}
+
+        # start with checkpointing
+        log_dict.update(
+            self.checkpointer.step(step)
+        )
+        
+        return log_dict
 
 
     def _log(self, log_dict: dict) -> None:
