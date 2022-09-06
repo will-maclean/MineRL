@@ -58,11 +58,15 @@ def test_dqnagent_full(wrapped_minerl_env):
         device=device, 
         hyperparams=hyperparams)
 
-    sample_state = sample_pt_state(wrapped_minerl_env.observation_space, hyperparams.feature_names)
-    sample_state = pt_dict_to_np(sample_state)
+    s = env.reset()
 
-    _ = agent.act(sample_state, train=True, step = 500)  # test epsilon greedy
-    _ = agent.act(sample_state, train=False, step = None)  # test greedy act
+    a1, _ = agent.act(s, train=True, step = 0)  # test epsilon greedy, random
+    a2, _ = agent.act(s, train=True, step = 1e9)  # test epsilon greedy, greedy
+    a3, _ = agent.act(s, train=False, step = None)  # test greedy act
+
+    _ = env.step(a1)
+    _ = env.step(a2)
+    _ = env.step(a3)
 
     agent.save(save_path)
 
