@@ -58,15 +58,15 @@ def test_dqnagent_full(wrapped_minerl_env):
         device=device, 
         hyperparams=hyperparams)
 
-    s = env.reset()
+    s = wrapped_minerl_env.reset()
 
     a1, _ = agent.act(s, train=True, step = 0)  # test epsilon greedy, random
     a2, _ = agent.act(s, train=True, step = 1e9)  # test epsilon greedy, greedy
     a3, _ = agent.act(s, train=False, step = None)  # test greedy act
 
-    _ = env.step(a1)
-    _ = env.step(a2)
-    _ = env.step(a3)
+    _ = wrapped_minerl_env.step(a1)
+    _ = wrapped_minerl_env.step(a2)
+    _ = wrapped_minerl_env.step(a3)
 
     agent.save(save_path)
 
