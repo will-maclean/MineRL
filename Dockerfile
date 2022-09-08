@@ -199,6 +199,8 @@ RUN pip3 install pyyaml && \
 
 RUN pip3 install torch==1.12.0 wandb
 
+RUN wandb login 93b2c65fa31d949cc0cb8857823986f47f96f00f
+
 ENV DISPLAY :0
 ENV VGL_REFRESHRATE 60
 ENV VGL_ISACTIVE 1
