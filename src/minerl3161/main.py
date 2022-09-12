@@ -53,11 +53,12 @@ def main():
     n_actions = env.action_space.n
 
     # Configure agent
-    agent = POLICIES[args.policy].agent(obs_space=env.observation_space, 
-       n_actions=n_actions, 
-       device=device, 
-       hyperparams=hp
-       )
+    agent = POLICIES[args.policy].agent(
+            obs_space=env.observation_space, 
+            n_actions=n_actions, 
+            device=device, 
+            hyperparams=hp
+        )
 
     if args.wandb:
         wandb.init(

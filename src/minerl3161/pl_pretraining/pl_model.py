@@ -7,12 +7,18 @@ from minerl3161.models import DQNNet
 
 
 class DQNPretrainer(pl.LightningModule):
-    def __init__(self, gamma=0.99) -> None:
+    def __init__(self, obs_space, n_actions, hyperparams, gamma=0.99, target_update_freq=1) -> None:
         super().__init__()
 
         self.gamma = gamma
+        self.target_update_freq = target_update_freq
 
-        self.q1 = DQNNet()
+        self.q1 = DQNNet(
+            state_shape=obs_space,
+            n_actions=n_actions, 
+            dqn_hyperparams=hyperparams,
+            layer_size=hyperparams.model_hidden_layer_size
+            )
         self.q2 = deepcopy(self.q1)
         self.q2.eval()
 
@@ -51,3 +57,7 @@ class DQNPretrainer(pl.LightningModule):
         loss = F.smooth_l1_loss(q_values, td_target)
 
         return loss
+
+    def on_train_epoch_end(self, trainer: pl.Trainer) -> None:
+        if trainer.current_epoch % self.update_freq == 0:
+            self.q2.load_state_dict(self.q1.state_dict())
