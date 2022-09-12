@@ -10,11 +10,13 @@ import pickle
 import minerl3161
 
 
-class MineRLDiscreteActionWrapper(gym.ActionWrapper):
-    def __init__(self, env: gym.Env, functional_acts: bool = True, extracted_acts: bool = True) -> None:
+class MineRLDiscreteActionWrapper(gym.Wrapper):
+    def __init__(self, env: gym.Env, functional_acts: bool = True, extracted_acts: bool = True, capture_action_usage: bool = False) -> None:
         super().__init__(env)
         extracted_acts_filename = "extracted-actions.pickle"
         functional_acts_filename = "functional-actions.pickle"
+        self.capture_action_usage = capture_action_usage
+        self.current_obs = dict()
         self.action_set = []
 
         if extracted_acts:
@@ -29,11 +31,47 @@ class MineRLDiscreteActionWrapper(gym.ActionWrapper):
         
         self.action_space = gym.spaces.Discrete(len(self.action_set))
 
+        if self.capture_action_usage: self.action_usage = [0 for _ in range(len(self.action_set))]
+
+    def reset(self) -> Dict[str, np.ndarray]:
+        obs = self.env.reset()
+        self.current_obs = obs
+        return obs
+
+    def step(self, action_idx: int) -> Dict[str, np.ndarray]:
+        obs = self.env.step(self.action(action_idx))
+        self.current_obs = obs
+        return obs
+
     def action(self, action_idx: int) -> Dict[str, str]:
-        return self.action_set[action_idx]
+        if self.capture_action_usage: 
+            self.action_usage[action_idx] += 1
+
+        action = self.action_set[action_idx]
+
+        if action["place"] == "place_navigate":
+            action = self._get_navigate_block()
+
+        return action
     
     def get_actions_count(self) -> int:
         return len(self.action_set)
+    
+    def get_action_usage(self) -> List[int]:
+        return self.action_usage
+    
+    def _get_navigate_block(self, action: Dict[str, str]) -> Dict[str, str]:
+        navigate_blocks = ["dirt", "cobblestone", "stone"]
+
+        for block in navigate_blocks:
+            if self.current_obs["inventory"][block].item() > 0:
+                action["place"] = block
+                break
+        
+        if action["place"] == "place_navigate":
+            action["place"] = "none"
+
+        return action
 
 
 class Grayscale(gym.ObservationWrapper):
@@ -225,6 +263,9 @@ def mineRLObservationSpaceWrapper(
             downsize_height: int = 64,
             include_equipped_items = False,
             ):
+
+    env = MineRLDiscreteActionWrapper(env, capture_action_usage=True)  # This must be applied before any other wrappers
+
     if 'pov' in features:
         camera = True
         features.remove('pov')
@@ -242,7 +283,5 @@ def mineRLObservationSpaceWrapper(
         env = Grayscale(env, feature_name=camera_feature_name)
         env = PyTorchImage(env, feature_name=camera_feature_name)
         env = StackImage(env, frame=frame, feature_name=camera_feature_name)
-    
-    env = MineRLDiscreteActionWrapper(env)
 
     return env

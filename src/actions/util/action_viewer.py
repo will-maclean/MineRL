@@ -4,15 +4,15 @@ import pickle
 import minerl3161
 
 
-def load_actions(env: str) -> list:
-    filepath = os.path.join(minerl3161.actions_path, f"actions-{env}.pickle")
+def load_actions() -> list:
+    filepath = os.path.join(minerl3161.actions_path, f"extracted-actions.pickle")
 
     with open(filepath, "rb") as f:
         return pickle.load(f)
 
 
-def actions_formatter(env: str) -> None:
-    actions = load_actions(env)
+def actions_formatter() -> None:
+    actions = load_actions()
 
     for i, action in enumerate(actions):
         print("-"*15)
@@ -24,4 +24,4 @@ def actions_formatter(env: str) -> None:
                 print(str.upper(k))
 
 
-actions_formatter("Navigate")
+actions_formatter()
