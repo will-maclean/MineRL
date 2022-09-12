@@ -9,6 +9,12 @@ from minerl3161.utils import pt_dict_to_np, sample_pt_state
 from minerl3161.wrappers import mineRLObservationSpaceWrapper
 
 
+def compare_models(model1, model2):
+    for p1, p2 in zip(model1.parameters(), model2.parameters()):
+        if p1.data.ne(p2.data).sum() > 0:
+            return False
+    return True
+
 
 def test_dqnagent_dummy():
     state_space_shape = {
@@ -34,6 +40,20 @@ def test_dqnagent_dummy():
     _ = agent.act(sample_state, train=True, step = 500)  # test epsilon greedy
     _ = agent.act(sample_state, train=False, step = None)  # test greedy act
 
+    # copy the weights of the two models across
+    agent.q1.load_state_dict(agent.q2.state_dict())
+    assert compare_models(agent.q1, agent.q2)  # this passes!
+
+    # test the two models output the same stuff
+    sample_state = sample_pt_state(state_space_shape, state_space_shape.keys(), batch=1)
+    q1_out = agent.q1(sample_state)
+    q1_out_2 = agent.q1(sample_state)
+    q2_out = agent.q2(sample_state)
+
+    assert q1_out.allclose(q1_out_2)  # check model pass is idempotent -> passes
+    assert q1_out.allclose(q2_out)  # this also passes
+
+    # test saving
     agent.save(save_path)
 
     del agent
@@ -44,7 +64,7 @@ def test_dqnagent_dummy():
     os.remove(save_path)
 
 
-def test_dqnagent_full(minerl_env):
+def notest_dqnagent_full(minerl_env):
 
     w = 16
     h = 16

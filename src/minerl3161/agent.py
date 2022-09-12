@@ -99,7 +99,6 @@ class DQNAgent(BaseAgent):
         ).to(device)
         self.q2.load_state_dict(self.q1.state_dict())
         self.q2.requires_grad_(False)
-        self.q2.eval()
         
 
     def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:

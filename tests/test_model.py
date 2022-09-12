@@ -9,6 +9,11 @@ from minerl3161.models import DQNNet
 from minerl3161.utils import np_dict_to_pt, sample_pt_state
 from minerl3161.wrappers import mineRLObservationSpaceWrapper
 
+def compare_models(model1, model2):
+    for p1, p2 in zip(model1.parameters(), model2.parameters()):
+        if p1.data.ne(p2.data).sum() > 0:
+            return False
+    return True
 
 
 def test_dqnnet_dummy():
@@ -36,8 +41,22 @@ def test_dqnnet_dummy():
     loss.backward()
     optim.step()
 
+    net2 = DQNNet(state_space, n_actions, layer_size=layer_size).to(device)
+    net2.requires_grad_(False)
+    net.load_state_dict(net2.state_dict())
+    assert compare_models(net, net2)  # this passes!
 
-def test_dqnnet_real(minerl_env):
+    # test the two models output the same stuff
+    sample_state = sample_pt_state(state_space, state_space.keys(), batch=1)
+    q1_out = net(sample_state)
+    q1_out_2 = net(sample_state)
+    q2_out = net2(sample_state)
+
+    assert q1_out.allclose(q1_out_2)  # check model pass is idempotent -> passes
+    assert q1_out.allclose(q2_out)  # this fails!
+
+
+def notest_dqnnet_real(minerl_env):
     # real observation space
     w = 16
     h = 16
