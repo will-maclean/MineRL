@@ -9,6 +9,7 @@ import numpy as np
 import wandb
 from tqdm import tqdm
 import torch
+from minerl3161.checkpointer import Checkpointer
 from minerl3161.utils import copy_weights
 from torch.optim import Adam, Optimizer
 
@@ -39,6 +40,8 @@ class BaseTrainer:
         self.hp: BaseHyperparameters = hyperparameters
         self.use_wandb = use_wandb
         self.device = device
+
+        self.checkpointer = Checkpointer(agent, checkpoint_every=self.hp.checkpoint_every, use_wandb=use_wandb)
 
         self.gathered_transitions = ReplayBuffer(
             self.hp.buffer_size_gathered, self.env.observation_space
@@ -80,6 +83,8 @@ class BaseTrainer:
             log_dict.update(self._housekeeping(t))
 
             self._log(log_dict)
+        
+        self.close()
 
     def _gather(self, steps: int) -> Dict[str, Any]:
         """gathers steps of experience from the environment
@@ -129,14 +134,22 @@ class BaseTrainer:
         raise NotImplementedError()
 
     def _housekeeping(self, step: int) -> None:
-        #TODO: implement
-        return {}
+        log_dict = {}
+
+        # start with checkpointing
+        log_dict.update(
+            self.checkpointer.step(step)
+        )
+        
+        return log_dict
 
 
     def _log(self, log_dict: dict) -> None:
         if self.use_wandb:
             wandb.log(log_dict)
-
+    
+    def close(self):
+        pass
 
 # TODO: write tests
 class DQNTrainer(BaseTrainer):
