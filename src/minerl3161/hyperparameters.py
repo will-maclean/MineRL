@@ -5,7 +5,7 @@ from typing import List, Union
 @dataclass
 class BaseHyperparameters:
     train_steps: int = 100000  # number of train_loop steps
-    burn_in: int = 50  # how many steps to loop for before starting training
+    burn_in: int = 5000  # how many steps to loop for before starting training
     train_every: int = 1  # how many steps per train call
     evaluate_every: int = 10_000  # how many steps per evaluation call
     evaluate_episodes: int = 5  # how many episodes we complete each evaluation call
@@ -29,10 +29,10 @@ class DQNHyperparameters(BaseHyperparameters):
     model_hidden_layer_size: int = 64  # layer size for hidden layers in neural net
     hard_update_freq: Union[
         int, None
-    ] = 1000  # how ofter to do a hard copy from q1 to q2
+    ] = 8000  # how ofter to do a hard copy from q1 to q2
     soft_update_freq: Union[
         int, None
-    ] = 1  # how often to do a soft update from q1 to q2
+    ] = 0  # how often to do a soft update from q1 to q2
     polyak_tau: float = 0.01  # controls the weight of the soft update
     reward_scale: float = 1.0  # controls whether we want to scale the rewards in the loss function
     
