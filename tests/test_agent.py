@@ -29,16 +29,17 @@ def test_dqnagent_dummy():
     save_path = "test.pt"
 
     agent = DQNAgent(
-        obs_space=state_space_shape, 
-        n_actions=n_actions, 
-        device=device, 
-        hyperparams=hyperparams)
+        obs_space=state_space_shape,
+        n_actions=n_actions,
+        device=device,
+        hyperparams=hyperparams,
+    )
 
     sample_state = sample_pt_state(state_space_shape, state_space_shape.keys())
     sample_state = pt_dict_to_np(sample_state)
 
-    _ = agent.act(sample_state, train=True, step = 500)  # test epsilon greedy
-    _ = agent.act(sample_state, train=False, step = None)  # test greedy act
+    _ = agent.act(sample_state, train=True, step=500)  # test epsilon greedy
+    _ = agent.act(sample_state, train=False, step=None)  # test greedy act
 
     # copy the weights of the two models across
     agent.q1.load_state_dict(agent.q2.state_dict())
@@ -72,21 +73,28 @@ def notest_dqnagent_full(minerl_env):
     n_actions = 16
 
     hyperparams = DQNHyperparameters()
-    env = mineRLObservationSpaceWrapper(minerl_env, frame=stack, features=hyperparams.inventory_feature_names, downsize_width=w, downsize_height=h)
+    env = mineRLObservationSpaceWrapper(
+        minerl_env,
+        frame=stack,
+        features=hyperparams.inventory_feature_names,
+        downsize_width=w,
+        downsize_height=h,
+    )
     device = "cpu"
     save_path = "test.pt"
 
     agent = DQNAgent(
-        obs_space=env.observation_space, 
-        n_actions=n_actions, 
-        device=device, 
-        hyperparams=hyperparams)
+        obs_space=env.observation_space,
+        n_actions=n_actions,
+        device=device,
+        hyperparams=hyperparams,
+    )
 
     s = env.reset()
 
-    a1, _ = agent.act(s, train=True, step = 0)  # test epsilon greedy, random
-    a2, _ = agent.act(s, train=True, step = 1e9)  # test epsilon greedy, greedy
-    a3, _ = agent.act(s, train=False, step = None)  # test greedy act
+    a1, _ = agent.act(s, train=True, step=0)  # test epsilon greedy, random
+    a2, _ = agent.act(s, train=True, step=1e9)  # test epsilon greedy, greedy
+    a3, _ = agent.act(s, train=False, step=None)  # test greedy act
 
     _ = env.step(a1)
     _ = env.step(a2)

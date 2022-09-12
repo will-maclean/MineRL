@@ -86,20 +86,19 @@ class DQNAgent(BaseAgent):
 
         self.q1 = DQNNet(
             state_shape=obs_space,
-            n_actions=n_actions, 
+            n_actions=n_actions,
             dqn_hyperparams=hyperparams,
-            layer_size=hyperparams.model_hidden_layer_size
+            layer_size=hyperparams.model_hidden_layer_size,
         ).to(device)
 
         self.q2 = DQNNet(
             state_shape=obs_space,
-            n_actions=n_actions, 
+            n_actions=n_actions,
             dqn_hyperparams=hyperparams,
-            layer_size=hyperparams.model_hidden_layer_size
+            layer_size=hyperparams.model_hidden_layer_size,
         ).to(device)
         self.q2.load_state_dict(self.q1.state_dict())
         self.q2.requires_grad_(False)
-        
 
     def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:
         """chooses action from action space based on state
@@ -134,7 +133,6 @@ class DQNAgent(BaseAgent):
 
                 return action, {}
 
-
     # TODO: Determine if pickle supports saving and loading of model weights
     def save(self, path: str):
         """saves the current agent
@@ -163,12 +161,7 @@ class TinyDQNAgent(BaseAgent):
     """BaseAgent implementation that implements a Deep Q Learning algorithm. This include a PyTorch neural network."""
 
     def __init__(
-        self,
-        obs_space: int,
-        n_actions: int,
-        device: str,
-        *args,
-        **kwargs
+        self, obs_space: int, n_actions: int, device: str, *args, **kwargs
     ) -> None:
         """Base agent initialiser
 
@@ -184,7 +177,7 @@ class TinyDQNAgent(BaseAgent):
         self.obs_space = obs_space
         self.n_action = n_actions
 
-        self.q1 = TinyDQN(S = obs_space.shape[0], A = n_actions).to(device)
+        self.q1 = TinyDQN(S=obs_space.shape[0], A=n_actions).to(device)
         self.q2.requires_grad_(False)
         self.q2.eval()
 
@@ -220,7 +213,6 @@ class TinyDQNAgent(BaseAgent):
                 action = q_vals.squeeze().argmax().detach().cpu().numpy()
 
                 return action, {}
-
 
     # TODO: Determine if pickle supports saving and loading of model weights
     def save(self, path: str):

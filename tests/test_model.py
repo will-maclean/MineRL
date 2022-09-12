@@ -9,6 +9,7 @@ from minerl3161.models import DQNNet
 from minerl3161.utils import np_dict_to_pt, sample_pt_state
 from minerl3161.wrappers import mineRLObservationSpaceWrapper
 
+
 def compare_models(model1, model2):
     for p1, p2 in zip(model1.parameters(), model2.parameters()):
         if p1.data.ne(p2.data).sum() > 0:
@@ -18,10 +19,10 @@ def compare_models(model1, model2):
 
 def test_dqnnet_dummy():
     state_space = {
-        'a': np.zeros(3), 
-        'pov': np.zeros((4, 16, 16)),
-        }
-    
+        "a": np.zeros(3),
+        "pov": np.zeros((4, 16, 16)),
+    }
+
     n_actions = 32
     layer_size = 8
     batch_size = 3
@@ -60,13 +61,15 @@ def notest_dqnnet_real(minerl_env):
     # real observation space
     w = 16
     h = 16
-    features = ['pov', 'stone_sword', 'stonecutter', 'stone_shovel']
+    features = ["pov", "stone_sword", "stonecutter", "stone_shovel"]
     stack = 4
     n_actions = 8
-    device="cpu"
+    device = "cpu"
     layer_size = 8
 
-    env = mineRLObservationSpaceWrapper(minerl_env, frame=stack, features=features, downsize_width=w, downsize_height=h)
+    env = mineRLObservationSpaceWrapper(
+        minerl_env, frame=stack, features=features, downsize_width=w, downsize_height=h
+    )
 
     obs_space = env.observation_space
 
