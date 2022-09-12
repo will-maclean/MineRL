@@ -197,7 +197,10 @@ RUN python3 --version
 RUN pip3 install pyyaml && \
     pip3 install minerl==0.4.4 
 
-RUN pip3 install torch==1.12.0 wandb
+RUN pip3 install torch==1.12.0 
+RUN pip3 install wandb requests omegaconf pycocotools --upgrade
+
+RUN wandb login 93b2c65fa31d949cc0cb8857823986f47f96f00f
 
 ENV DISPLAY :0
 ENV VGL_REFRESHRATE 60

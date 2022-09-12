@@ -16,6 +16,7 @@ class BaseHyperparameters:
     )
     gather_every: int = 1  # how often we collect transition data
     gather_n: int = 1  # how many transitions we collect at once
+    checkpoint_every: Union[int, None] = 50_000  # how often we should save a copy of the agent 
 
 
 @dataclass
