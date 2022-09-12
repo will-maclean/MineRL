@@ -25,7 +25,7 @@ def test_dqnnet_dummy():
     net = DQNNet(state_space, n_actions, layer_size=layer_size).to(device)
     optim = th.optim.Adam(lr=0.01, params=net.parameters())
 
-    sample_input = sample_pt_state(state_space, state_space.keys(), batch=1)
+    sample_input = sample_pt_state(state_space, state_space.keys(), batch=batch_size)
     sample_output = th.rand((batch_size, n_actions))
 
     nn_output = net(sample_input)
