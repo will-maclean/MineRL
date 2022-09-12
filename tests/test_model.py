@@ -57,7 +57,7 @@ def test_dqnnet_dummy():
     assert q1_out.allclose(q2_out)  # this fails!
 
 
-def notest_dqnnet_real(minerl_env):
+def test_dqnnet_real(minerl_env):
     # real observation space
     w = 16
     h = 16

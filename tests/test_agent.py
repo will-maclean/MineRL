@@ -65,7 +65,7 @@ def test_dqnagent_dummy():
     os.remove(save_path)
 
 
-def notest_dqnagent_full(minerl_env):
+def test_dqnagent_full(minerl_env):
 
     w = 16
     h = 16
