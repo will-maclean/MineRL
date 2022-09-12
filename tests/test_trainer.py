@@ -12,7 +12,7 @@ wandb_entity = "minerl3161"
 wandb_project = "testing"
 
 
-def test_DQNtrainer(minerl_env):
+def notest_DQNtrainer(minerl_env):
     # just runs main.py for a few steps basically
     # Loading onto appropriate device
     using_gpu = torch.cuda.is_available()
@@ -57,13 +57,18 @@ def test_DQNtrainer(minerl_env):
 
     # Initialise trainer and start training
     trainer = DQNTrainer(env=env, agent=agent, hyperparameters=hp, use_wandb=True, device=device)
-    trainer.train()
 
-    wandb.finish()
+    print("starting training")
+    # run the trainer
+    trainer.train()
+    print("ending training")
+
+    # wandb.finish()
 
      # tidy up by deleting the run
     api = wandb.Api()
     run = api.run(f"{wandb_entity}/{wandb_project}/{run_id}")
     run.delete()
-
+    
+    print("run deleted")
 
