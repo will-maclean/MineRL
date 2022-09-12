@@ -210,8 +210,9 @@ class DQNTrainer(BaseTrainer):
         q_values = q_values.gather(1, batch["actions"])
 
         # estimate q values for next states/actions using q2 network
-        next_actions = self.agent.q2(batch["next_states"]).argmax(dim=1).unsqueeze(1)
-        next_q_values = self.agent.q2(batch["next_states"]).gather(1, next_actions)
+        next_q_values = self.agent.q2(batch["next_states"])
+        next_actions = next_q_values.argmax(dim=1).unsqueeze(1)
+        next_q_values = next_q_values.gather(1, next_actions)
 
         # calculate TD target for Bellman Equation
         td_target = self.hp.reward_scale * torch.sign(batch[
