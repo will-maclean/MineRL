@@ -32,7 +32,7 @@ def decode_action(obj: dict, camera_shrink_factor=100) -> list:
         'sneak': 0,
         'sprint': 0
     }
-    
+
     for k in obj.keys():
         if k == "camera":
             for d, dim in enumerate(obj[k]):
@@ -217,7 +217,7 @@ class MineRLWrapper(gym.Wrapper):
         """ Maps an observation from the env/dataset to an action index in our action set
         Args:
             obs (dict): A single action from the env/dataset in dictionary form
-
+            action_set (dict): The action set initialised by the MineRLWrapper
         """
         cluster_centers = pd.DataFrame([decode_action(i) for i in action_set])
 
