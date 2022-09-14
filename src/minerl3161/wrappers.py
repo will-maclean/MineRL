@@ -1,4 +1,5 @@
 from copy import deepcopy
+import stat
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -10,29 +11,28 @@ import pickle
 
 import minerl3161
 
-NULL_ACTION = {
-    'attack': 0,
-    'back': 0,
-    'camera0': 0.0,
-    'camera1': 0.0,
-    'craft': 'none',
-    'equip': 'none',
-    'forward': 0,
-    'jump': 0,
-    'left': 0,
-    'nearbyCraft': 'none',
-    'nearbySmelt': 'none',
-    'place': 'none',
-    'right': 0,
-    'sneak': 0,
-    'sprint': 0
-}
-
 def decode_action(obj: dict, camera_shrink_factor=100) -> list:
     """Decodes an action to fit into a dataframe.
     Helper function for MineRLWrapper.map_action()
     """
-    proc = NULL_ACTION.copy()
+    proc = {
+        'attack': 0,
+        'back': 0,
+        'camera0': 0.0,
+        'camera1': 0.0,
+        'craft': 'none',
+        'equip': 'none',
+        'forward': 0,
+        'jump': 0,
+        'left': 0,
+        'nearbyCraft': 'none',
+        'nearbySmelt': 'none',
+        'place': 'none',
+        'right': 0,
+        'sneak': 0,
+        'sprint': 0
+    }
+
     for k in obj.keys():
         if k == "camera":
             for d, dim in enumerate(obj[k]):
@@ -212,29 +212,27 @@ class MineRLWrapper(gym.Wrapper):
 
         return state, reward, done, info
 
-    def find_cat_action(self, action: str, value: str) -> int:
-        """ Finds the index of the given action-value pair in the set of actions.
-        Assumes map_action has been called before to initialise self.cluster_centers
-        """
-        return self.cluster_centers[self.cluster_centers[action] == value].index[0]
-
-    def map_action(self, obs:dict) -> int:
+    @staticmethod
+    def map_action(obs:dict, action_set: list) -> int:
         """ Maps an observation from the env/dataset to an action index in our action set
         Args:
             obs (dict): A single action from the env/dataset in dictionary form
+            action_set (dict): The action set initialised by the MineRLWrapper
         """
-        self.cluster_centers = pd.DataFrame([decode_action(i) for i in self.action_set])
+        cluster_centers = pd.DataFrame([decode_action(i) for i in action_set])
+
+        # First checks if the action is categorical in nature
         cat_list = ['place', 'nearbyCraft', 'nearbySmelt', 'craft', 'equip']
         for cat_act in cat_list:
             if obs[cat_act] != 'none':
-                return self.find_cat_action(cat_act, obs[cat_act])
+                return cluster_centers[cluster_centers[cat_act] == obs[cat_act]].index[0]
 
         # The values of each numerical field in a list
         obs_num = list({k: v for k, v in obs.items() if k not in cat_list}.values())
 
         # Calculates the euclidean distance between `obs` and every action in action set
         distances = [
-            np.linalg.norm(obs_num - action.values) for _, action in self.cluster_centers.drop(
+            np.linalg.norm(obs_num - action.values) for _, action in cluster_centers.drop(
                 cat_list, axis=1).iterrows()
         ]
         return np.argmin(distances)
