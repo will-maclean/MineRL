@@ -5,6 +5,18 @@ from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.wrappers import minerlWrapper
 
 
+def test_env_wrapper_default(minerl_env):
+
+        env = minerlWrapper(minerl_env)
+    
+        assert env.observation_space['pov'].shape == (4, 64, 64)
+    
+        state = env.reset()
+    
+        assert state['pov'].shape == (4, 64, 64)
+        assert len(state['inventory'].shape) == 1
+
+
 def test_env_wrapper_basic_specific(minerl_env):
 
     w = 16
@@ -12,7 +24,7 @@ def test_env_wrapper_basic_specific(minerl_env):
     features = ['pov', 'iron_pickaxe', 'planks', 'wooden_axe']
     stack = 4
 
-    env = minerlWrapper(minerl_env, frame=stack, features=features, resize_w=w, resize_h=h)
+    env = minerlWrapper(minerl_env, n_stack=stack, features=features, resize_w=w, resize_h=h)
 
     assert env.observation_space['pov'].shape == (stack, w, h)
 

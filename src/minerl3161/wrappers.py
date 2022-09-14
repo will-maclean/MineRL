@@ -10,42 +10,12 @@ import pickle
 import minerl3161
 
 
-class MineRLDiscreteActionWrapper(gym.ActionWrapper):
-    def __init__(self, env: gym.Env, functional_acts: bool = True, extracted_acts: bool = True) -> None:
-        super().__init__(env)
-        extracted_acts_filename = "extracted-actions.pickle"
-        functional_acts_filename = "functional-actions.pickle"
-        self.action_set = []
-
-        if extracted_acts:
-            e_filepath = os.path.join(minerl3161.actions_path, extracted_acts_filename)
-            with open(e_filepath, "rb") as f:
-                self.action_set.extend(pickle.load(f))
-
-        if functional_acts:
-            f_filepath = os.path.join(minerl3161.actions_path, functional_acts_filename)
-            with open(f_filepath, "rb") as f:
-                self.action_set.extend(pickle.load(f))
-        
-        self.action_space = gym.spaces.Discrete(len(self.action_set))
-
-    def action(self, action_idx: int) -> Dict[str, str]:
-        return self.action_set[action_idx]
-    
-    def get_actions_count(self) -> int:
-        return len(self.action_set)
-
-
-def convert_action(action=None, action_space=None):
-    return action, action_space
-
-
-def obs_grayscale(state=None, observation_space=None, feature_name='pov'):
+def obs_grayscale(state=None, observation_space=None, feature_name='pov', *args, **kwargs):
     if observation_space is not None:
         observation_space.spaces[feature_name] = gym.spaces.Box(
             low=0,
             high=255,
-            shape=(observation_space[feature_name].shape[:-1], 1)
+            shape=(*observation_space[feature_name].shape[:-1], 1)
         )
     
     if state is not None:
@@ -56,7 +26,7 @@ def obs_grayscale(state=None, observation_space=None, feature_name='pov'):
     return state, observation_space
 
 
-def obs_resize(state=None, observation_space=None, feature_name='pov', w=64, h=64):
+def obs_resize(state=None, observation_space=None, feature_name='pov', w=64, h=64, *args, **kwargs):
     if observation_space is not None:
         observation_space.spaces[feature_name] = gym.spaces.Box(
             low=0,
@@ -71,7 +41,7 @@ def obs_resize(state=None, observation_space=None, feature_name='pov', w=64, h=6
     return state, observation_space
 
 
-def obs_pytorch_image(state=None, observation_space=None, feature_name='pov'):
+def obs_pytorch_image(state=None, observation_space=None, feature_name='pov', *args, **kwargs):
     if observation_space is not None:
         observation_space.spaces[feature_name] = gym.spaces.Box(
             low=0,
@@ -85,7 +55,7 @@ def obs_pytorch_image(state=None, observation_space=None, feature_name='pov'):
     return state, observation_space
 
 
-def obs_stack_image(state=None, observation_space=None, feature_name='pov', state_buffer=None, frame=4):
+def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space=None, feature_name='pov', state_buffer=None, frame=4, *args, **kwargs):
     if observation_space is not None:
         observation_space.spaces[feature_name] = gym.spaces.Box(
             low=0,
@@ -98,12 +68,13 @@ def obs_stack_image(state=None, observation_space=None, feature_name='pov', stat
             state_buffer = np.zeros((frame, *observation_space[feature_name].shape[1:]))
 
         state_buffer = np.roll(state_buffer, shift=-1, axis=0)
-        state_buffer[-1] = np.squeeze(state[feature_name], axis=0)
+        new_state = state[feature_name]
+        state_buffer[-1] = np.squeeze(new_state, axis=0)
 
     return state_buffer, observation_space, state_buffer
 
 
-def obs_inventory_filter(state=None, observation_space=None, features=None, feature_max=16):
+def obs_inventory_filter(state=None, observation_space=None, features=None, feature_max=16, *args, **kwargs):
     if observation_space is not None:
         if len(features) == 1 and features[0] == "all":
             # return all the items
@@ -147,7 +118,7 @@ def obs_inventory_filter(state=None, observation_space=None, features=None, feat
     return state, observation_space
 
 
-def obs_toggle_equipped_items(state=None, observation_space=None, include_equipped_items=False):
+def obs_toggle_equipped_items(state=None, observation_space=None, include_equipped_items=False, *args, **kwargs):
     if observation_space is not None:
         if not include_equipped_items:
             del observation_space.spaces["equipped_items"]
@@ -159,42 +130,115 @@ def obs_toggle_equipped_items(state=None, observation_space=None, include_equipp
     return state, observation_space
 
 
-def convert_state(state=None, observation_space=None, *args, **kwargs):
-    state, observation_space = obs_inventory_filter(state=state, observation_space=observation_space, *args, **kwargs)
-    state, observation_space = obs_toggle_equipped_items(state=state, observation_space=observation_space, *args, **kwargs)
-    state, observation_space = obs_resize(state=state, observation_space=observation_space, *args, **kwargs)
-    state, observation_space = obs_grayscale(state=state, observation_space=observation_space, *args, **kwargs)
-    state, observation_space, state_buffer = obs_pytorch_image(state=state, observation_space=observation_space, *args, **kwargs)
-    state, observation_space = obs_stack_image(state=state, observation_space=observation_space, *args, **kwargs)
-
-    return state, observation_space, state_buffer
-
-
 class MineRLWrapper(gym.Wrapper):
-    def __init__(self, env, features=None, include_equipped_items=False, resize_w=64, resize_h=64, img_feature_name="pov", n_stack=4) -> None:
+    def __init__(self, 
+                env, 
+                features=None, 
+                include_equipped_items=False, 
+                resize_w=64, 
+                resize_h=64, 
+                img_feature_name="pov", 
+                n_stack=4,
+                functional_acts=True,
+                extracted_acts=True,
+        ) -> None:
         super().__init__(env)
 
+        self.features = features if features is not None else ["all"]
+
         # update action space
-        _, self.action_space = convert_action(action_space=self.action_space)
+        self.action_set = MineRLWrapper.create_action_set(functional_acts=functional_acts, extracted_acts=extracted_acts)
+        _, self.action_space = MineRLWrapper.convert_action(action_space=self.action_space)
 
         # update observation space
-        _, self.observation_space, _ = convert_state(observation_space=self.observation_space, features=features, include_equipped_items=include_equipped_items, resize_w=resize_w, resize_h=resize_h, img_feature_name=img_feature_name, n_stack=n_stack)
+        _, self.observation_space, _ = MineRLWrapper.convert_state(observation_space=self.observation_space, features=self.features, include_equipped_items=include_equipped_items, resize_w=resize_w, resize_h=resize_h, img_feature_name=img_feature_name, n_stack=n_stack)
 
-        # create state buffer
+        # create state buffer and other keep-track-of-things attrs
         self.state_buffer = np.zeros((n_stack, resize_h, resize_w), dtype=np.float32)
+        self.last_unprocessed_state = None
     
     def reset(self):
-        state = self.env.reset()
-        state, _, self.state_buffer = convert_state(state=state, state_buffer=self.state_buffer)
+        # create state buffer and other keep-track-of-things attrs
+        self.state_buffer = np.zeros_like(self.state_buffer)
+        
+        self.last_unprocessed_state = self.env.reset()
+        state, _, self.state_buffer = MineRLWrapper.convert_state(state=self.last_unprocessed_state, state_buffer=self.state_buffer, features=self.features)
         return state
     
     def step(self, action):
-        action, _ = convert_action(action=action)
-        state, reward, done, info = self.env.step(action)
-        state, _, self.state_buffer = convert_state(state=state, state_buffer=self.state_buffer)
+        action, _ = MineRLWrapper.convert_action(action=action, last_unprocessed_state=self.last_unprocessed_state)
+        self.last_unprocessed_state, reward, done, info = self.env.step(action)
+        state, _, self.state_buffer = MineRLWrapper.convert_state(state=self.last_unprocessed_state, state_buffer=self.state_buffer, features=self.features)
 
         return state, reward, done, info
+    
+    @staticmethod
+    def convert_state(state=None, observation_space=None, *args, **kwargs):
+        state, observation_space = obs_inventory_filter(state=state, observation_space=observation_space, *args, **kwargs)
+        state, observation_space = obs_toggle_equipped_items(state=state, observation_space=observation_space, *args, **kwargs)
+        state, observation_space = obs_resize(state=state, observation_space=observation_space, *args, **kwargs)
+        state, observation_space = obs_grayscale(state=state, observation_space=observation_space, *args, **kwargs)
+        state, observation_space = obs_pytorch_image(state=state, observation_space=observation_space, *args, **kwargs)
+        state, observation_space, state_buffer = obs_stack_image(state=state, observation_space=observation_space, *args, **kwargs)
+
+        return state, observation_space, state_buffer 
+    
+    @staticmethod
+    def create_action_set(functional_acts: bool = True, extracted_acts: bool = True):
+        extracted_acts_filename = "extracted-actions.pickle"
+        functional_acts_filename = "functional-actions.pickle"
+        action_set = []
+
+        if extracted_acts:
+            e_filepath = os.path.join(minerl3161.actions_path, extracted_acts_filename)
+            with open(e_filepath, "rb") as f:
+                action_set.extend(pickle.load(f))
+
+        if functional_acts:
+            f_filepath = os.path.join(minerl3161.actions_path, functional_acts_filename)
+            with open(f_filepath, "rb") as f:
+                action_set.extend(pickle.load(f))
+        
+        return action_set
+
+    @staticmethod
+    def convert_action(action: int = None, action_space=None, action_set=None, last_unprocessed_state=None,):
+        if action_space is not None:
+            pass
+
+        if action is not None:
+            action = action_set[action]
+
+            if action["place"] == "place_navigate":
+                action = MineRLWrapper._get_navigate_block(action, last_unprocessed_state)
+
+        return action, action_space
+    
+    @staticmethod
+    def _get_navigate_block(action: Dict[str, str], last_unprocessed_obs) -> Dict[str, str]:
+        navigate_blocks = ["dirt", "cobblestone", "stone"]
+
+        for block in navigate_blocks:
+            if last_unprocessed_obs["inventory"][block].item() > 0:
+                action["place"] = block
+                break
+        
+        if action["place"] == "place_navigate":
+            action["place"] = "none"
+
+        return action
 
 
 def minerlWrapper(env, *args, **kwargs):
+    """
+    Parameters:
+        features=None, 
+        include_equipped_items=False, 
+        resize_w=64, 
+        resize_h=64, 
+        img_feature_name="pov", 
+        n_stack=4,
+        functional_acts=True,
+        extracted_acts=True,
+    """
     return MineRLWrapper(env, *args, **kwargs)

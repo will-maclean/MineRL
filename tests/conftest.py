@@ -18,22 +18,3 @@ def minerl_env():
 
     env.close()
 
-
-@pytest.fixture(scope='session')
-def wrapped_minerl_env():
-    
-    env_name = "MineRLObtainDiamond-v0"
-    env = gym.make(env_name)
-    
-    w = 16
-    h = 16
-    stack = 4
-
-    hyperparams = DQNHyperparameters()
-    env = minerlWrapper(env, frame=stack, features=hyperparams.inventory_feature_names, resize_w=w, resize_h=h)
-
-    env.reset()
-
-    yield env
-
-    env.close()

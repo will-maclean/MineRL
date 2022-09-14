@@ -5,7 +5,11 @@ from minerl3161.trainer import BaseTrainer
 import numpy as np
 import os
 
-def test_get_dataset_batches(wrapped_minerl_env):
+from minerl3161.wrappers import minerlWrapper
+
+def test_get_dataset_batches(minerl_env):
+
+    wrapped_minerl_env = minerlWrapper(minerl_env)
     
     # os.environ['MINERL_DATA_ROOT'] = '../../../data/human-xp'
     state_space_shape = {

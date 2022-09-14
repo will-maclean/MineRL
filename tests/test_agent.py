@@ -6,6 +6,7 @@ import numpy as np
 from minerl3161.agent import DQNAgent
 from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.utils import pt_dict_to_np, sample_pt_state
+from minerl3161.wrappers import minerlWrapper
 
 
 
@@ -43,8 +44,9 @@ def test_dqnagent_dummy():
     os.remove(save_path)
 
 
-def test_dqnagent_full(wrapped_minerl_env):
-
+def test_dqnagent_full(minerl_env):
+    wrapped_minerl_env = minerlWrapper(minerl_env)
+    
     n_actions = 16
 
     hyperparams = DQNHyperparameters()
