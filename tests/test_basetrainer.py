@@ -7,7 +7,7 @@ import os
 
 from minerl3161.wrappers import minerlWrapper
 
-def no_test_get_dataset_batches(minerl_env):
+def test_get_dataset_batches(minerl_env):
 
     wrapped_minerl_env = minerlWrapper(minerl_env)
     
@@ -17,7 +17,7 @@ def no_test_get_dataset_batches(minerl_env):
     hyperparams.checkpoint_every = None  # don't checkpoint, as it will fail without wandb
 
     agent = DQNAgent(
-        obs_space=wrapped_minerl_env.observation_space.shape, 
+        obs_space=wrapped_minerl_env.observation_space, 
         n_actions=wrapped_minerl_env.action_space.n, 
         device=device, 
         hyperparams=hyperparams)
@@ -28,22 +28,21 @@ def no_test_get_dataset_batches(minerl_env):
     assert len(batches) == 5
     assert len(batches[0]['state']['pov']) == 10
 
-def no_test_sampling(minerl_env):
+def test_sampling(minerl_env):
 
     wrapped_minerl_env = minerlWrapper(minerl_env)
 
-    # os.environ['MINERL_DATA_ROOT'] = '../../../data/human-xp'
-
     hyperparams = DQNHyperparameters()
+    hyperparams.checkpoint_every = None  # don't checkpoint, as it will fail without wandb
     device = "cpu"
 
     agent = DQNAgent(
-        obs_space=wrapped_minerl_env.observation_space.shape, 
+        obs_space=wrapped_minerl_env.observation_space, 
         n_actions=wrapped_minerl_env.action_space.n, 
         device=device, 
         hyperparams=hyperparams)
 
-    base_trainer = DQNTrainer(wrapped_minerl_env, agent, hyperparams, False)
+    base_trainer = DQNTrainer(wrapped_minerl_env, agent, hyperparams, use_wandb=False)
 
     def strategy(dataset_size, gathered_size, step):
         return dataset_size-step, gathered_size+step
