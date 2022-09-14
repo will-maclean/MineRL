@@ -7,7 +7,7 @@ import os
 
 from minerl3161.wrappers import minerlWrapper
 
-def test_get_dataset_batches(minerl_env):
+def no_test_get_dataset_batches(minerl_env):
 
     wrapped_minerl_env = minerlWrapper(minerl_env)
     
@@ -28,7 +28,7 @@ def test_get_dataset_batches(minerl_env):
     assert len(batches) == 5
     assert len(batches[0]['state']['pov']) == 10
 
-def test_sampling(minerl_env):
+def no_test_sampling(minerl_env):
 
     wrapped_minerl_env = minerlWrapper(minerl_env)
 
