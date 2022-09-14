@@ -8,7 +8,7 @@ from collections import namedtuple
 from minerl3161.agent import DQNAgent
 from minerl3161.trainer import DQNTrainer
 from minerl3161.hyperparameters import DQNHyperparameters
-from minerl3161.wrappers import MineRLDiscreteActionWrapper, mineRLObservationSpaceWrapper
+from minerl3161.wrappers import minerlWrapper
 
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'params'])
@@ -46,7 +46,7 @@ def main():
 
     # Configure environment
     env = gym.make(args.env)
-    env = mineRLObservationSpaceWrapper(env, hp.inventory_feature_names)
+    env = minerlWrapper(env, hp.inventory_feature_names)  #FIXME: surely we need to pass in more shit than this
 
 
     # Initialising ActionWrapper to determine number of actions in use

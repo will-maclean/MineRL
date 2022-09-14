@@ -7,7 +7,7 @@ import minerl
 from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.models import DQNNet
 from minerl3161.utils import np_dict_to_pt, sample_pt_state
-from minerl3161.wrappers import mineRLObservationSpaceWrapper
+from minerl3161.wrappers import minerlWrapper
 
 
 
@@ -47,7 +47,7 @@ def test_dqnnet_real(minerl_env):
     device="cpu"
     layer_size = 8
 
-    env = mineRLObservationSpaceWrapper(minerl_env, frame=stack, features=features, downsize_width=w, downsize_height=h)
+    env = minerlWrapper(minerl_env, frame=stack, features=features, resize_w=w, resize_h=h)
 
     obs_space = env.observation_space
 

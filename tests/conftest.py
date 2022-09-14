@@ -4,7 +4,7 @@ import gym
 import minerl
 from minerl3161.hyperparameters import DQNHyperparameters
 
-from minerl3161.wrappers import mineRLObservationSpaceWrapper
+from minerl3161.wrappers import minerlWrapper
 
 
 @pytest.fixture(scope="session")
@@ -30,7 +30,7 @@ def wrapped_minerl_env():
     stack = 4
 
     hyperparams = DQNHyperparameters()
-    env = mineRLObservationSpaceWrapper(env, frame=stack, features=hyperparams.inventory_feature_names, downsize_width=w, downsize_height=h)
+    env = minerlWrapper(env, frame=stack, features=hyperparams.inventory_feature_names, resize_w=w, resize_h=h)
 
     env.reset()
 

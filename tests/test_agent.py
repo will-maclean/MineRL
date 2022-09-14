@@ -6,7 +6,6 @@ import numpy as np
 from minerl3161.agent import DQNAgent
 from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.utils import pt_dict_to_np, sample_pt_state
-from minerl3161.wrappers import mineRLObservationSpaceWrapper
 
 
 

@@ -194,3 +194,7 @@ class MineRLWrapper(gym.Wrapper):
         state, _, self.state_buffer = convert_state(state=state, state_buffer=self.state_buffer)
 
         return state, reward, done, info
+
+
+def minerlWrapper(env, *args, **kwargs):
+    return MineRLWrapper(env, *args, **kwargs)
