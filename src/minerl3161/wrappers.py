@@ -26,17 +26,17 @@ def obs_grayscale(state=None, observation_space=None, feature_name='pov', *args,
     return state, observation_space
 
 
-def obs_resize(state=None, observation_space=None, feature_name='pov', w=64, h=64, *args, **kwargs):
+def obs_resize(state=None, observation_space=None, feature_name='pov', resize_w=64, resize_h=64, *args, **kwargs):
     if observation_space is not None:
         observation_space.spaces[feature_name] = gym.spaces.Box(
             low=0,
             high=255,
-            shape=(h, w, 3),
+            shape=(resize_w, resize_h, 3),
             dtype=observation_space[feature_name].dtype,
         )
     
     if state is not None:
-        state[feature_name] = cv2.resize(state[feature_name], (w, h), interpolation=cv2.INTER_AREA)
+        state[feature_name] = cv2.resize(state[feature_name], (resize_w, resize_h), interpolation=cv2.INTER_AREA)
     
     return state, observation_space
 
@@ -50,7 +50,7 @@ def obs_pytorch_image(state=None, observation_space=None, feature_name='pov', *a
         )
 
     if state is not None:
-        state = np.swapaxes(state[feature_name], 0, 2) / 255, observation_space
+        state[feature_name] = np.swapaxes(state[feature_name], 0, 2) / 255
     
     return state, observation_space
 
@@ -71,7 +71,9 @@ def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space=None,
         new_state = state[feature_name]
         state_buffer[-1] = np.squeeze(new_state, axis=0)
 
-    return state_buffer, observation_space, state_buffer
+        state[feature_name] = state_buffer.copy()
+
+    return state, observation_space, state_buffer
 
 
 def obs_inventory_filter(state=None, observation_space=None, features=None, feature_max=16, *args, **kwargs):
@@ -121,6 +123,9 @@ def obs_inventory_filter(state=None, observation_space=None, features=None, feat
 def obs_toggle_equipped_items(state=None, observation_space=None, include_equipped_items=False, *args, **kwargs):
     if observation_space is not None:
         if not include_equipped_items:
+            # we need to make a copy of the observation space and use that instead so that we don't modify the original
+            # observation space, as deleting is in-place
+            observation_space = deepcopy(observation_space)
             del observation_space.spaces["equipped_items"]
 
     if state is not None:
@@ -144,31 +149,35 @@ class MineRLWrapper(gym.Wrapper):
         ) -> None:
         super().__init__(env)
 
-        self.features = features if features is not None else ["all"]
+        self.obs_kwargs = {
+            "features": features if features is not None else ["all"],
+            "resize_w": resize_w,
+            "resize_h": resize_h,
+            "img_feature_name": img_feature_name,
+            "n_stack": n_stack,
+            "include_equipped_items": include_equipped_items,
+            "state_buffer": np.zeros((n_stack, resize_h, resize_w), dtype=np.float32),
+            "last_unprocessed_state": None,
+        }
 
         # update action space
         self.action_set = MineRLWrapper.create_action_set(functional_acts=functional_acts, extracted_acts=extracted_acts)
-        _, self.action_space = MineRLWrapper.convert_action(action_space=self.action_space)
+        _, self.action_space = MineRLWrapper.convert_action(action_space=self.action_space, action_set=self.action_set)
 
         # update observation space
-        _, self.observation_space, _ = MineRLWrapper.convert_state(observation_space=self.observation_space, features=self.features, include_equipped_items=include_equipped_items, resize_w=resize_w, resize_h=resize_h, img_feature_name=img_feature_name, n_stack=n_stack)
-
-        # create state buffer and other keep-track-of-things attrs
-        self.state_buffer = np.zeros((n_stack, resize_h, resize_w), dtype=np.float32)
-        self.last_unprocessed_state = None
+        _, self.observation_space, _ = MineRLWrapper.convert_state(observation_space=deepcopy(self.observation_space), **self.obs_kwargs)
     
     def reset(self):
-        # create state buffer and other keep-track-of-things attrs
-        self.state_buffer = np.zeros_like(self.state_buffer)
+        self.obs_kwargs["state_buffer"] = np.zeros_like(self.obs_kwargs["state_buffer"])
         
-        self.last_unprocessed_state = self.env.reset()
-        state, _, self.state_buffer = MineRLWrapper.convert_state(state=self.last_unprocessed_state, state_buffer=self.state_buffer, features=self.features)
+        self.obs_kwargs["last_unprocessed_state"] = self.env.reset()
+        state, _, self.obs_kwargs["state_buffer"] = MineRLWrapper.convert_state(state=self.obs_kwargs["last_unprocessed_state"], **self.obs_kwargs)
         return state
     
     def step(self, action):
-        action, _ = MineRLWrapper.convert_action(action=action, last_unprocessed_state=self.last_unprocessed_state)
-        self.last_unprocessed_state, reward, done, info = self.env.step(action)
-        state, _, self.state_buffer = MineRLWrapper.convert_state(state=self.last_unprocessed_state, state_buffer=self.state_buffer, features=self.features)
+        action, _ = MineRLWrapper.convert_action(action=action, last_unprocessed_state=self.obs_kwargs["last_unprocessed_state"], action_set=self.action_set)
+        self.obs_kwargs["last_unprocessed_state"], reward, done, info = self.env.step(action)
+        state, _, self.obs_kwargs["state_buffer"] = MineRLWrapper.convert_state(state=self.obs_kwargs["last_unprocessed_state"], **self.obs_kwargs)
 
         return state, reward, done, info
     
@@ -204,7 +213,7 @@ class MineRLWrapper(gym.Wrapper):
     @staticmethod
     def convert_action(action: int = None, action_space=None, action_set=None, last_unprocessed_state=None,):
         if action_space is not None:
-            pass
+            action_space = gym.spaces.Discrete(len(action_set))
 
         if action is not None:
             action = action_set[action]

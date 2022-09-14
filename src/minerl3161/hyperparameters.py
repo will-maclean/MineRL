@@ -45,8 +45,6 @@ class DQNHyperparameters(BaseHyperparameters):
 
     # these are the feature names that are passed into the observation wrapper.
     inventory_feature_names: List = field(default_factory=lambda: [
-        # camera
-        "pov",
         # either set "all" or individually specify items
         "all",
     ])

@@ -21,7 +21,7 @@ def test_env_wrapper_basic_specific(minerl_env):
 
     w = 16
     h = 16
-    features = ['pov', 'iron_pickaxe', 'planks', 'wooden_axe']
+    features = ['iron_pickaxe', 'planks', 'wooden_axe']
     stack = 4
 
     env = minerlWrapper(minerl_env, n_stack=stack, features=features, resize_w=w, resize_h=h)
@@ -41,7 +41,7 @@ def test_env_wrapper_all(minerl_env):
     h = 16
     features = DQNHyperparameters().inventory_feature_names
     stack = 4
-    env = minerlWrapper(minerl_env, frame=stack, features=features, resize_w=w, resize_h=h)
+    env = minerlWrapper(minerl_env, n_stack=stack, features=features, resize_w=w, resize_h=h)
 
     assert env.observation_space['pov'].shape == (stack, w, h)
 

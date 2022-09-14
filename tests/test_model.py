@@ -41,13 +41,13 @@ def test_dqnnet_real(minerl_env):
     # real observation space
     w = 16
     h = 16
-    features = ['pov', 'stone_sword', 'stonecutter', 'stone_shovel']
+    features = ['stone_sword', 'stonecutter', 'stone_shovel']
     stack = 4
     n_actions = 8
     device="cpu"
     layer_size = 8
 
-    env = minerlWrapper(minerl_env, frame=stack, features=features, resize_w=w, resize_h=h)
+    env = minerlWrapper(minerl_env, n_stack=stack, features=features, resize_w=w, resize_h=h)
 
     obs_space = env.observation_space
 

@@ -1,4 +1,4 @@
-from minerl3161.wrappers import minerlWrapper
+from minerl3161.wrappers import minerlWrapper, MineRLWrapper
 
 
 
@@ -7,16 +7,10 @@ def test_actionwrapper(minerl_env):
     action_count = wrapped_env.action_space.n
     
     for action_idx in range(action_count):
-        action = wrapped_env.convert_action(action_idx)
+        _, _, done, _ = wrapped_env.step(action_idx)
 
-        try: 
-            _, _, done, _ = wrapped_env.step(action)
-
-            if done:
-                wrapped_env.reset()
-
-        except Exception:
-            raise InvalidActionException
+        if done:
+            wrapped_env.reset()
 
 
 class InvalidActionException(Exception):
