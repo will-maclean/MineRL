@@ -226,8 +226,9 @@ class MineRLWrapper(gym.Wrapper):
         cat_list = ['place', 'nearbyCraft', 'nearbySmelt', 'craft', 'equip']
         for cat_act in cat_list:
             if obs[cat_act] != 'none':
-                return cluster_centers[cluster_centers[cat_act] == obs[cat_act]].index[0]
-
+                mapped_action = cluster_centers[cluster_centers[cat_act] == obs[cat_act]].index
+                if len(mapped_action) > 0:
+                    return mapped_action[0]
         # The values of each numerical field in a list
         obs_num = list({k: v for k, v in obs.items() if k not in cat_list}.values())
 
