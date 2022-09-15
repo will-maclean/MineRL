@@ -219,6 +219,7 @@ class MineRLWrapper(gym.Wrapper):
             obs (dict): A single action from the env/dataset in dictionary form
             action_set (dict): The action set initialised by the MineRLWrapper
         """
+        obs = decode_action(obs)
         cluster_centers = pd.DataFrame([decode_action(i) for i in action_set])
 
         # First checks if the action is categorical in nature
