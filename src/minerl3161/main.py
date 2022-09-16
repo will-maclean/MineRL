@@ -1,4 +1,5 @@
 import argparse
+from minerl3161.buffer import ReplayBuffer
 import torch
 import wandb
 import gym
@@ -9,6 +10,7 @@ from minerl3161.agent import DQNAgent
 from minerl3161.trainer import DQNTrainer
 from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.wrappers import minerlWrapper
+from minerl3161.wrappers import MineRLWrapper
 
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'params'])
@@ -48,6 +50,7 @@ def main():
     env = gym.make(args.env)
     env = minerlWrapper(env, hp.inventory_feature_names)  #FIXME: surely we need to pass in more shit than this
 
+    load_human_xp(env)
 
     # Initialising ActionWrapper to determine number of actions in use
     n_actions = env.action_space.n
@@ -70,6 +73,26 @@ def main():
     trainer = POLICIES[args.policy].trainer(env=env, agent=agent, hyperparameters=hp, use_wandb=args.wandb, device=device)
     trainer.train()
 
-   
+
+def load_human_xp(env):
+    buffer = ReplayBuffer(3000, env.observation_space)
+    data = minerl.data.make('MineRLObtainDiamond-v0')
+    trajectory_names = data.get_trajectory_names()
+
+    action_set = MineRLWrapper.create_action_set(functional_acts=True, extracted_acts=True)
+
+    for traj_name in trajectory_names:
+        for current_state, action, reward, next_state, done in data.load_data(traj_name):
+            buffer.add(
+                    reward, 
+                    done, 
+                    MineRLWrapper.map_action(action, action_set), 
+                    MineRLWrapper.convert_state(current_state, features=['all']), 
+                    MineRLWrapper.convert_state(next_state, features=['all'])
+            )
+
+    buffer.save('/opt/project/data/human-xp.pkl')
+
+
 if __name__ == '__main__':
     main()

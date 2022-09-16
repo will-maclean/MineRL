@@ -96,7 +96,7 @@ def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space=None,
 
     if state is not None:
         if state_buffer is None:
-            state_buffer = np.zeros((frame, *observation_space[feature_name].shape[1:]))
+            state_buffer = np.zeros((frame, *state[feature_name].shape[1:]))
 
         state_buffer = np.roll(state_buffer, shift=-1, axis=0)
         new_state = state[feature_name]

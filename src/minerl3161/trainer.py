@@ -22,6 +22,9 @@ from.utils import np_dict_to_pt
 from minerl.data import BufferedBatchIter
 import minerl
 
+from .utils import linear_sampling_strategy as lss
+from os.path import exists
+
 # TODO: write tests
 class BaseTrainer:
     """Abstract class for Trainers. At the least, all implementations must have _train_step()."""
@@ -48,9 +51,12 @@ class BaseTrainer:
         self.gathered_transitions = ReplayBuffer(
             self.hp.buffer_size_gathered, self.env.observation_space
         )
+        self.human_dataset = ReplayBuffer(
+            self.hp.buffer_size_gathered, self.env.observation_space
+        )
+        if exists('/opt/project/data/human-xp.pkl'):
+            self.human_dataset.load('/opt/project/data/human-xp.pkl')
 
-        data = minerl.data.make('MineRLObtainDiamond-v0')
-        self.dataset_iter = BufferedBatchIter(data)
         self.human_dataset_batch_size = self.hp.batch_size 
         self.gathered_xp_batch_size = 0
 
@@ -70,7 +76,7 @@ class BaseTrainer:
             self.human_dataset_batch_size, self.gathered_xp_batch_size = \
                 strategy(self.human_dataset_batch_size, self.gathered_xp_batch_size, self.hp.sampling_step)
         
-        dataset_batch = self._get_dataset_batches(self.human_dataset_batch_size)[0]
+        dataset_batch = self.human_dataset.sample(self.human_dataset_batch_size)
         gathered_batch = self.gathered_transitions.sample(self.gathered_xp_batch_size)
 
         if gathered_batch['reward'].size == 0:
@@ -95,16 +101,16 @@ class BaseTrainer:
         )
 
 
-    def _get_dataset_batches(self, batch_size: int, num_batches: int = 1) -> Dict[str, np.ndarray]:
-        batches = []
-        for current_state, action, reward, next_state, done \
-            in self.dataset_iter.buffered_batch_iter(batch_size=batch_size, num_batches=num_batches):
-            batches.append(
-                ReplayBuffer.create_batch_sample(
-                    reward, done, action, current_state, next_state
-                )
-            )
-        return batches
+    # def _get_dataset_batches(self, batch_size: int, num_batches: int = 1) -> Dict[str, np.ndarray]:
+    #     batches = []
+    #     for current_state, action, reward, next_state, done \
+    #         in self.dataset_iter.buffered_batch_iter(batch_size=batch_size, num_batches=num_batches):
+    #         batches.append(
+    #             ReplayBuffer.create_batch_sample(
+    #                 reward, done, action, current_state, next_state
+    #             )
+    #         )
+    #     return batches
 
 
     def train(self) -> None:
@@ -209,7 +215,7 @@ class DQNTrainer(BaseTrainer):
 
     def _train_step(self, step: int) -> None:
         # Get a batch of experience from the gathered transitions
-        batch = self.sample()
+        batch = self.sample(lss)
 
         # convert np transitions into torch tensors
         batch["state"] = np_dict_to_pt(batch["state"], device=self.device)
