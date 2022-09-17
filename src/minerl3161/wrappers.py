@@ -41,6 +41,7 @@ def decode_action(obj: dict, camera_shrink_factor=100) -> list:
             proc[k] = obj[k] if not isinstance(obj[k], np.ndarray) else obj[k].tolist()
     return proc
 
+
 def obs_grayscale(state=None, observation_space=None, img_feature_name='pov', *args, **kwargs):
     if observation_space is not None:
         observation_space.spaces[img_feature_name] = gym.spaces.Box(
@@ -204,7 +205,6 @@ class MineRLWrapper(gym.Wrapper):
     
     def reset(self):
         self.obs_kwargs["state_buffer"] = np.zeros_like(self.obs_kwargs["state_buffer"])
-        
         self.obs_kwargs["last_unprocessed_state"] = self.env.reset()
         state, _, self.obs_kwargs["state_buffer"] = MineRLWrapper.convert_state(state=self.obs_kwargs["last_unprocessed_state"], **self.obs_kwargs)
         return state

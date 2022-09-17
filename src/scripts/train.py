@@ -7,7 +7,7 @@ import gym
 import minerl
 from collections import namedtuple
 
-from minerl3161.agent import DQNAgent
+from minerl3161.agent import DQNAgent, TinyDQNAgent
 from minerl3161.trainer import DQNTrainer
 from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.wrappers import minerlWrapper
@@ -18,7 +18,8 @@ Policy = namedtuple('Policy', ['agent', 'trainer', 'params'])
 
 
 POLICIES = {
-    "vanilla-dqn": Policy(DQNAgent, DQNTrainer, DQNHyperparameters)
+    "vanilla-dqn": Policy(DQNAgent, DQNTrainer, DQNHyperparameters),
+    "tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, DQNHyperparameters)
 }
 
 def main():
@@ -54,6 +55,7 @@ def main():
     # Configure environment
     env = gym.make(args.env)
     env = minerlWrapper(env, **dataclasses.asdict(hp))
+
 
     human_dataset = ReplayBuffer.load(args.human_exp_path)
 
