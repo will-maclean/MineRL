@@ -19,6 +19,14 @@ class BaseHyperparameters:
     sampling_step: int = 1 # sampling strategy: batch includes one less human data item every time
     checkpoint_every: Union[int, None] = 50_000  # how often we should save a copy of the agent 
 
+    # observation space
+    n_stack: int = 4  # how many frames to stack
+    resize_w: int = 84  # width of the resized frame
+    resize_h: int = 84  # height of the resized frame
+    img_feature_name: str = "pov"  # name of the image feature in the observation space
+    include_equipped_items: bool = False  # whether to include the equipped items in the observation space
+    inv_feature_max: int = 16  # 
+
 
 @dataclass
 class DQNHyperparameters(BaseHyperparameters):
