@@ -192,12 +192,12 @@ class DQNTrainer(BaseTrainer):
 
         # do q2 model update (also referred to as target network)
         if (
-            self.hp.hard_update_freq is not None
+            self.hp.hard_update_freq != 0
             and step % self.hp.hard_update_freq == 0
         ):
             copy_weights(copy_from=self.agent.q1, copy_to=self.agent.q2, polyak=None)
         if (
-            self.hp.soft_update_freq is not None
+            self.hp.soft_update_freq != 0
             and step % self.hp.soft_update_freq == 0
         ):
             copy_weights(copy_from=self.agent.q1, copy_to=self.agent.q2, polyak=self.hp.polyak_tau)
@@ -210,13 +210,14 @@ class DQNTrainer(BaseTrainer):
         q_values = q_values.gather(1, batch["actions"])
 
         # estimate q values for next states/actions using q2 network
-        next_actions = self.agent.q2(batch["next_states"]).argmax(dim=1).unsqueeze(1)
-        next_q_values = self.agent.q2(batch["next_states"]).gather(1, next_actions)
+        next_q_values = self.agent.q2(batch["next_states"])
+        next_actions = next_q_values.argmax(dim=1).unsqueeze(1)
+        next_q_values = next_q_values.gather(1, next_actions)
 
         # calculate TD target for Bellman Equation
-        td_target = self.hp.reward_scale * batch[
+        td_target = self.hp.reward_scale * torch.sign(batch[
             "rewards"
-        ] + self.hp.gamma * next_q_values * (1 - batch["dones"])
+        ]) + self.hp.gamma * next_q_values * (1 - batch["dones"])
 
         # Calculate loss for Bellman Equation
         # Note that we use smooth_l1_loss instead of MSE as it is more stable for larger loss signals. RL problems

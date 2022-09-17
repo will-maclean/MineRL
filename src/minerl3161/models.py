@@ -93,3 +93,16 @@ class DQNNet(nn.Module):
                 feature_names = state_shape.keys()   
         
         return feature_names
+
+
+class TinyDQN(nn.Module):
+    def __init__(self, S, A):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Linear(S, 32),
+            nn.ReLU(),
+            nn.Linear(32, A)
+        )
+    
+    def forward(self, x):
+        return self.model(x)
