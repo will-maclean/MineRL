@@ -53,7 +53,7 @@ def main():
 
     # Configure environment
     env = gym.make(args.env)
-    env = minerlWrapper(env, **dataclasses.asdict(hp))  #FIXME: surely we need to pass in more shit than this
+    env = minerlWrapper(env, **dataclasses.asdict(hp))
 
     human_dataset = ReplayBuffer.load(args.huamn_exp_path)
 
