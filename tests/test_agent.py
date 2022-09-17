@@ -1,3 +1,4 @@
+import dataclasses
 import os
 
 import gym
@@ -45,17 +46,16 @@ def test_dqnagent_dummy():
 
 
 def test_dqnagent_full(minerl_env):
-    wrapped_minerl_env = minerlWrapper(minerl_env)
-    
-    n_actions = 16
-
     hyperparams = DQNHyperparameters()
+
+    wrapped_minerl_env = minerlWrapper(minerl_env, **dataclasses.asdict(hyperparams))
+
     device = "cpu"
     save_path = "test.pt"
 
     agent = DQNAgent(
         obs_space=wrapped_minerl_env.observation_space, 
-        n_actions=n_actions, 
+        n_actions=wrapped_minerl_env.action_space.n, 
         device=device, 
         hyperparams=hyperparams)
 

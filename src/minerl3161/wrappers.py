@@ -171,7 +171,7 @@ def obs_toggle_equipped_items(state=None, observation_space=None, include_equipp
 class MineRLWrapper(gym.Wrapper):
     def __init__(self, 
                 env, 
-                features=None, 
+                inventory_feature_names=None, 
                 include_equipped_items=False, 
                 resize_w=64, 
                 resize_h=64, 
@@ -179,11 +179,13 @@ class MineRLWrapper(gym.Wrapper):
                 n_stack=4,
                 functional_acts=True,
                 extracted_acts=True,
+                *args,
+                **kwargs,
         ) -> None:
         super().__init__(env)
 
         self.obs_kwargs = {
-            "features": features if features is not None else ["all"],
+            "inventory_feature_names": inventory_feature_names if inventory_feature_names is not None else ["all"],
             "resize_w": resize_w,
             "resize_h": resize_h,
             "img_feature_name": img_feature_name,
