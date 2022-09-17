@@ -1,6 +1,7 @@
 import argparse
 import dataclasses
 
+from tqdm import tqdm
 import gym
 import minerl
 import numpy as np
@@ -13,7 +14,7 @@ def convert_dataset(env_name, out_path, hyperparams):
 
     env = gym.make(env_name)
 
-    _, observation_space = MineRLWrapper.convert_state(observation_space=env.observation_space, **dataclasses.asdict(hyperparams))
+    _, observation_space, empty_buffer = MineRLWrapper.convert_state(observation_space=env.observation_space, **dataclasses.asdict(hyperparams))
 
     buffer = ReplayBuffer(hyperparams.buffer_size_dataset, observation_space)
     data = minerl.data.make(env_name)
@@ -21,16 +22,22 @@ def convert_dataset(env_name, out_path, hyperparams):
 
     action_set = MineRLWrapper.create_action_set(functional_acts=True, extracted_acts=True)
 
-    for traj_name in trajectory_names:
-        state_buffer = np.zeros()
-        next_state_buffer = np.zeros()
+    for traj_name in tqdm(trajectory_names):
+        state_buffer = np.zeros_like(empty_buffer)
+        next_state_buffer = np.zeros_like(empty_buffer)
         for s, a, r, s_, d in data.load_data(traj_name):
 
             s, _, state_buffer = MineRLWrapper.convert_state(s, state_buffer=state_buffer, **dataclasses.asdict(hyperparams))
-            a, _ = MineRLWrapper.map_action(a, action_set=action_set)
+            a = MineRLWrapper.map_action(a, action_set=action_set)
             s_, _, next_state_buffer = MineRLWrapper.convert_state(s_, state_buffer=next_state_buffer, **dataclasses.asdict(hyperparams))
 
             buffer.add(s, a, s_, r, d)
+
+            if buffer.full:
+                break
+        
+        if buffer.full:
+                break
 
     buffer.save(out_path)
 
@@ -44,4 +51,4 @@ if __name__ == "__main__":
 
     hyperparams = DQNHyperparameters()
 
-    convert_dataset(env=args.env_name, out_path=args.out_path, hyperparams=hyperparams)
+    convert_dataset(env_name=args.env_name, out_path=args.out_path, hyperparams=hyperparams)

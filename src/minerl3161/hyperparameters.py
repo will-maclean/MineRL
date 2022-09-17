@@ -12,7 +12,7 @@ class BaseHyperparameters:
     batch_size: int = 8  # batch size for training
     buffer_size_gathered: int = 100000  # buffer size for gathered data
     buffer_size_dataset: int = (
-        100000  # buffer size for the provided data i.e. how much provided data to use
+        1_000  # buffer size for the provided data i.e. how much provided data to use
     )
     gather_every: int = 1  # how often we collect transition data
     gather_n: int = 1  # how many transitions we collect at once

@@ -2,6 +2,7 @@ import os
 import pickle
 from collections import namedtuple
 from typing import Dict, List, Tuple
+from pathlib import Path
 
 import numpy as np
 
@@ -92,6 +93,7 @@ class ReplayBuffer:
         Args:
             save_path (str): path to save to
         """
+        Path(save_path).parent.mkdir(exist_ok=True, parents=True)
         with open(save_path, "wb") as outfile:
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
 

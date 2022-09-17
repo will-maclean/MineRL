@@ -86,17 +86,19 @@ def obs_pytorch_image(state=None, observation_space=None, img_feature_name='pov'
     return state, observation_space
 
 
-def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space=None, img_feature_name='pov', state_buffer=None, frame=4, *args, **kwargs):
+def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space=None, img_feature_name='pov', state_buffer=None, n_stack=4, *args, **kwargs):
     if observation_space is not None:
         observation_space.spaces[img_feature_name] = gym.spaces.Box(
             low=0,
             high=1,
-            shape=(frame, observation_space[img_feature_name].shape[1], observation_space[img_feature_name].shape[2])
+            shape=(n_stack, observation_space[img_feature_name].shape[1], observation_space[img_feature_name].shape[2])
         )
+        if state_buffer is None:
+            state_buffer = np.zeros((n_stack, *observation_space[img_feature_name].shape[1:]))
 
     if state is not None:
         if state_buffer is None:
-            state_buffer = np.zeros((frame, *state[img_feature_name].shape[1:]))
+            state_buffer = np.zeros((n_stack, *state[img_feature_name].shape[1:]))
 
         state_buffer = np.roll(state_buffer, shift=-1, axis=0)
         new_state = state[img_feature_name]
@@ -107,44 +109,44 @@ def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space=None,
     return state, observation_space, state_buffer
 
 
-def obs_inventory_filter(state=None, observation_space=None, features=None, inv_feature_max=16, *args, **kwargs):
+def obs_inventory_filter(state=None, observation_space=None, inventory_feature_names=None, inv_feature_max=16, *args, **kwargs):
     if observation_space is not None:
-        if len(features) == 1 and features[0] == "all":
+        if len(inventory_feature_names) == 1 and inventory_feature_names[0] == "all":
             # return all the items
             observation_space.spaces['inventory'] = gym.spaces.Box(
                 low=0,
                 high=1,
                 shape=(len(list(observation_space['inventory'].spaces.keys())),)
             )
-        elif len(features) > 0 and "all" not in features:
+        elif len(inventory_feature_names) > 0 and "all" not in inventory_feature_names:
             # return a specified set of features
             observation_space.spaces['inventory'] = gym.spaces.Box(
                 low=0,
                 high=1,
-                shape=(len(features),)
+                shape=(len(inventory_feature_names),)
             )
         else:
-            raise ValueError(f"features must be either ['all'] or a list of features not containing 'all'. Features is: {features}")
+            raise ValueError(f"features must be either ['all'] or a list of features not containing 'all'. Features is: {inventory_feature_names}")
 
     if state is not None:
         inventory = []
 
-        if len(features) == 1 and features[0] == "all":
+        if len(inventory_feature_names) == 1 and inventory_feature_names[0] == "all":
             # return all the items
             for key in state['inventory']:
                 inventory.append(
                     min(state['inventory'][key], inv_feature_max) / inv_feature_max
                     )
             
-        elif len(features) > 0 and "all" not in features:
+        elif len(inventory_feature_names) > 0 and "all" not in inventory_feature_names:
             # return a specified set of features
-            for key in features:
+            for key in inventory_feature_names:
                 inventory.append(
                     min(state['inventory'][key], inv_feature_max) / inv_feature_max
                     )
             
         else:
-            raise ValueError(f"features must be either ['all'] or a list of features not containing 'all'. Features is: {features}")
+            raise ValueError(f"features must be either ['all'] or a list of features not containing 'all'. Features is: {inventory_feature_names}")
         
         state['inventory'] = np.array(inventory)
 
