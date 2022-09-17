@@ -11,7 +11,8 @@ from minerl3161.trainer import DQNTrainer
 from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.wrappers import minerlWrapper
 from minerl3161.wrappers import MineRLWrapper
-
+from os.path import exists
+from config import *
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'params'])
 
@@ -50,7 +51,8 @@ def main():
     env = gym.make(args.env)
     env = minerlWrapper(env, hp.inventory_feature_names)  #FIXME: surely we need to pass in more shit than this
 
-    load_human_xp(env, hp)
+    if not exists(human_data_pkl_path):
+        load_human_xp(env, hp, args)
 
     # Initialising ActionWrapper to determine number of actions in use
     n_actions = env.action_space.n
@@ -74,9 +76,9 @@ def main():
     trainer.train()
 
 
-def load_human_xp(env, hp):
+def load_human_xp(env, hp, args):
     buffer = ReplayBuffer(hp.buffer_size_dataset, env.observation_space)
-    data = minerl.data.make('MineRLObtainDiamond-v0')
+    data = minerl.data.make(args.env)
     trajectory_names = data.get_trajectory_names()
 
     action_set = MineRLWrapper.create_action_set(functional_acts=True, extracted_acts=True)
@@ -91,7 +93,7 @@ def load_human_xp(env, hp):
                     done
             )
 
-    buffer.save('/opt/project/data/human-xp.pkl')
+    buffer.save(human_data_pkl_path)
 
 
 if __name__ == '__main__':
