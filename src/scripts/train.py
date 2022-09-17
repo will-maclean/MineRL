@@ -50,7 +50,7 @@ def main():
     env = gym.make(args.env)
     env = minerlWrapper(env, hp.inventory_feature_names)  #FIXME: surely we need to pass in more shit than this
 
-    load_human_xp(env)
+    load_human_xp(env, hp)
 
     # Initialising ActionWrapper to determine number of actions in use
     n_actions = env.action_space.n
@@ -74,8 +74,8 @@ def main():
     trainer.train()
 
 
-def load_human_xp(env):
-    buffer = ReplayBuffer(3000, env.observation_space)
+def load_human_xp(env, hp):
+    buffer = ReplayBuffer(hp.buffer_size_dataset, env.observation_space)
     data = minerl.data.make('MineRLObtainDiamond-v0')
     trajectory_names = data.get_trajectory_names()
 
@@ -84,11 +84,11 @@ def load_human_xp(env):
     for traj_name in trajectory_names:
         for current_state, action, reward, next_state, done in data.load_data(traj_name):
             buffer.add(
-                    reward, 
-                    done, 
+                    MineRLWrapper.convert_state(current_state, features=['all'])[0], 
                     MineRLWrapper.map_action(action, action_set), 
-                    MineRLWrapper.convert_state(current_state, features=['all']), 
-                    MineRLWrapper.convert_state(next_state, features=['all'])
+                    MineRLWrapper.convert_state(next_state, features=['all'])[0],
+                    reward, 
+                    done
             )
 
     buffer.save('/opt/project/data/human-xp.pkl')
