@@ -52,7 +52,7 @@ class BaseTrainer:
             self.hp.buffer_size_gathered, self.env.observation_space
         )
         self.human_dataset = ReplayBuffer(
-            self.hp.buffer_size_gathered, self.env.observation_space
+            self.hp.buffer_size_dataset, self.env.observation_space
         )
         if exists('/opt/project/data/human-xp.pkl'):
             self.human_dataset.load('/opt/project/data/human-xp.pkl')
@@ -99,18 +99,6 @@ class BaseTrainer:
                 (dataset_batch['next_state'][key], gathered_batch['state'][key])
                 ) for key in dataset_batch['next_state']}
         )
-
-
-    # def _get_dataset_batches(self, batch_size: int, num_batches: int = 1) -> Dict[str, np.ndarray]:
-    #     batches = []
-    #     for current_state, action, reward, next_state, done \
-    #         in self.dataset_iter.buffered_batch_iter(batch_size=batch_size, num_batches=num_batches):
-    #         batches.append(
-    #             ReplayBuffer.create_batch_sample(
-    #                 reward, done, action, current_state, next_state
-    #             )
-    #         )
-    #     return batches
 
 
     def train(self) -> None:
