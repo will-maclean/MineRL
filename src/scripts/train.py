@@ -1,4 +1,5 @@
 import argparse
+import dataclasses
 from minerl3161.buffer import ReplayBuffer
 import torch
 import wandb
@@ -12,7 +13,6 @@ from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.wrappers import minerlWrapper
 from minerl3161.wrappers import MineRLWrapper
 from os.path import exists
-from config import *
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'params'])
 
@@ -34,8 +34,12 @@ def main():
 
     parser.add_argument('--gpu', action='store_true', default=True,
                         help='sets if we use gpu hardware')
+    
     parser.add_argument('--no-gpu', action='store_false', dest="gpu",
                         help='sets if we use gpu hardware')
+
+    parser.add_argument('--human_exp_path', type=str, default=None
+                        help='pass in path to human experience pickle')
 
     args = parser.parse_args()
 
@@ -49,10 +53,9 @@ def main():
 
     # Configure environment
     env = gym.make(args.env)
-    env = minerlWrapper(env, hp.inventory_feature_names)  #FIXME: surely we need to pass in more shit than this
+    env = minerlWrapper(env, **dataclasses.asdict(hp))  #FIXME: surely we need to pass in more shit than this
 
-    if not exists(human_data_pkl_path):
-        load_human_xp(env, hp, args)
+    human_dataset = ReplayBuffer.load(args.huamn_exp_path)
 
     # Initialising ActionWrapper to determine number of actions in use
     n_actions = env.action_space.n
@@ -72,28 +75,8 @@ def main():
         )
 
     # Initialise trainer and start training
-    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, hyperparameters=hp, use_wandb=args.wandb, device=device)
+    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hp, use_wandb=args.wandb, device=device)
     trainer.train()
-
-
-def load_human_xp(env, hp, args):
-    buffer = ReplayBuffer(hp.buffer_size_dataset, env.observation_space)
-    data = minerl.data.make(args.env)
-    trajectory_names = data.get_trajectory_names()
-
-    action_set = MineRLWrapper.create_action_set(functional_acts=True, extracted_acts=True)
-
-    for traj_name in trajectory_names:
-        for current_state, action, reward, next_state, done in data.load_data(traj_name):
-            buffer.add(
-                    MineRLWrapper.convert_state(current_state, features=['all'])[0], 
-                    MineRLWrapper.map_action(action, action_set), 
-                    MineRLWrapper.convert_state(next_state, features=['all'])[0],
-                    reward, 
-                    done
-            )
-
-    buffer.save(human_data_pkl_path)
 
 
 if __name__ == '__main__':

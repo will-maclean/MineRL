@@ -30,7 +30,7 @@ class BaseTrainer:
     """Abstract class for Trainers. At the least, all implementations must have _train_step()."""
 
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: BaseHyperparameters, use_wandb: bool =False,
+        self, env: gym.Env, agent: BaseAgent, human_dataset: ReplayBuffer, hyperparameters: BaseHyperparameters, use_wandb: bool =False,
         device="cpu"
     ) -> None:
         """Initialiser for BaseTrainer.
@@ -51,9 +51,8 @@ class BaseTrainer:
         self.gathered_transitions = ReplayBuffer(
             self.hp.buffer_size_gathered, self.env.observation_space
         )
-        self.human_dataset = ReplayBuffer(
-            self.hp.buffer_size_dataset, self.env.observation_space
-        )
+        self.human_dataset = human_dataset
+
         if exists('/opt/project/data/human-xp.pkl'):
             self.human_dataset.load('/opt/project/data/human-xp.pkl')
 
