@@ -5,7 +5,7 @@ import minerl
 from minerl3161.agent import DQNAgent
 
 from minerl3161.hyperparameters import DQNHyperparameters
-from minerl3161.wrappers import mineRLObservationSpaceWrapper
+from minerl3161.wrappers import minerlWrapper
 from minerl3161.trainer import DQNTrainer
 
 wandb_entity = "minerl3161"
@@ -35,7 +35,7 @@ def notest_DQNtrainer(minerl_env):
     hp.mlp_output_size = 6
 
     # Configure environment
-    env = mineRLObservationSpaceWrapper(minerl_env, hp.inventory_feature_names)
+    env = minerlWrapper(minerl_env, hp.inventory_feature_names)  #FIXME: surely we need to pass in more shit than this
 
 
     # Initialising ActionWrapper to determine number of actions in use

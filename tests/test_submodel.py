@@ -5,7 +5,7 @@ import minerl
 
 from minerl3161.submodel import CNN, MLP, MineRLFeatureExtraction
 from minerl3161.utils import sample_pt_state
-from minerl3161.wrappers import mineRLObservationSpaceWrapper
+from minerl3161.wrappers import minerlWrapper
 
 
 
@@ -57,10 +57,10 @@ def test_minerl_feature_extraction_subnet_real(minerl_env):
     # real observation space
     w = 16
     h = 16
-    features = ['pov', 'stone_sword', 'stonecutter', 'stone_shovel']
+    features = ['stone_sword', 'stonecutter', 'stone_shovel']
     stack = 4
 
-    env = mineRLObservationSpaceWrapper(minerl_env, frame=stack, features=features, downsize_width=w, downsize_height=h)
+    env = minerlWrapper(minerl_env, n_stack=stack, features=features, resize_w=w, resize_h=h)
 
     obs_space = env.observation_space
 
