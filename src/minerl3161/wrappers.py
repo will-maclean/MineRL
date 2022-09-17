@@ -41,110 +41,112 @@ def decode_action(obj: dict, camera_shrink_factor=100) -> list:
             proc[k] = obj[k] if not isinstance(obj[k], np.ndarray) else obj[k].tolist()
     return proc
 
-def obs_grayscale(state=None, observation_space=None, feature_name='pov', *args, **kwargs):
+def obs_grayscale(state=None, observation_space=None, img_feature_name='pov', *args, **kwargs):
     if observation_space is not None:
-        observation_space.spaces[feature_name] = gym.spaces.Box(
+        observation_space.spaces[img_feature_name] = gym.spaces.Box(
             low=0,
             high=255,
-            shape=(*observation_space[feature_name].shape[:-1], 1)
+            shape=(*observation_space[img_feature_name].shape[:-1], 1)
         )
     
     if state is not None:
         rgb_weights = np.array([0.2989, 0.5870, 0.1140])
-        intermediate = state[feature_name] * rgb_weights
-        state[feature_name] = np.expand_dims(np.sum(intermediate, axis = 2), 2)
+        intermediate = state[img_feature_name] * rgb_weights
+        state[img_feature_name] = np.expand_dims(np.sum(intermediate, axis = 2), 2)
 
     return state, observation_space
 
 
-def obs_resize(state=None, observation_space=None, feature_name='pov', resize_w=64, resize_h=64, *args, **kwargs):
+def obs_resize(state=None, observation_space=None, img_feature_name='pov', resize_w=64, resize_h=64, *args, **kwargs):
     if observation_space is not None:
-        observation_space.spaces[feature_name] = gym.spaces.Box(
+        observation_space.spaces[img_feature_name] = gym.spaces.Box(
             low=0,
             high=255,
             shape=(resize_w, resize_h, 3),
-            dtype=observation_space[feature_name].dtype,
+            dtype=observation_space[img_feature_name].dtype,
         )
     
     if state is not None:
-        state[feature_name] = cv2.resize(state[feature_name], (resize_w, resize_h), interpolation=cv2.INTER_AREA)
+        state[img_feature_name] = cv2.resize(state[img_feature_name], (resize_w, resize_h), interpolation=cv2.INTER_AREA)
     
     return state, observation_space
 
 
-def obs_pytorch_image(state=None, observation_space=None, feature_name='pov', *args, **kwargs):
+def obs_pytorch_image(state=None, observation_space=None, img_feature_name='pov', *args, **kwargs):
     if observation_space is not None:
-        observation_space.spaces[feature_name] = gym.spaces.Box(
+        observation_space.spaces[img_feature_name] = gym.spaces.Box(
             low=0,
             high=1,
-            shape=(observation_space[feature_name].shape[2], observation_space[feature_name].shape[1], observation_space[feature_name].shape[0])
+            shape=(observation_space[img_feature_name].shape[2], observation_space[img_feature_name].shape[1], observation_space[img_feature_name].shape[0])
         )
 
     if state is not None:
-        state[feature_name] = np.swapaxes(state[feature_name], 0, 2) / 255
+        state[img_feature_name] = np.swapaxes(state[img_feature_name], 0, 2) / 255
     
     return state, observation_space
 
 
-def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space=None, feature_name='pov', state_buffer=None, frame=4, *args, **kwargs):
+def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space=None, img_feature_name='pov', state_buffer=None, n_stack=4, *args, **kwargs):
     if observation_space is not None:
-        observation_space.spaces[feature_name] = gym.spaces.Box(
+        observation_space.spaces[img_feature_name] = gym.spaces.Box(
             low=0,
             high=1,
-            shape=(frame, observation_space[feature_name].shape[1], observation_space[feature_name].shape[2])
+            shape=(n_stack, observation_space[img_feature_name].shape[1], observation_space[img_feature_name].shape[2])
         )
+        if state_buffer is None:
+            state_buffer = np.zeros((n_stack, *observation_space[img_feature_name].shape[1:]))
 
     if state is not None:
         if state_buffer is None:
-            state_buffer = np.zeros((frame, *state[feature_name].shape[1:]))
+            state_buffer = np.zeros((n_stack, *state[img_feature_name].shape[1:]))
 
         state_buffer = np.roll(state_buffer, shift=-1, axis=0)
-        new_state = state[feature_name]
+        new_state = state[img_feature_name]
         state_buffer[-1] = np.squeeze(new_state, axis=0)
 
-        state[feature_name] = state_buffer.copy()
+        state[img_feature_name] = state_buffer.copy()
 
     return state, observation_space, state_buffer
 
 
-def obs_inventory_filter(state=None, observation_space=None, features=None, feature_max=16, *args, **kwargs):
+def obs_inventory_filter(state=None, observation_space=None, inventory_feature_names=None, inv_feature_max=16, *args, **kwargs):
     if observation_space is not None:
-        if len(features) == 1 and features[0] == "all":
+        if len(inventory_feature_names) == 1 and inventory_feature_names[0] == "all":
             # return all the items
             observation_space.spaces['inventory'] = gym.spaces.Box(
                 low=0,
                 high=1,
                 shape=(len(list(observation_space['inventory'].spaces.keys())),)
             )
-        elif len(features) > 0 and "all" not in features:
+        elif len(inventory_feature_names) > 0 and "all" not in inventory_feature_names:
             # return a specified set of features
             observation_space.spaces['inventory'] = gym.spaces.Box(
                 low=0,
                 high=1,
-                shape=(len(features),)
+                shape=(len(inventory_feature_names),)
             )
         else:
-            raise ValueError(f"features must be either ['all'] or a list of features not containing 'all'. Features is: {features}")
+            raise ValueError(f"features must be either ['all'] or a list of features not containing 'all'. Features is: {inventory_feature_names}")
 
     if state is not None:
         inventory = []
 
-        if len(features) == 1 and features[0] == "all":
+        if len(inventory_feature_names) == 1 and inventory_feature_names[0] == "all":
             # return all the items
             for key in state['inventory']:
                 inventory.append(
-                    min(state['inventory'][key], feature_max) / feature_max
+                    min(state['inventory'][key], inv_feature_max) / inv_feature_max
                     )
             
-        elif len(features) > 0 and "all" not in features:
+        elif len(inventory_feature_names) > 0 and "all" not in inventory_feature_names:
             # return a specified set of features
-            for key in features:
+            for key in inventory_feature_names:
                 inventory.append(
-                    min(state['inventory'][key], feature_max) / feature_max
+                    min(state['inventory'][key], inv_feature_max) / inv_feature_max
                     )
             
         else:
-            raise ValueError(f"features must be either ['all'] or a list of features not containing 'all'. Features is: {features}")
+            raise ValueError(f"features must be either ['all'] or a list of features not containing 'all'. Features is: {inventory_feature_names}")
         
         state['inventory'] = np.array(inventory)
 
