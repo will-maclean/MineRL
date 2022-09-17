@@ -111,9 +111,11 @@ def test_sample_pt_state():
 
 def test_linear_sampling_strategy():
     dataset_size = 10
-    gathered_size = 43
-    step = 3
-    new_dataset_size, new_gathered_size = linear_sampling_strategy(dataset_size, gathered_size, step)
+    gathered_size = 10
+    step = 5
+    batch_size=10
 
-    assert new_dataset_size == 7
-    assert new_gathered_size == 46
+    new_dataset_size, new_gathered_size = linear_sampling_strategy(batch_size, step, 1.0, 0.0, 10)
+
+    assert new_dataset_size == 5
+    assert new_gathered_size == 5

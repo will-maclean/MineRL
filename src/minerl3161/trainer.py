@@ -71,9 +71,19 @@ class BaseTrainer:
         }
     
     def sample(self, strategy: callable)-> Dict[str, np.ndarray]:
-        if len(self.gathered_transitions) >= strategy(self.human_dataset_batch_size, self.gathered_xp_batch_size, self.hp.sampling_step)[1]: 
-            self.human_dataset_batch_size, self.gathered_xp_batch_size = \
-                strategy(self.human_dataset_batch_size, self.gathered_xp_batch_size, self.hp.sampling_step)
+        human_dataset_batch_size, gathered_xp_batch_size \
+            = strategy(self.hp.batch_size, 
+                        step=self.t, 
+                        start_val=self.hp.sample_max, 
+                        final_val=self.hp.sample_min, 
+                        final_steps=self.hp.sample_final_step)
+        
+        if len(self.gathered_transitions) < gathered_xp_batch_size:
+            gathered_xp_batch_size = len(self.gathered_transitions)
+            human_dataset_batch_size = self.hp.batch_size - self.gathered_xp_batch_size
+        
+        self.human_dataset_batch_size = human_dataset_batch_size
+        self.gathered_xp_batch_size = gathered_xp_batch_size
         
         dataset_batch = self.human_dataset.sample(self.human_dataset_batch_size)
         gathered_batch = self.gathered_transitions.sample(self.gathered_xp_batch_size)
@@ -193,9 +203,9 @@ class BaseTrainer:
 # TODO: write tests
 class DQNTrainer(BaseTrainer):
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, use_wandb: bool = False, device: str = "cpu"
+        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, human_dataset: ReplayBuffer, use_wandb: bool = False, device: str = "cpu"
     ) -> None:
-        super().__init__(env=env, agent=agent, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device)
+        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device)
 
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)

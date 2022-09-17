@@ -55,7 +55,7 @@ def main():
     env = gym.make(args.env)
     env = minerlWrapper(env, **dataclasses.asdict(hp))
 
-    human_dataset = ReplayBuffer.load(args.huamn_exp_path)
+    human_dataset = ReplayBuffer.load(args.human_exp_path)
 
     # Initialising ActionWrapper to determine number of actions in use
     n_actions = env.action_space.n

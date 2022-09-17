@@ -21,7 +21,7 @@ def convert_dataset(env_name, out_path, hyperparams):
     trajectory_names = data.get_trajectory_names()
 
     action_set = MineRLWrapper.create_action_set(functional_acts=True, extracted_acts=True)
-
+    
     for traj_name in tqdm(trajectory_names):
         state_buffer = np.zeros_like(empty_buffer)
         next_state_buffer = np.zeros_like(empty_buffer)

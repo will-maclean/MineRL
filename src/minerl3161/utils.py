@@ -132,5 +132,19 @@ def sample_np_state(observation_space, features, batch=None):
     return state
 
 
-def linear_sampling_strategy(dataset_size, gathered_size, step):
-    return dataset_size-step, gathered_size+step
+def linear_sampling_strategy(batch_size, step, *args, **kwargs):
+    """_summary_
+
+    Args:
+        dataset_size (_type_): _description_
+        gathered_size (_type_): _description_
+        step (int): current timestep
+
+    Returns:
+        _type_: _description_
+    """
+    r = linear_decay(step, *args, **kwargs)
+
+    human_r = int(batch_size * r)
+    gathered_r = int(batch_size * (1-r))
+    return gathered_r, human_r

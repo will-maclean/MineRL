@@ -25,7 +25,12 @@ class BaseHyperparameters:
     resize_h: int = 84  # height of the resized frame
     img_feature_name: str = "pov"  # name of the image feature in the observation space
     include_equipped_items: bool = False  # whether to include the equipped items in the observation space
-    inv_feature_max: int = 16  # 
+    inv_feature_max: int = 16 
+
+    # sampling options
+    sample_max: float = 1.0
+    sample_min: float = 0.01
+    sample_final_step: int = 100_000
 
 
 @dataclass
