@@ -1,24 +1,16 @@
-import gym
-import minerl
+from minerl3161.wrappers import minerlWrapper, MineRLWrapper
 
-from minerl3161.wrappers import MineRLDiscreteActionWrapper
 
 
 def test_actionwrapper(minerl_env):
-    act_wrapper = MineRLDiscreteActionWrapper(minerl_env)
-    action_count = act_wrapper.action_space.n
-
+    wrapped_env = minerlWrapper(minerl_env)
+    action_count = wrapped_env.action_space.n
+    
     for action_idx in range(action_count):
-        action = act_wrapper.action(action_idx)
+        _, _, done, _ = wrapped_env.step(action_idx)
 
-        try: 
-            _, _, done, _ = minerl_env.step(action)
-
-            if done:
-                minerl_env.reset()
-
-        except Exception:
-            raise InvalidActionException
+        if done:
+            wrapped_env.reset()
 
 
 class InvalidActionException(Exception):

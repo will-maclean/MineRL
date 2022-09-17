@@ -19,13 +19,18 @@ from .evaluator import Evaluator
 from .hyperparameters import BaseHyperparameters, DQNHyperparameters
 from.utils import np_dict_to_pt
 
+from minerl.data import BufferedBatchIter
+import minerl
+
+from .utils import linear_sampling_strategy as lss
+from os.path import exists
 
 # TODO: write tests
 class BaseTrainer:
     """Abstract class for Trainers. At the least, all implementations must have _train_step()."""
 
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: BaseHyperparameters, use_wandb: bool =False,
+        self, env: gym.Env, agent: BaseAgent, human_dataset: ReplayBuffer, hyperparameters: BaseHyperparameters, use_wandb: bool =False,
         device="cpu"
     ) -> None:
         """Initialiser for BaseTrainer.
@@ -46,9 +51,14 @@ class BaseTrainer:
         self.gathered_transitions = ReplayBuffer(
             self.hp.buffer_size_gathered, self.env.observation_space
         )
-        self.dataset_transitions = ReplayBuffer(
-            self.hp.buffer_size_dataset, self.env.observation_space
-        )
+        self.human_dataset = human_dataset
+
+        if exists('/opt/project/data/human-xp.pkl'):
+            self.human_dataset.load('/opt/project/data/human-xp.pkl')
+
+        self.human_dataset_batch_size = self.hp.batch_size 
+        self.gathered_xp_batch_size = 0
+
         self.evaluator = Evaluator(env)
 
         # store stuff used to interact with the environment here i.e. anything that 
@@ -59,7 +69,46 @@ class BaseTrainer:
             "last_state": None,
             "episode_return": 0,
         }
-        self.t = 0
+    
+    def sample(self, strategy: callable)-> Dict[str, np.ndarray]:
+        human_dataset_batch_size, gathered_xp_batch_size \
+            = strategy(self.hp.batch_size, 
+                        step=self.t, 
+                        start_val=self.hp.sample_max, 
+                        final_val=self.hp.sample_min, 
+                        final_steps=self.hp.sample_final_step)
+        
+        if len(self.gathered_transitions) < gathered_xp_batch_size:
+            gathered_xp_batch_size = len(self.gathered_transitions)
+            human_dataset_batch_size = self.hp.batch_size - self.gathered_xp_batch_size
+        
+        self.human_dataset_batch_size = human_dataset_batch_size
+        self.gathered_xp_batch_size = gathered_xp_batch_size
+        
+        dataset_batch = self.human_dataset.sample(self.human_dataset_batch_size)
+        gathered_batch = self.gathered_transitions.sample(self.gathered_xp_batch_size)
+
+        if gathered_batch['reward'].size == 0:
+            return ReplayBuffer.create_batch_sample(
+                dataset_batch['reward'],
+                dataset_batch['done'],
+                dataset_batch['action'],
+                dataset_batch['state'],
+                dataset_batch['next_state']
+            )
+        
+        return ReplayBuffer.create_batch_sample(
+            np.concatenate((dataset_batch['reward'], gathered_batch['reward'])),
+            np.concatenate((dataset_batch['done'], gathered_batch['done'])),
+            np.concatenate((dataset_batch['action'], gathered_batch['action'])),
+            {key: np.concatenate(
+                (dataset_batch['state'][key], gathered_batch['state'][key])
+                ) for key in dataset_batch['state']},
+            {key: np.concatenate(
+                (dataset_batch['next_state'][key], gathered_batch['state'][key])
+                ) for key in dataset_batch['next_state']}
+        )
+
 
     def train(self) -> None:
         """main training function. This basic training loop should be enough for most conventional RL algorithms"""
@@ -154,32 +203,30 @@ class BaseTrainer:
 # TODO: write tests
 class DQNTrainer(BaseTrainer):
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, use_wandb: bool = False, device: str = "cpu"
+        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, human_dataset: ReplayBuffer, use_wandb: bool = False, device: str = "cpu"
     ) -> None:
-        super().__init__(env=env, agent=agent, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device)
+        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device)
 
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
 
     def _train_step(self, step: int) -> None:
         # Get a batch of experience from the gathered transitions
-        batch = self.gathered_transitions.sample(
-            self.hp.batch_size
-        )  # TODO: implement strategy to sample from both buffers
+        batch = self.sample(lss)
 
         # convert np transitions into torch tensors
-        batch["states"] = np_dict_to_pt(batch["states"], device=self.device)
+        batch["state"] = np_dict_to_pt(batch["state"], device=self.device)
 
-        batch["next_states"] = np_dict_to_pt(batch["next_states"], device=self.device)
+        batch["next_state"] = np_dict_to_pt(batch["next_state"], device=self.device)
 
-        batch["actions"] = torch.tensor(
-            batch["actions"], dtype=torch.long, device=self.device
+        batch["action"] = torch.tensor(
+            batch["action"], dtype=torch.long, device=self.device
         )
-        batch["rewards"] = torch.tensor(
-            batch["rewards"], dtype=torch.float32, device=self.device
+        batch["reward"] = torch.tensor(
+            batch["reward"], dtype=torch.float32, device=self.device
         )
-        batch["dones"] = torch.tensor(
-            batch["dones"], dtype=torch.float32, device=self.device
+        batch["done"] = torch.tensor(
+            batch["done"], dtype=torch.float32, device=self.device
         )
 
         # calculate loss signal
@@ -206,18 +253,19 @@ class DQNTrainer(BaseTrainer):
 
     def _calc_loss(self, batch: dict) -> torch.Tensor:
         # estimate q values for current states/actions using q1 network
-        q_values = self.agent.q1(batch["states"])
-        q_values = q_values.gather(1, batch["actions"])
+        q_values = self.agent.q1(batch["state"])
+        q_values = q_values.gather(1, batch["action"])
 
         # estimate q values for next states/actions using q2 network
-        next_q_values = self.agent.q2(batch["next_states"])
+
+        next_q_values = self.agent.q2(batch["next_state"])
         next_actions = next_q_values.argmax(dim=1).unsqueeze(1)
         next_q_values = next_q_values.gather(1, next_actions)
 
         # calculate TD target for Bellman Equation
         td_target = self.hp.reward_scale * torch.sign(batch[
-            "rewards"
-        ]) + self.hp.gamma * next_q_values * (1 - batch["dones"])
+            "reward"
+        ]) + self.hp.gamma * next_q_values * (1 - batch["done"])
 
         # Calculate loss for Bellman Equation
         # Note that we use smooth_l1_loss instead of MSE as it is more stable for larger loss signals. RL problems

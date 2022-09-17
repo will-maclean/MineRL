@@ -1,4 +1,6 @@
 import argparse
+import dataclasses
+from minerl3161.buffer import ReplayBuffer
 import torch
 import wandb
 import gym
@@ -8,8 +10,9 @@ from collections import namedtuple
 from minerl3161.agent import DQNAgent, TinyDQNAgent
 from minerl3161.trainer import DQNTrainer
 from minerl3161.hyperparameters import DQNHyperparameters
-from minerl3161.wrappers import MineRLDiscreteActionWrapper, mineRLObservationSpaceWrapper
-
+from minerl3161.wrappers import minerlWrapper
+from minerl3161.wrappers import MineRLWrapper
+from os.path import exists
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'params'])
 
@@ -32,8 +35,12 @@ def main():
 
     parser.add_argument('--gpu', action='store_true', default=True,
                         help='sets if we use gpu hardware')
+    
     parser.add_argument('--no-gpu', action='store_false', dest="gpu",
                         help='sets if we use gpu hardware')
+
+    parser.add_argument('--human_exp_path', type=str, default="data/human-xp.pkl",
+                        help='pass in path to human experience pickle')
 
     args = parser.parse_args()
 
@@ -47,9 +54,10 @@ def main():
 
     # Configure environment
     env = gym.make(args.env)
-    if "MineRL" in args.env:
-        env = mineRLObservationSpaceWrapper(env, hp.inventory_feature_names)
+    env = minerlWrapper(env, **dataclasses.asdict(hp))
 
+
+    human_dataset = ReplayBuffer.load(args.human_exp_path)
 
     # Initialising ActionWrapper to determine number of actions in use
     n_actions = env.action_space.n
@@ -69,9 +77,9 @@ def main():
         )
 
     # Initialise trainer and start training
-    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, hyperparameters=hp, use_wandb=args.wandb, device=device)
+    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hp, use_wandb=args.wandb, device=device)
     trainer.train()
 
-   
+
 if __name__ == '__main__':
     main()

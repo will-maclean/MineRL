@@ -1,3 +1,4 @@
+import dataclasses
 import os
 
 import gym
@@ -6,7 +7,7 @@ import numpy as np
 from minerl3161.agent import DQNAgent
 from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.utils import pt_dict_to_np, sample_pt_state
-from minerl3161.wrappers import mineRLObservationSpaceWrapper
+from minerl3161.wrappers import minerlWrapper
 
 
 def compare_models(model1, model2):
@@ -66,39 +67,29 @@ def test_dqnagent_dummy():
 
 
 def test_dqnagent_full(minerl_env):
-
-    w = 16
-    h = 16
-    stack = 4
-    n_actions = 16
-
     hyperparams = DQNHyperparameters()
-    env = mineRLObservationSpaceWrapper(
-        minerl_env,
-        frame=stack,
-        features=hyperparams.inventory_feature_names,
-        downsize_width=w,
-        downsize_height=h,
-    )
+
+    wrapped_minerl_env = minerlWrapper(minerl_env, **dataclasses.asdict(hyperparams))
+
     device = "cpu"
     save_path = "test.pt"
 
     agent = DQNAgent(
-        obs_space=env.observation_space,
-        n_actions=n_actions,
-        device=device,
-        hyperparams=hyperparams,
-    )
+        obs_space=wrapped_minerl_env.observation_space, 
+        n_actions=wrapped_minerl_env.action_space.n, 
+        device=device, 
+        hyperparams=hyperparams
+        )
 
-    s = env.reset()
+    s = wrapped_minerl_env.reset()
 
     a1, _ = agent.act(s, train=True, step=0)  # test epsilon greedy, random
     a2, _ = agent.act(s, train=True, step=1e9)  # test epsilon greedy, greedy
     a3, _ = agent.act(s, train=False, step=None)  # test greedy act
 
-    _ = env.step(a1)
-    _ = env.step(a2)
-    _ = env.step(a3)
+    _ = wrapped_minerl_env.step(a1)
+    _ = wrapped_minerl_env.step(a2)
+    _ = wrapped_minerl_env.step(a3)
 
     agent.save(save_path)
 
