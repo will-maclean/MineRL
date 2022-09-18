@@ -36,7 +36,7 @@ def convert_dataset(env_name, out_path, hyperparams, save_every=5):
 
             counter += 1
             
-            if counter % save_every == 0:
+            if counter % save_every == 0 or r != 0:
                 buffer.add(s, a, s_, r, d)
 
             if buffer.full:
