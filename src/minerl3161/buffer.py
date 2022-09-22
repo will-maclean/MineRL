@@ -231,7 +231,7 @@ class PrioritisedReplayBuffer(ReplayBuffer):
 
         states = {}
         next_states = {}
-        for k in self.states[0].keys():
+        for k in self.feature_names:
             states[k] = self.states[k][indices]
             next_states[k] = self.next_states[k][indices]
         
