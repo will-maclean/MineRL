@@ -7,8 +7,8 @@ import minerl
 import numpy as np
 
 from minerl3161.wrappers import MineRLWrapper
-from minerl3161.buffer import ReplayBuffer
-from minerl3161.hyperparameters import DQNHyperparameters
+from minerl3161.buffer import ReplayBuffer, PrioritisedReplayBuffer
+from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
 
 def convert_dataset(env_name, out_path, hyperparams, save_every=5):
 
@@ -16,7 +16,7 @@ def convert_dataset(env_name, out_path, hyperparams, save_every=5):
 
     _, observation_space, empty_buffer = MineRLWrapper.convert_state(observation_space=env.observation_space, **dataclasses.asdict(hyperparams))
 
-    buffer = ReplayBuffer(hyperparams.buffer_size_dataset, observation_space)
+    buffer = PrioritisedReplayBuffer(hyperparams.buffer_size_dataset, observation_space, hyperparams.alpha)
     data = minerl.data.make(env_name)
     trajectory_names = data.get_trajectory_names()
 
@@ -56,6 +56,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    hyperparams = DQNHyperparameters()
+    hyperparams = RainbowDQNHyperparameters()
 
     convert_dataset(env_name=args.env_name, out_path=args.out_path, hyperparams=hyperparams, save_every=args.save_every)

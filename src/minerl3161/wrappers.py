@@ -159,8 +159,13 @@ def obs_toggle_equipped_items(state=None, observation_space=None, include_equipp
         if not include_equipped_items:
             # we need to make a copy of the observation space and use that instead so that we don't modify the original
             # observation space, as deleting is in-place
-            observation_space = deepcopy(observation_space)
-            del observation_space.spaces["equipped_items"]
+            del_keys = []
+            for k in observation_space.spaces.keys():
+                if k.startswith("equipped"):
+                    del_keys.append(k)
+            
+            for k in del_keys:
+                del observation_space.spaces[k]
 
     if state is not None:
         if not include_equipped_items:
