@@ -10,20 +10,24 @@ from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.buffer import ReplayBuffer
 from minerl3161.wrappers import MineRLWrapper
 
-from pl_model import DQNPretrainer
-from pl_dataset import MineRLDataset
+from minerl3161.pl_pretraining.pl_model import DQNPretrainer
+from minerl3161.pl_pretraining.pl_dataset import MineRLDataset
 
 def opt():
+    
     parser = argparse.ArgumentParser()
+    
+    # Required
+    parser.add_argument("--data_path", type=str)
 
+    # Optional
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--train_val_split", type=float, default=0.8)
     parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument("--data_path", type=str)
     parser.add_argument("--num_workers", type=int, default=4)
     parser.add_argument("--lr", type=float, default=3e-4)
-    parser.add_argument("--target_update_freq", type=int, default=1)
+    parser.add_argument("--target_update_freq", type=int, default=5)
 
     args = parser.parse_args()
 

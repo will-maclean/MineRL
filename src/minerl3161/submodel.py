@@ -41,7 +41,7 @@ class MLP(nn.Module):
         if len(layers_size) == 0:
             self.layers = nn.Sequential(
                 nn.Linear(input_size, output_size),
-                nn.Softmax(-1) if softmax else nn.Sigmoid(),
+                nn.Softmax(-1) if softmax else nn.ReLU(),
             )
 
         else:
@@ -55,7 +55,7 @@ class MLP(nn.Module):
 
             layers.append(nn.Linear(layers_size[-1], output_size))
             layers.append(
-                nn.Softmax(-1) if softmax else nn.Sigmoid(),
+                nn.Softmax(-1) if softmax else nn.ReLU(),
             )
 
             self.layers = nn.Sequential(*layers)
@@ -80,7 +80,7 @@ class MineRLFeatureExtraction(nn.Module):
                 try:
                     # assume this needs a MLP
                     self.layers[feature] = MLP(
-                        observation_space[feature].shape[0], mlp_hidden_size
+                        observation_space[feature].shape[0], mlp_hidden_size, softmax=False, layers_size=(mlp_hidden_size, mlp_hidden_size)
                     )
                 except TypeError as e:
                     # we aren't equipped to handle dictionary observation spaces
