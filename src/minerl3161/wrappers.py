@@ -164,7 +164,13 @@ def obs_toggle_equipped_items(state=None, observation_space=None, include_equipp
 
     if state is not None:
         if not include_equipped_items:
-            del state["equipped_items"]
+            del_keys = []
+            for k in state.keys():
+                if k.startswith("equipped"):
+                    del_keys.append(k)
+            
+            for k in del_keys:
+                del state[k]
 
     return state, observation_space
 
