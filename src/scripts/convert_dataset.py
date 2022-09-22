@@ -36,7 +36,7 @@ def convert_dataset(env_name, out_path, hyperparams, save_every=5):
 
             counter += 1
             
-            if counter % save_every == 0:
+            if counter % save_every == 0 or r != 0:
                 buffer.add(s, a, s_, r, d)
 
             if buffer.full:
@@ -50,7 +50,7 @@ def convert_dataset(env_name, out_path, hyperparams, save_every=5):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--env_name', type=str, default='MineRLObtainDiamond-v0')
+    parser.add_argument('--env_name', type=str, default='MineRLObtainDiamondDense-v0')
     parser.add_argument('--out_path', type=str, default='data/human-xp.pkl')
     parser.add_argument('--save_every', type=int, default=5)
 

@@ -135,3 +135,5 @@ logs
 data/*
 **/wandb
 wandb
+**/lightning_logs
+*.pkl

@@ -159,14 +159,46 @@ def obs_toggle_equipped_items(state=None, observation_space=None, include_equipp
         if not include_equipped_items:
             # we need to make a copy of the observation space and use that instead so that we don't modify the original
             # observation space, as deleting is in-place
-            observation_space = deepcopy(observation_space)
-            del observation_space.spaces["equipped_items"]
+            del_keys = []
+            for k in observation_space.keys():
+                if k.startswith("equipped"):
+                    del_keys.append(k)
+            
+            for k in del_keys:
+                del observation_space.spaces[k]
 
     if state is not None:
         if not include_equipped_items:
-            del state["equipped_items"]
+            del_keys = []
+            for k in state.keys():
+                if k.startswith("equipped"):
+                    del_keys.append(k)
+            
+            for k in del_keys:
+                del state[k]
 
     return state, observation_space
+
+
+def obs_compass(state=None, observation_space=None, compass_name="compass", *args, **kwargs):
+    if observation_space is not None:
+        try:
+            observation_space.spaces[compass_name] = gym.spaces.Box(
+                low=-1,
+                high=1,
+                shape=(1,)
+            )
+        except KeyError:
+            pass
+    
+    if state is not None:
+        try:
+            state[compass_name] /= 180
+        except KeyError:
+            pass
+    
+    return state, observation_space
+
 
 
 class MineRLWrapper(gym.Wrapper):
@@ -245,6 +277,7 @@ class MineRLWrapper(gym.Wrapper):
 
     @staticmethod
     def convert_state(state=None, observation_space=None, *args, **kwargs):
+        state, observation_space = obs_compass(state=state, observation_space=observation_space, *args, **kwargs)
         state, observation_space = obs_inventory_filter(state=state, observation_space=observation_space, *args, **kwargs)
         state, observation_space = obs_toggle_equipped_items(state=state, observation_space=observation_space, *args, **kwargs)
         state, observation_space = obs_resize(state=state, observation_space=observation_space, *args, **kwargs)
