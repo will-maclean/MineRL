@@ -229,8 +229,12 @@ class PrioritisedReplayBuffer(ReplayBuffer):
         
         indices = self._sample_proportional(batch_size)
 
-        states = self.states[indices]
-        next_states = self.next_states[indices]
+        states = {}
+        next_states = {}
+        for k in self.states[0].keys():
+            states[k] = self.states[k][indices]
+            next_states[k] = self.next_states[k][indices]
+        
         actions = self.actions[indices]
         rewards = self.rewards[indices]
         dones = self.dones[indices]

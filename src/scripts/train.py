@@ -40,7 +40,7 @@ def main():
     parser.add_argument('--no-gpu', action='store_false', dest="gpu",
                         help='sets if we use gpu hardware')
 
-    parser.add_argument('--human_exp_path', type=str, default="data/human-xp.pkl",
+    parser.add_argument('--human_exp_path', type=str, default="data/human-xp-navigate-dense.pkl",
                         help='pass in path to human experience pickle')
 
     args = parser.parse_args()
