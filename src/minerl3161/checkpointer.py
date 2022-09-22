@@ -28,7 +28,8 @@ class Checkpointer:
             self.active = False
         
         if self.active and not use_wandb:
-            raise ValueError("Currently, checkpointing only supports checkpointing with wandb")
+            print("Currently, checkpointing only supports checkpointing with wandb")
+            self.active = False
     
     def step(self, timestep: int) -> dict:
         """Decides whether or not checkpoint. Called every timestep

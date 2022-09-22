@@ -53,9 +53,6 @@ class BaseTrainer:
         )
         self.human_dataset = human_dataset
 
-        if exists('/opt/project/data/human-xp.pkl'):
-            self.human_dataset.load('/opt/project/data/human-xp.pkl')
-
         self.human_dataset_batch_size = self.hp.batch_size 
         self.gathered_xp_batch_size = 0
 

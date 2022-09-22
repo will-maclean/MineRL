@@ -146,5 +146,5 @@ def linear_sampling_strategy(batch_size, step, *args, **kwargs):
     r = linear_decay(step, *args, **kwargs)
 
     human_r = int(batch_size * r)
-    gathered_r = int(batch_size * (1-r))
+    gathered_r = int(batch_size * (1-r)) + 1
     return gathered_r, human_r

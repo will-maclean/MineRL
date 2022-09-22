@@ -160,7 +160,7 @@ def obs_toggle_equipped_items(state=None, observation_space=None, include_equipp
             # we need to make a copy of the observation space and use that instead so that we don't modify the original
             # observation space, as deleting is in-place
             del_keys = []
-            for k in observation_space.keys():
+            for k in observation_space.spaces.keys():
                 if k.startswith("equipped"):
                     del_keys.append(k)
             
@@ -186,14 +186,14 @@ def obs_compass(state=None, observation_space=None, compass_name="compass", *arg
             observation_space.spaces[compass_name] = gym.spaces.Box(
                 low=-1,
                 high=1,
-                shape=(1,)
+                shape=(1,),
             )
         except KeyError:
             pass
     
     if state is not None:
         try:
-            state[compass_name] /= 180
+            state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
         except KeyError:
             pass
     
