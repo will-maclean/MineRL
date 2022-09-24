@@ -90,7 +90,7 @@ class ReplayBuffer:
         return self.max_samples if self.full else self.counter
 
     def save(self, save_path):
-        """Saves the current repla ybuffer
+        """Saves the current replay buffer
 
         Args:
             save_path (str): path to save to

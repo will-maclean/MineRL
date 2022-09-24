@@ -289,6 +289,11 @@ class RainbowDQNTrainer(BaseTrainer):
             self.hp.buffer_size_gathered, self.env.observation_space, self.hp.alpha
         )
 
+        # self.human_dataset = human_dataset
+
+        # if exists('/opt/project/data/human-xp.pkl'):
+        #     self.human_dataset.load('/opt/project/data/human-xp.pkl')
+
     def _train_step(self, step: int) -> None:
         log_dict = {}
         # Get a batch of experience from the gathered transitions
@@ -336,23 +341,8 @@ class RainbowDQNTrainer(BaseTrainer):
         return log_dict
 
     def _calc_loss(self, batch: dict) -> torch.Tensor:
-
-        """
-        # PER: importance sampling before average
-        elementwise_loss = self._compute_dqn_loss(samples)
-        loss = torch.mean(elementwise_loss * weights)
-
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-        
-        # PER: update priorities
-        loss_for_prior = elementwise_loss.detach().cpu().numpy()
-        new_priorities = loss_for_prior + self.prior_eps
-        self.memory.update_priorities(indices, new_priorities)
-
-        return loss.item()
-        """
+        gathered_batch_size = batch["gathered_batch_size"]
+        human_batch_size = batch["human_batch_size"]
 
         human_weights = torch.FloatTensor(
             batch["human_weights"].reshape(-1, 1)
@@ -394,10 +384,20 @@ class RainbowDQNTrainer(BaseTrainer):
         new_priorities_human = new_priorities[:n_human]  # human experience must be first in the batch for this to work!!
         new_priorities_gathered = new_priorities[n_human:]
 
-        self.human_dataset.update_priorities(human_indices, new_priorities_human)
-        self.gathered_transitions.update_priorities(gathered_indices, new_priorities_gathered)
+        if human_batch_size > 0 :
+            self.human_dataset.update_priorities(human_indices, new_priorities_human)
+        
+        if gathered_batch_size > 0 :
+            self.gathered_transitions.update_priorities(gathered_indices, new_priorities_gathered)
+        
+        if human_batch_size == 0:
+            weights = gathered_weights
+        elif gathered_batch_size == 0:
+            weights = human_weights
+        else:
+            weights = torch.concat([human_weights, gathered_weights], dim=0)
 
-        loss = loss * torch.concat([human_weights, gathered_weights], dim=1)
+        loss = loss * weights
 
         return loss.mean()
     
@@ -418,19 +418,26 @@ class RainbowDQNTrainer(BaseTrainer):
         
         beta = linear_decay(step=step, start_val=self.hp.beta_max, final_val=self.hp.beta_min, final_steps=self.hp.train_steps*0.8)
 
-        dataset_batch, gathered_weights, gathered_indices = self.human_dataset.sample(self.human_dataset_batch_size, beta)  # TODO: pass in beta
-        gathered_batch, human_weights, human_indices = self.gathered_transitions.sample(self.gathered_xp_batch_size, beta)  # TODO: pass in beta
-
-        if gathered_batch['reward'].size == 0:
-            return_batch =  ReplayBuffer.create_batch_sample(
-                dataset_batch['reward'],
-                dataset_batch['done'],
-                dataset_batch['action'],
-                dataset_batch['state'],
-                dataset_batch['next_state']
-            )
+        if self.human_dataset_batch_size == 0:
+            gathered_batch, gathered_weights, gathered_indices = self.gathered_transitions.sample(self.gathered_xp_batch_size, beta)
+            return_batch =  ReplayBuffer.create_batch_sample(gathered_batch["reward"], gathered_batch["done"], gathered_batch["action"], gathered_batch["state"], gathered_batch["next_state"])
+            return_batch["gathered_weights"] = gathered_weights
+            return_batch["gathered_indices"] = gathered_indices
+            return_batch["human_weights"] = np.empty((1,))
+            return_batch["human_indices"] = np.empty((1,))
+        
+        if self.gathered_xp_batch_size == 0:
+            dataset_batch, human_weights, human_indices = self.human_dataset.sample(self.human_dataset_batch_size, beta)
+            return_batch =  ReplayBuffer.create_batch_sample(dataset_batch["reward"], dataset_batch["done"], dataset_batch["action"], dataset_batch["state"], dataset_batch["next_state"])
+            return_batch["gathered_weights"] = np.empty((1,))
+            return_batch["gathered_indices"] = np.empty((1,))
+            return_batch["human_weights"] = human_weights
+            return_batch["human_indices"] = human_indices
         
         else:
+            dataset_batch, gathered_weights, gathered_indices = self.human_dataset.sample(self.human_dataset_batch_size, beta)
+            gathered_batch, human_weights, human_indices = self.gathered_transitions.sample(self.gathered_xp_batch_size, beta)
+
             return_batch =  ReplayBuffer.create_batch_sample(
                 np.concatenate((dataset_batch['reward'], gathered_batch['reward'])),
                 np.concatenate((dataset_batch['done'], gathered_batch['done'])),
@@ -443,9 +450,12 @@ class RainbowDQNTrainer(BaseTrainer):
                     ) for key in dataset_batch['next_state']}
             )
         
-        return_batch["gathered_weights"] = gathered_weights
-        return_batch["gathered_indices"] = gathered_indices
-        return_batch["human_weights"] = human_weights
-        return_batch["human_indices"] = human_indices
+            return_batch["gathered_weights"] = gathered_weights
+            return_batch["gathered_indices"] = gathered_indices
+            return_batch["human_weights"] = human_weights
+            return_batch["human_indices"] = human_indices
+        
+        return_batch["gathered_batch_size"] = self.gathered_xp_batch_size
+        return_batch["human_batch_size"] = self.human_dataset_batch_size
 
         return return_batch, {"beta": beta, "human_dataset_batch_size": self.human_dataset_batch_size, "gathered_xp_batch_size": self.gathered_xp_batch_size}

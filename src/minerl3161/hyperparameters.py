@@ -10,7 +10,7 @@ class BaseHyperparameters:
     evaluate_every: int = 10_000  # how many steps per evaluation call
     evaluate_episodes: int = 5  # how many episodes we complete each evaluation call
     batch_size: int = 64  # batch size for training
-    buffer_size_gathered: int = 100000  # buffer size for gathered data
+    buffer_size_gathered: int = 20000  # buffer size for gathered data
     buffer_size_dataset: int = (
         5_000  # buffer size for the provided data i.e. how much provided data to use
     )

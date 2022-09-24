@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--env_name', type=str, default='MineRLObtainDiamondDense-v0')
-    parser.add_argument('--out_path', type=str, default='data/human-xp.pkl')
+    parser.add_argument('--out_path', type=str, default='data/human-xp-navigate-dense-PER.pkl')
     parser.add_argument('--save_every', type=int, default=5)
 
     args = parser.parse_args()

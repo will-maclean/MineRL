@@ -25,11 +25,11 @@ POLICIES = {
 
 def main():
     parser = argparse.ArgumentParser('Parse configuration file')
-    parser.add_argument('--policy', type=str, default='vanilla-dqn')
+    parser.add_argument('--policy', type=str, default='rainbow-dqn')
     parser.add_argument('--env', type=str, default="MineRLObtainDiamondDense-v0")
 
     # Why can't argparse read bools from the command line? Who knows. Workaround:
-    parser.add_argument('--wandb', action='store_true', default=True,
+    parser.add_argument('--wandb', action='store_true', default=False,
                         help='sets if we use wandb logging')
     parser.add_argument('--no-wandb', action='store_false', dest="wandb",
                         help='sets if we use wandb logging')
@@ -40,7 +40,7 @@ def main():
     parser.add_argument('--no-gpu', action='store_false', dest="gpu",
                         help='sets if we use gpu hardware')
 
-    parser.add_argument('--human_exp_path', type=str, default="data/human-xp-navigate-dense.pkl",
+    parser.add_argument('--human_exp_path', type=str, default="data/human-xp-navigate-dense-PER.pkl",
                         help='pass in path to human experience pickle')
 
     args = parser.parse_args()
