@@ -41,6 +41,9 @@ def main():
 
     parser.add_argument('--human_exp_path', type=str, default="data/human-xp.pkl",
                         help='pass in path to human experience pickle')
+    
+    parser.add_argument('--load_path', type=str, default=None,
+                        help='path to model checkpoint to load (optional)')
 
     args = parser.parse_args()
 
@@ -67,7 +70,8 @@ def main():
             obs_space=env.observation_space, 
             n_actions=n_actions, 
             device=device, 
-            hyperparams=hp
+            hyperparams=hp,
+            load_path=args.load_path
         )
 
     if args.wandb:

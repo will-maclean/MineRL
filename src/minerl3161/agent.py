@@ -12,6 +12,8 @@ from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.models import DQNNet, TinyDQN
 from minerl3161.utils import epsilon_decay, np_dict_to_pt
 
+from minerl3161.pl_pretraining.pl_model import DQNPretrainer
+
 from .hyperparameters import DQNHyperparameters
 
 
@@ -68,6 +70,7 @@ class DQNAgent(BaseAgent):
         n_actions: int,
         device: str,
         hyperparams: DQNHyperparameters,
+        load_path: str = None,
     ) -> None:
         """Base agent initialiser
 
@@ -99,6 +102,12 @@ class DQNAgent(BaseAgent):
         ).to(device)
         self.q2.load_state_dict(self.q1.state_dict())
         self.q2.requires_grad_(False)
+
+        if load_path is not None:
+            pl_model = DQNPretrainer.load_from_checkpoint(load_path)
+
+            self.q1.load_state_dict(pl_model.q1.state_dict())
+            self.q2.load_state_dict(pl_model.q2.state_dict())
 
     def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:
         """chooses action from action space based on state
