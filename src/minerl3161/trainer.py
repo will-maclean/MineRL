@@ -14,10 +14,10 @@ from minerl3161.utils import copy_weights
 from torch.optim import Adam, Optimizer
 
 from .agent import BaseAgent
-from .buffer import ReplayBuffer
+from .buffer import ReplayBuffer, PrioritisedReplayBuffer
 from .evaluator import Evaluator
 from .hyperparameters import BaseHyperparameters, DQNHyperparameters
-from.utils import np_dict_to_pt
+from .utils import np_dict_to_pt, linear_decay
 
 from minerl.data import BufferedBatchIter
 import minerl
@@ -31,7 +31,7 @@ class BaseTrainer:
 
     def __init__(
         self, env: gym.Env, agent: BaseAgent, human_dataset: ReplayBuffer, hyperparameters: BaseHyperparameters, use_wandb: bool =False,
-        device="cpu"
+        device="cpu", replay_buffer_class=ReplayBuffer, replay_buffer_kwargs={},
     ) -> None:
         """Initialiser for BaseTrainer.
 
@@ -48,8 +48,8 @@ class BaseTrainer:
 
         self.checkpointer = Checkpointer(agent, checkpoint_every=self.hp.checkpoint_every, use_wandb=use_wandb)
 
-        self.gathered_transitions = ReplayBuffer(
-            self.hp.buffer_size_gathered, self.env.observation_space
+        self.gathered_transitions = replay_buffer_class(
+            self.hp.buffer_size_gathered, self.env.observation_space, **replay_buffer_kwargs
         )
         self.human_dataset = human_dataset
 
@@ -271,3 +271,188 @@ class DQNTrainer(BaseTrainer):
         loss = torch.nn.functional.smooth_l1_loss(q_values, td_target)
 
         return loss
+    
+
+class RainbowDQNTrainer(BaseTrainer):
+    def __init__(
+        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, human_dataset: PrioritisedReplayBuffer, use_wandb: bool = False, device: str = "cpu"
+    ) -> None:
+        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device, replay_buffer_class=PrioritisedReplayBuffer, replay_buffer_kwargs={"alpha": hyperparameters.alpha})
+
+        # The optimiser keeps track of the model weights that we want to train
+        self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
+
+        self.gathered_transitions = PrioritisedReplayBuffer(
+            self.hp.buffer_size_gathered, self.env.observation_space, self.hp.alpha
+        )
+
+        # self.human_dataset = human_dataset
+
+        # if exists('/opt/project/data/human-xp.pkl'):
+        #     self.human_dataset.load('/opt/project/data/human-xp.pkl')
+
+    def _train_step(self, step: int) -> None:
+        log_dict = {}
+        # Get a batch of experience from the gathered transitions
+        batch, sample_log_dict = self.sample(lss, step)
+
+        log_dict.update(sample_log_dict)
+
+        # convert np transitions into torch tensors
+        batch["state"] = np_dict_to_pt(batch["state"], device=self.device)
+
+        batch["next_state"] = np_dict_to_pt(batch["next_state"], device=self.device)
+
+        batch["action"] = torch.tensor(
+            batch["action"], dtype=torch.long, device=self.device
+        )
+        batch["reward"] = torch.tensor(
+            batch["reward"], dtype=torch.float32, device=self.device
+        )
+        batch["done"] = torch.tensor(
+            batch["done"], dtype=torch.float32, device=self.device
+        )
+
+        # calculate loss signal
+        loss = self._calc_loss(batch)
+
+        # update model parameters
+        self.optim.zero_grad()
+        loss.backward()
+        self.optim.step()
+
+        # do q2 model update (also referred to as target network)
+        if (
+            self.hp.hard_update_freq != 0
+            and step % self.hp.hard_update_freq == 0
+        ):
+            copy_weights(copy_from=self.agent.q1, copy_to=self.agent.q2, polyak=None)
+        if (
+            self.hp.soft_update_freq != 0
+            and step % self.hp.soft_update_freq == 0
+        ):
+            copy_weights(copy_from=self.agent.q1, copy_to=self.agent.q2, polyak=self.hp.polyak_tau)
+
+        log_dict["loss"] = loss.detach().cpu().item()
+
+        return log_dict
+
+    def _calc_loss(self, batch: dict) -> torch.Tensor:
+        gathered_batch_size = batch["gathered_batch_size"]
+        human_batch_size = batch["human_batch_size"]
+
+        human_weights = torch.FloatTensor(
+            batch["human_weights"].reshape(-1, 1)
+        ).to(self.device)
+        gathered_weights = torch.FloatTensor(
+            batch["gathered_weights"].reshape(-1, 1)
+        ).to(self.device)
+        
+        human_indices = batch["human_indices"]
+        gathered_indices = batch["gathered_indices"]
+        
+        # estimate q values for current states/actions using q1 network
+        q_values = self.agent.q1(batch["state"])
+        q_values = q_values.gather(1, batch["action"])
+
+        # estimate q values for next states/actions using q2 network
+
+        next_q_values = self.agent.q2(batch["next_state"])
+        next_actions = next_q_values.argmax(dim=1).unsqueeze(1)
+        next_q_values = next_q_values.gather(1, next_actions)
+
+        # calculate TD target for Bellman Equation
+        td_target = self.hp.reward_scale * torch.sign(batch[
+            "reward"
+        ]) + self.hp.gamma * next_q_values * (1 - batch["done"])
+
+        # Calculate loss for Bellman Equation
+        # Note that we use smooth_l1_loss instead of MSE as it is more stable for larger loss signals. RL problems
+        # typically suffer from high variance, so anything we can do to introduce more stability is usually a
+        # good thing.
+        loss = torch.nn.functional.smooth_l1_loss(q_values, td_target, reduction="none")
+
+        # update the weights
+        loss_for_prior = loss.detach().cpu().numpy()
+        new_priorities = loss_for_prior + self.hp.prior_eps
+
+        # need to split the new priorities
+        n_human = human_weights.shape[0]
+        new_priorities_human = new_priorities[:n_human]  # human experience must be first in the batch for this to work!!
+        new_priorities_gathered = new_priorities[n_human:]
+
+        if human_batch_size > 0 :
+            self.human_dataset.update_priorities(human_indices, new_priorities_human)
+        
+        if gathered_batch_size > 0 :
+            self.gathered_transitions.update_priorities(gathered_indices, new_priorities_gathered)
+        
+        if human_batch_size == 0:
+            weights = gathered_weights
+        elif gathered_batch_size == 0:
+            weights = human_weights
+        else:
+            weights = torch.concat([human_weights, gathered_weights], dim=0)
+
+        loss = loss * weights
+
+        return loss.mean()
+    
+    def sample(self, strategy: callable, step)-> Dict[str, np.ndarray]:
+        human_dataset_batch_size, gathered_xp_batch_size \
+            = strategy(self.hp.batch_size, 
+                        step=self.t, 
+                        start_val=self.hp.sample_max, 
+                        final_val=self.hp.sample_min, 
+                        final_steps=self.hp.sample_final_step)
+        
+        if len(self.gathered_transitions) < gathered_xp_batch_size:
+            gathered_xp_batch_size = len(self.gathered_transitions)
+            human_dataset_batch_size = self.hp.batch_size - self.gathered_xp_batch_size
+        
+        self.human_dataset_batch_size = human_dataset_batch_size
+        self.gathered_xp_batch_size = gathered_xp_batch_size
+        
+        beta = linear_decay(step=step, start_val=self.hp.beta_max, final_val=self.hp.beta_min, final_steps=self.hp.train_steps*0.8)
+
+        if self.human_dataset_batch_size == 0:
+            gathered_batch, gathered_weights, gathered_indices = self.gathered_transitions.sample(self.gathered_xp_batch_size, beta)
+            return_batch =  ReplayBuffer.create_batch_sample(gathered_batch["reward"], gathered_batch["done"], gathered_batch["action"], gathered_batch["state"], gathered_batch["next_state"])
+            return_batch["gathered_weights"] = gathered_weights
+            return_batch["gathered_indices"] = gathered_indices
+            return_batch["human_weights"] = np.empty((1,))
+            return_batch["human_indices"] = np.empty((1,))
+        
+        if self.gathered_xp_batch_size == 0:
+            dataset_batch, human_weights, human_indices = self.human_dataset.sample(self.human_dataset_batch_size, beta)
+            return_batch =  ReplayBuffer.create_batch_sample(dataset_batch["reward"], dataset_batch["done"], dataset_batch["action"], dataset_batch["state"], dataset_batch["next_state"])
+            return_batch["gathered_weights"] = np.empty((1,))
+            return_batch["gathered_indices"] = np.empty((1,))
+            return_batch["human_weights"] = human_weights
+            return_batch["human_indices"] = human_indices
+        
+        else:
+            dataset_batch, human_weights, human_indices = self.human_dataset.sample(self.human_dataset_batch_size, beta)
+            gathered_batch, gathered_weights, gathered_indices = self.gathered_transitions.sample(self.gathered_xp_batch_size, beta)
+
+            return_batch =  ReplayBuffer.create_batch_sample(
+                np.concatenate((dataset_batch['reward'], gathered_batch['reward'])),
+                np.concatenate((dataset_batch['done'], gathered_batch['done'])),
+                np.concatenate((dataset_batch['action'], gathered_batch['action'])),
+                {key: np.concatenate(
+                    (dataset_batch['state'][key], gathered_batch['state'][key])
+                    ) for key in dataset_batch['state']},
+                {key: np.concatenate(
+                    (dataset_batch['next_state'][key], gathered_batch['state'][key])
+                    ) for key in dataset_batch['next_state']}
+            )
+        
+            return_batch["gathered_weights"] = gathered_weights
+            return_batch["gathered_indices"] = gathered_indices
+            return_batch["human_weights"] = human_weights
+            return_batch["human_indices"] = human_indices
+        
+        return_batch["gathered_batch_size"] = self.gathered_xp_batch_size
+        return_batch["human_batch_size"] = self.human_dataset_batch_size
+
+        return return_batch, {"beta": beta, "human_dataset_batch_size": self.human_dataset_batch_size, "gathered_xp_batch_size": self.gathered_xp_batch_size}
