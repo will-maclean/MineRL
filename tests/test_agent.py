@@ -68,6 +68,7 @@ def test_dqnagent_dummy():
 
 def test_dqnagent_full(minerl_env):
     hyperparams = DQNHyperparameters()
+    hyperparams.feature_names = ["pov", "inventory"]
 
     wrapped_minerl_env = minerlWrapper(minerl_env, **dataclasses.asdict(hyperparams))
 
