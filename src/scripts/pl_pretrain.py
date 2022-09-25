@@ -21,6 +21,7 @@ def opt():
     parser.add_argument("--data_path", type=str)
 
     # Optional
+    parser.add_argument("--env_name", type=str, default="MineRLObtainDiamond-v0")
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--train_val_split", type=float, default=0.8)
@@ -37,8 +38,7 @@ def opt():
 def main():
     args = opt()
 
-    env_name = "MineRLObtainDiamond-v0"
-    env = gym.make(env_name)
+    env = gym.make(args.env_name)
     hp = DQNHyperparameters()
     env = MineRLWrapper(env, **dataclasses.asdict(hp))
 
@@ -64,7 +64,10 @@ def main():
 
     # checkpoint
     checkpoint_callback = pl.callbacks.ModelCheckpoint(monitor="val_loss")
-    logger = WandbLogger()
+    logger = WandbLogger(project=f"pretraining-{args.env_name}", log_model="all")
+
+    # log gradients, parameter histogram and model topology
+    logger.watch(model, log="all")
 
     # training
 

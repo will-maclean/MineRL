@@ -137,3 +137,4 @@ data/*
 wandb
 **/lightning_logs
 *.pkl
+*.ckpt

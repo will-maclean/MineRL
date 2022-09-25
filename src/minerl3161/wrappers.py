@@ -182,20 +182,34 @@ def obs_toggle_equipped_items(state=None, observation_space=None, include_equipp
 
 def obs_compass(state=None, observation_space=None, compass_name="compass", *args, **kwargs):
     if observation_space is not None:
-        try:
+        if "compass" in observation_space.spaces.keys():
             observation_space.spaces[compass_name] = gym.spaces.Box(
-                low=-1,
+                low=0,
                 high=1,
-                shape=(1,),
+                shape=(1,)
             )
-        except KeyError:
-            pass
-    
+        elif "compassAngle" in observation_space.spaces.keys():
+            observation_space.spaces[compass_name] = gym.spaces.Box(
+                low=0,
+                high=1,
+                shape=(1,)
+            )
+
+            del observation_space.spaces["compassAngle"]
+        
     if state is not None:
         try:
             state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
         except KeyError:
             pass
+
+        if "compass" in state.keys():
+            state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
+        
+        elif "compassAngle" in state.keys():
+            state[compass_name] = np.atleast_1d(state["compassAngle"] / 180)
+
+            del state["compassAngle"]
     
     return state, observation_space
 
