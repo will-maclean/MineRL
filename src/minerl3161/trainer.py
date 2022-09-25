@@ -53,9 +53,6 @@ class BaseTrainer:
         )
         self.human_dataset = human_dataset
 
-        if exists('/opt/project/data/human-xp.pkl'):
-            self.human_dataset.load('/opt/project/data/human-xp.pkl')
-
         self.human_dataset_batch_size = self.hp.batch_size 
         self.gathered_xp_batch_size = 0
 
@@ -435,8 +432,8 @@ class RainbowDQNTrainer(BaseTrainer):
             return_batch["human_indices"] = human_indices
         
         else:
-            dataset_batch, gathered_weights, gathered_indices = self.human_dataset.sample(self.human_dataset_batch_size, beta)
-            gathered_batch, human_weights, human_indices = self.gathered_transitions.sample(self.gathered_xp_batch_size, beta)
+            dataset_batch, human_weights, human_indices = self.human_dataset.sample(self.human_dataset_batch_size, beta)
+            gathered_batch, gathered_weights, gathered_indices = self.gathered_transitions.sample(self.gathered_xp_batch_size, beta)
 
             return_batch =  ReplayBuffer.create_batch_sample(
                 np.concatenate((dataset_batch['reward'], gathered_batch['reward'])),

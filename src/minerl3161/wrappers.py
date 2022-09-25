@@ -180,6 +180,27 @@ def obs_toggle_equipped_items(state=None, observation_space=None, include_equipp
     return state, observation_space
 
 
+def obs_compass(state=None, observation_space=None, compass_name="compass", *args, **kwargs):
+    if observation_space is not None:
+        try:
+            observation_space.spaces[compass_name] = gym.spaces.Box(
+                low=-1,
+                high=1,
+                shape=(1,),
+            )
+        except KeyError:
+            pass
+    
+    if state is not None:
+        try:
+            state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
+        except KeyError:
+            pass
+    
+    return state, observation_space
+
+
+
 class MineRLWrapper(gym.Wrapper):
     def __init__(self, 
                 env, 
@@ -256,6 +277,7 @@ class MineRLWrapper(gym.Wrapper):
 
     @staticmethod
     def convert_state(state=None, observation_space=None, *args, **kwargs):
+        state, observation_space = obs_compass(state=state, observation_space=observation_space, *args, **kwargs)
         state, observation_space = obs_inventory_filter(state=state, observation_space=observation_space, *args, **kwargs)
         state, observation_space = obs_toggle_equipped_items(state=state, observation_space=observation_space, *args, **kwargs)
         state, observation_space = obs_resize(state=state, observation_space=observation_space, *args, **kwargs)

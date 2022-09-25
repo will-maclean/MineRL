@@ -27,6 +27,8 @@ class ReplayBuffer:
             self.feature_names = list(obs_space.keys())
         except AttributeError:
             self.feature_names = list(obs_space.spaces.keys())
+        
+        self.obs_space = obs_space
 
         self.states = self._create_state_buffer(n, obs_space)
         self.actions = np.zeros((n, 1), dtype=np.float32)
