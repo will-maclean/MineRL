@@ -37,7 +37,7 @@ BATCH_SIZE = 10
 MAX_ACTIONS = 20000
 
 BIN_AS_CAT = False
-BIN_PROB_THRESHOLD = 0.2
+BIN_PROB_THRESHOLD = 0.05
 
 NULL_ACTION = {
     'attack': 0,
@@ -58,13 +58,13 @@ NULL_ACTION = {
 }
 
 # Paths
-ROOT_PATH = Path(__file__).absolute().parent.parent.parent
+ROOT_PATH = Path(__file__).absolute().parent.parent.parent.parent
 SRC_PATH = ROOT_PATH.joinpath('src')
 DATA_PATH = ROOT_PATH.joinpath('data')
 ACTIONS_PATH = SRC_PATH.joinpath('actions')
 
 # Util functions
-StringBuilder = lambda ENV_STRING: (f'MineRL{ENV_STRING}-v0', str(ACTIONS_PATH.joinpath(f'actions-{ENV_STRING}.pickle')))
+StringBuilder = lambda ENV_STRING: (f'MineRL{ENV_STRING}-v0', str(ACTIONS_PATH.joinpath(f'actions-{ENV_STRING}-05.pickle')))
 
 def log(msg, level="INFO"):
     format_dict = {
@@ -222,7 +222,5 @@ if __name__ == "__main__":
     extract_actions("Treechop")
     extract_actions("Navigate")
     extract_actions("ObtainIronPickaxe")
-    extract_actions("ObtainDiamond")
-    merge_actions()
-
-
+    # extract_actions("ObtainDiamond")
+    # merge_actions()
