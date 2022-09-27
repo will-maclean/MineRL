@@ -4,18 +4,20 @@ import os
 import numpy as np
 import pickle
 from tqdm import tqdm
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
+from pathlib import Path
 
-import minerl3161
-
+# Paths
+ROOT_PATH = Path(__file__).absolute().parent.parent.parent.parent
+SRC_PATH = ROOT_PATH.joinpath('src')
+ACTIONS_PATH = SRC_PATH.joinpath('actions')
 
 ITERS = 10000
-NUM_ACTIONS = 12
-
+NUM_ACTIONS = 28
 
 def get_actions():
-    file_name = f'actions-ObtainDiamond.pickle'
-    filepath = os.path.join(minerl3161.actions_path, file_name)
+    file_name = f'all-actions.pickle'
+    filepath = os.path.join(ACTIONS_PATH, file_name)
 
     with open(filepath, 'rb') as f:
             actions = pickle.load(f)
@@ -24,7 +26,7 @@ def get_actions():
 
 
 def test_actions():
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
 
     env = gym.make(f'MineRLNavigateDense-v0')
     env.reset()
@@ -32,10 +34,10 @@ def test_actions():
     rewards = []
 
     actions = get_actions()
-
+    print("Retrieved Actions")
 
     for _ in tqdm(range(ITERS)):
-        action = actions[np.random.choice(NUM_ACTIONS)]
+        action = np.random.choice(actions)
         _, reward, done, _ = env.step(action)
         env.render()
 
@@ -47,12 +49,12 @@ def test_actions():
             break
     # env.close()
 
-    ax.plot(rewards)
-    plt.show()
+    # ax.plot(rewards)
+    # plt.show()
     
     print(f"Rew after {ITERS} time steps: {total_reward}")
 
 
 # test_actions(obf=True)
-test_actions(obf=False)
+test_actions()
 
