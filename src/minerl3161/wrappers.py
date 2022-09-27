@@ -202,9 +202,12 @@ def obs_compass(state=None, observation_space=None, compass_name="compass", *arg
             state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
         except KeyError:
             pass
-
+        
         if "compass" in state.keys():
-            state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
+            if type(state[compass_name]) == np.ndarray:
+                state[compass_name] = np.atleast_1d(state[compass_name] / 180)
+            else:
+                state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
         
         elif "compassAngle" in state.keys():
             state[compass_name] = np.atleast_1d(state["compassAngle"] / 180)
@@ -309,13 +312,18 @@ class MineRLWrapper(gym.Wrapper):
 
         if extracted_acts:
             e_filepath = os.path.join(minerl3161.actions_path, extracted_acts_filename)
-            with open(e_filepath, "rb") as f:
-                action_set.extend(pickle.load(f))
+            # with open(e_filepath, "rb") as f:
+            #     action_set.extend(pickle.load(f))
 
         if functional_acts:
             f_filepath = os.path.join(minerl3161.actions_path, functional_acts_filename)
-            with open(f_filepath, "rb") as f:
-                action_set.extend(pickle.load(f))
+            # with open(f_filepath, "rb") as f:
+            #     action_set.extend(pickle.load(f))
+
+        # action set new approach
+        f_filepath = os.path.join(minerl3161.actions_path, "action-set.pickle")
+        with open(f_filepath, "rb") as f:
+            action_set = pickle.load(f)
         
         return action_set
 
