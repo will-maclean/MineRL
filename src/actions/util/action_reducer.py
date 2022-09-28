@@ -67,7 +67,7 @@ if __name__ == "__main__":
     new_actions = all_actions.drop(remove_i).reset_index(drop=True)
     log("Removed", "SUCCESS")
 
-    actions_out = [encode_action(act) for _, act in new_actions.iterrows()]
+    actions_out = [encode_action(act, camera_shrink=CAMERA_SHRINK) for _, act in new_actions.iterrows()]
     log(f"Total Actions: {len(actions_out)}")
 
     log("Saving actions...")

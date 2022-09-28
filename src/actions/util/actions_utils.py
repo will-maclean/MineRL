@@ -48,7 +48,7 @@ def check_download(env):
         log(f"{environment} Exists")
 
 
-def encode_action(obj, bin_prob_threshold = 0):
+def encode_action(obj, bin_prob_threshold = 0, camera_shrink=1):
     """ Encodes the action dict into a format acceptable by minerl
     """
     proc = {}
@@ -60,7 +60,8 @@ def encode_action(obj, bin_prob_threshold = 0):
             except:
                 proc[k] = v
     
-    proc['camera'] = np.array([obj.get('camera0'), obj.get('camera1')], dtype=np.float32)
+    proc['camera'] = np.array(
+        [obj.get('camera0'), obj.get('camera1')], dtype=np.float32) * camera_shrink
     return proc
 
 def decode_batch(obj, batch_size) -> list:
