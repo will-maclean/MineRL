@@ -60,6 +60,7 @@ class BaseTrainer:
             "needs_reset": True,
             "last_state": None,
             "episode_return": 0,
+            "episode_length": 0,
         }
     
     def sample(self, strategy: callable)-> Dict[str, np.ndarray]:
@@ -155,7 +156,7 @@ class BaseTrainer:
             # self.env.render()
 
             self.gathered_transitions.add(state, action, next_state, reward, done)
-
+            self.env_interaction["episode_length"] += 1
             self.env_interaction["episode_return"] += reward
             self.env_interaction["last_state"] = state
 
@@ -165,10 +166,11 @@ class BaseTrainer:
                 self.env_interaction["episode_return"] = 0
                 self.env_interaction["needs_reset"] = True
                 self.env_interaction["last_state"] = None
+                self.env_interaction["episode_length"] = 0
         
         end_time = time.perf_counter()
 
-        log_dict["gather_fps"] = steps / (end_time - start_time)
+        log_dict["gather_fps"] = 1 / (end_time - start_time)
 
         return log_dict
 
@@ -205,8 +207,11 @@ class DQNTrainer(BaseTrainer):
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
 
     def _train_step(self, step: int) -> None:
+        log_dict = {}
+        start_time = time.perf_counter()
+
         # Get a batch of experience from the gathered transitions
-        batch = self.sample(lss)
+        batch = self.sample(self.hp.sampling_strategy)
 
         # convert np transitions into torch tensors
         batch["state"] = np_dict_to_pt(batch["state"], device=self.device)
@@ -242,6 +247,9 @@ class DQNTrainer(BaseTrainer):
             and step % self.hp.soft_update_freq == 0
         ):
             copy_weights(copy_from=self.agent.q1, copy_to=self.agent.q2, polyak=self.hp.polyak_tau)
+        
+        end_time = time.perf_counter()
+        log_dict["train_fps"] = steps / (end_time - start_time)
 
         return {"loss": loss.detach().cpu().item()}
 
