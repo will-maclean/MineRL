@@ -165,7 +165,7 @@ class BaseTrainer:
 
             if done:
                 log_dict["episode_return"] = self.env_interaction["episode_return"]
-                
+                log_dict["episode_length"] = self.env_interaction["episode_length"]
                 self.env_interaction["episode_return"] = 0
                 self.env_interaction["needs_reset"] = True
                 self.env_interaction["last_state"] = None
