@@ -24,7 +24,7 @@ actions = []
 
 for angle in x_angles:
     new_action = dc(NULL_ACTION)
-    new_action["camera"][0] = angle
+    new_action["camera"][1] = angle
     actions.append(new_action)
 
 with open("custom-navigate-actions.pkl", "wb") as f:
