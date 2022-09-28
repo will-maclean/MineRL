@@ -104,7 +104,7 @@ class DQNAgent(BaseAgent):
         self.q2.requires_grad_(False)
 
         if load_path is not None:
-            pl_model = DQNPretrainer.load_from_checkpoint(load_path)
+            pl_model = DQNPretrainer.load_from_checkpoint(load_path, obs_space=obs_space, n_actions=n_actions, hyperparams=hyperparams)
 
             self.q1.load_state_dict(pl_model.q1.state_dict())
             self.q2.load_state_dict(pl_model.q2.state_dict())

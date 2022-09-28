@@ -227,12 +227,15 @@ class MineRLWrapper(gym.Wrapper):
                 resize_h=64, 
                 img_feature_name="pov", 
                 n_stack=4,
-                functional_acts=True,
+                functional_acts=False,
                 extracted_acts=True,
+                repeat_action = 1,
                 *args,
                 **kwargs,
         ) -> None:
         super().__init__(env)
+
+        self.repeat_action = repeat_action
 
         self.obs_kwargs = {
             "inventory_feature_names": inventory_feature_names if inventory_feature_names is not None else ["all"],
@@ -260,10 +263,19 @@ class MineRLWrapper(gym.Wrapper):
     
     def step(self, action):
         action, _ = MineRLWrapper.convert_action(action=action, last_unprocessed_state=self.obs_kwargs["last_unprocessed_state"], action_set=self.action_set)
-        self.obs_kwargs["last_unprocessed_state"], reward, done, info = self.env.step(action)
+
+        reward_sum = 0
+
+        for _ in range(self.repeat_action):
+            self.obs_kwargs["last_unprocessed_state"], reward, done, info = self.env.step(action)
+            reward_sum += reward
+
+            if done:
+                break
+        
         state, _, self.obs_kwargs["state_buffer"] = MineRLWrapper.convert_state(state=self.obs_kwargs["last_unprocessed_state"], **self.obs_kwargs)
 
-        return state, reward, done, info
+        return state, reward_sum, done, info
 
     @staticmethod
     def map_action(obs:dict, action_set: list) -> int:
@@ -306,7 +318,7 @@ class MineRLWrapper(gym.Wrapper):
     
     @staticmethod
     def create_action_set(functional_acts: bool = True, extracted_acts: bool = True):
-        extracted_acts_filename = "extracted-actions.pickle"
+        extracted_acts_filename = "custom-navigate-actions.pkl"
         functional_acts_filename = "functional-actions.pickle"
         action_set = []
 
