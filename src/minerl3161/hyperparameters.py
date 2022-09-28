@@ -1,15 +1,17 @@
 from dataclasses import dataclass, field
 from typing import List, Union
 
+from minerl3161.utils import linear_sampling_strategy
+
 
 @dataclass
 class BaseHyperparameters:
     train_steps: int = 2_000_000  # number of train_loop steps
-    burn_in: int = 5_000  # how many steps to loop for before starting training
+    burn_in: int = 50  # how many steps to loop for before starting training
     train_every: int = 1  # how many steps per train call
     evaluate_every: int = 50_000  # how many steps per evaluation call
     evaluate_episodes: int = 5  # how many episodes we complete each evaluation call
-    batch_size: int = 256  # batch size for training
+    batch_size: int = 16  # batch size for training
     buffer_size_gathered: int = 75_000  # buffer size for gathered data
     buffer_size_dataset: int = (
         5_000  # buffer size for the provided data i.e. how much provided data to use
@@ -71,3 +73,4 @@ class RainbowDQNHyperparameters(DQNHyperparameters):
     alpha: float = 0.2
     beta_max: float = 1.0
     beta_min: float = 0.6
+    sampling_strategy: callable = linear_sampling_strategy
