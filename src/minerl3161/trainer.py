@@ -173,7 +173,7 @@ class BaseTrainer:
         
         end_time = time.perf_counter()
 
-        log_dict["gather_fps"] = 1 / (end_time - start_time)
+        log_dict["gather_fps"] = steps / (end_time - start_time)
 
         return log_dict
 
@@ -252,7 +252,7 @@ class DQNTrainer(BaseTrainer):
             copy_weights(copy_from=self.agent.q1, copy_to=self.agent.q2, polyak=self.hp.polyak_tau)
         
         end_time = time.perf_counter()
-        log_dict["train_fps"] = steps / (end_time - start_time)
+        log_dict["train_fps"] = 1 / (end_time - start_time)
 
         return {"loss": loss.detach().cpu().item()}
 
