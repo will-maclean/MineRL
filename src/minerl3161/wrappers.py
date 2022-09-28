@@ -318,24 +318,24 @@ class MineRLWrapper(gym.Wrapper):
     
     @staticmethod
     def create_action_set(functional_acts: bool = True, extracted_acts: bool = True):
-        extracted_acts_filename = "custom-navigate-actions.pkl"
+        extracted_acts_filename = "extracted-actions.pickle"
         functional_acts_filename = "functional-actions.pickle"
         action_set = []
 
-        # if extracted_acts:
-        #     e_filepath = os.path.join(minerl3161.actions_path, extracted_acts_filename)
-        #     with open(e_filepath, "rb") as f:
-        #         action_set.extend(pickle.load(f))
+        if extracted_acts:
+            e_filepath = os.path.join(minerl3161.actions_path, extracted_acts_filename)
+            with open(e_filepath, "rb") as f:
+                action_set.extend(pickle.load(f))
 
-        # if functional_acts:
-        #     f_filepath = os.path.join(minerl3161.actions_path, functional_acts_filename)
-        #     with open(f_filepath, "rb") as f:
-        #         action_set.extend(pickle.load(f))
+        if functional_acts:
+            f_filepath = os.path.join(minerl3161.actions_path, functional_acts_filename)
+            with open(f_filepath, "rb") as f:
+                action_set.extend(pickle.load(f))
 
         #action set new approach
-        f_filepath = os.path.join(minerl3161.actions_path, "all-actions.pickle")
-        with open(f_filepath, "rb") as f:
-           action_set.extend(pickle.load(f))
+        f_filepath = os.path.join(minerl3161.actions_path, "action-set.pickle")
+        # with open(f_filepath, "rb") as f:
+        #    action_set.extend(pickle.load(f))
         
         return action_set
 

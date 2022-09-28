@@ -16,8 +16,8 @@ from actions_utils import (CAT_VARS, NULL_ACTION, check_download, decode_batch,
 
 # Hyperparameters
 BIN_PROB_THRESHOLD = 0.05
-N_GENERAL_ACTIONS = 16
-N_CAM_ACTIONS = 17
+N_GENERAL_ACTIONS = 15
+N_CAM_ACTIONS = 15
 
 GENERAL_CFG = [
     ["ObtainDiamond", 100],
@@ -27,8 +27,8 @@ GENERAL_CFG = [
 ]
 
 FUNCTIONAL_CFG = [
-    ["ObtainDiamond", 200, True]
-]
+    # ["ObtainDiamond", 200, True]
+] 
 
 OPPOSITES_PROBS = [
     {"forward": 0.05, "back": 0.95},
@@ -47,7 +47,7 @@ TIMEOUT_ACTIONS = 100000
 ROOT_PATH = Path(__file__).absolute().parent.parent.parent.parent
 SRC_PATH = ROOT_PATH.joinpath('src')
 DATA_PATH = ROOT_PATH.joinpath('data')
-ACTIONS_PATH = SRC_PATH.joinpath('actions')
+ACTIONS_PATH = DATA_PATH.joinpath('action_sets')
 
 # Initial path setup
 data_path = str(DATA_PATH)
@@ -140,6 +140,7 @@ def remove_opposites(actions: list) -> list:
     return new_actions
 
 def generate_cam_actions():
+    log("Collecting Camera Attack Actions...")
     cam0 = np.arange(-90, 90, 30)
     cam1 = np.arange(-90, 90, 30)
     acts = list(product(cam0, cam1))
@@ -156,8 +157,16 @@ def generate_cam_actions():
         act['camera0'], act['camera1'] = angle
         act['attack'] = np.array(1)
         camera_actions.append(encode_action(act))
-
+    log("Collected Camera Attack Actions", "SUCCESS")
     return camera_actions
+
+def load_func_actions():
+    log("Loading Functional Actions...")
+    path = ACTIONS_PATH.joinpath(f'functional-actions.pickle')
+    with open(path, 'rb') as f:
+        d = pickle.load(f)
+    log("Loaded Functional Actions", "SUCCESS")
+    return d
 
 def run_kprototypes(df):
     """Running Kprototypes on a dataset of actions"""
@@ -189,30 +198,31 @@ if __name__ == '__main__':
     general_df = extract_actions(GENERAL_CFG)
     log("Collected General Actions", "SUCCESS")
 
-    # log("Collecting Functional Actions...")
-    # functional_df = extract_actions(FUNCTIONAL_CFG)
-    # log("Collected Functional Actions", "SUCCESS")
+    if len(FUNCTIONAL_CFG) > 0:
+        log("Collecting Functional Actions...")
+        functional_df = extract_actions(FUNCTIONAL_CFG)
+        log("Collected Functional Actions", "SUCCESS")
+    else:
+        func_actions = load_func_actions()
 
-    log("Collecting Camera Attack Actions...")
     cam_actions = generate_cam_actions()
-    log("Collected Camera Attack Actions", "SUCCESS")
     
     # 3. Perform Clustering
     log("Clustering General Actions...")
     gen_actions = remove_opposites(run_kmeans(general_df, N_GENERAL_ACTIONS))
     log("Clustered General Actions", "SUCCESS")
 
-    log("Clustering Functional Actions...")
-    func_actions = []
-    # for v in CAT_VARS:
-    #     gb = functional_df.groupby(v)
-    #     func_actions += [run_kprototypes(gb.get_group(grp))[0] for grp in gb.groups if grp != 'none']
-    # log("Clustered Functional Actions", "SUCCESS")
-    
+    if len(FUNCTIONAL_CFG) > 0:
+        log("Clustering Functional Actions...")
+        func_actions = []
+        for v in CAT_VARS:
+            gb = functional_df.groupby(v)
+            func_actions += [run_kprototypes(gb.get_group(grp))[0] for grp in gb.groups if grp != 'none']
+        log("Clustered Functional Actions", "SUCCESS")
+        
     # 4. Save
     log("Saving actions...")
     out_path = ACTIONS_PATH.joinpath(f'{OUTPUT_NAME}.pickle')
     with open(out_path, 'wb') as f:
-        # pickle.dump(gen_actions + func_actions, f)
         pickle.dump(gen_actions + cam_actions + func_actions, f)
     log(f"saved at {out_path}", level="SUCCESS")

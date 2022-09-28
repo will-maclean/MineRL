@@ -4,11 +4,12 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from actions.action_extractor import DATA_PATH
 
 from actions_utils import decode_action, encode_action, log
 
 # Hyperparameters
-CAMERA_SHRINK = 100
+CAMERA_SHRINK = 50
 SIMILARITY_THRESHOLD = 0.05
 
 # Options
@@ -20,7 +21,8 @@ CAT_VARS = ["craft", "equip", "nearbyCraft", "nearbySmelt", "place"]
 # Paths
 ROOT_PATH = Path(__file__).absolute().parent.parent.parent.parent
 SRC_PATH = ROOT_PATH.joinpath('src')
-ACTIONS_PATH = SRC_PATH.joinpath('actions')
+DATA_PATH = ROOT_PATH.joinpath('data')
+ACTIONS_PATH = DATA_PATH.joinpath('action_sets')
 
 # Local Functions
 def load_actions():
