@@ -18,11 +18,11 @@ def opt():
     parser = argparse.ArgumentParser()
     
     # Required
-    parser.add_argument("--data_path", type=str)
+    parser.add_argument("--data_path", type=str, default="data/human-xp-navigate-dense.pkl")
 
     # Optional
-    parser.add_argument("--env_name", type=str, default="MineRLObtainDiamond-v0")
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--env_name", type=str, default="MineRLNavigateDense-v0")
+    parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--train_val_split", type=float, default=0.8)
     parser.add_argument("--epochs", type=int, default=100)

@@ -204,7 +204,10 @@ def obs_compass(state=None, observation_space=None, compass_name="compass", *arg
             pass
 
         if "compass" in state.keys():
-            state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
+            if type(state[compass_name]) == np.ndarray:
+                state[compass_name] = np.atleast_1d(state[compass_name] / 180)
+            else:
+                state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
         
         elif "compassAngle" in state.keys():
             state[compass_name] = np.atleast_1d(state["compassAngle"] / 180)
@@ -224,7 +227,7 @@ class MineRLWrapper(gym.Wrapper):
                 resize_h=64, 
                 img_feature_name="pov", 
                 n_stack=4,
-                functional_acts=True,
+                functional_acts=False,
                 extracted_acts=True,
                 *args,
                 **kwargs,
@@ -303,7 +306,7 @@ class MineRLWrapper(gym.Wrapper):
     
     @staticmethod
     def create_action_set(functional_acts: bool = True, extracted_acts: bool = True):
-        extracted_acts_filename = "extracted-actions.pickle"
+        extracted_acts_filename = "custom-navigate-actions.pkl"
         functional_acts_filename = "functional-actions.pickle"
         action_set = []
 
