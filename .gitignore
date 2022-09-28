@@ -132,7 +132,8 @@ dmypy.json
 .idea
 
 logs
-data/*
+data/MineRL*
+data/download*
 **/wandb
 wandb
 **/lightning_logs

@@ -44,7 +44,7 @@ BATCH_SIZE = 10
 TIMEOUT_ACTIONS = 100000
 
 # Paths
-ROOT_PATH = Path(__file__).absolute().parent.parent.parent.parent
+ROOT_PATH = Path(__file__).absolute().parent.parent.parent
 SRC_PATH = ROOT_PATH.joinpath('src')
 DATA_PATH = ROOT_PATH.joinpath('data')
 ACTIONS_PATH = DATA_PATH.joinpath('action_sets')
