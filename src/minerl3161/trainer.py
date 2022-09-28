@@ -1,7 +1,7 @@
 """ BaseTrainer and implementations stored here
 """
 from abc import abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Union
 import time
 
 import gym
@@ -25,7 +25,7 @@ class BaseTrainer:
     """Abstract class for Trainers. At the least, all implementations must have _train_step()."""
 
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, human_dataset: ReplayBuffer, hyperparameters: BaseHyperparameters, use_wandb: bool =False,
+        self, env: gym.Env, agent: BaseAgent, hyperparameters: BaseHyperparameters, human_dataset: Union[ReplayBuffer, None] = None, use_wandb: bool =False,
         device="cpu", replay_buffer_class=ReplayBuffer, replay_buffer_kwargs={},
     ) -> None:
         """Initialiser for BaseTrainer.
@@ -64,6 +64,9 @@ class BaseTrainer:
         }
     
     def sample(self, strategy: callable)-> Dict[str, np.ndarray]:
+        if self.human_transitions is None:
+            return self.gathered_transitions.sample(self.hp.batch_size)
+        
         human_dataset_batch_size, gathered_xp_batch_size \
             = strategy(self.hp.batch_size, 
                         step=self.t, 
@@ -158,7 +161,7 @@ class BaseTrainer:
             self.gathered_transitions.add(state, action, next_state, reward, done)
             self.env_interaction["episode_length"] += 1
             self.env_interaction["episode_return"] += reward
-            self.env_interaction["last_state"] = state
+            self.env_interaction["last_state"] = next_state
 
             if done:
                 log_dict["episode_return"] = self.env_interaction["episode_return"]
