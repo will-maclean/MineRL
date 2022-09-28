@@ -310,20 +310,20 @@ class MineRLWrapper(gym.Wrapper):
         functional_acts_filename = "functional-actions.pickle"
         action_set = []
 
-        if extracted_acts:
-            e_filepath = os.path.join(minerl3161.actions_path, extracted_acts_filename)
-            # with open(e_filepath, "rb") as f:
-            #     action_set.extend(pickle.load(f))
+        # if extracted_acts:
+        #     e_filepath = os.path.join(minerl3161.actions_path, extracted_acts_filename)
+        #     with open(e_filepath, "rb") as f:
+        #         action_set.extend(pickle.load(f))
 
-        if functional_acts:
-            f_filepath = os.path.join(minerl3161.actions_path, functional_acts_filename)
-            # with open(f_filepath, "rb") as f:
-            #     action_set.extend(pickle.load(f))
+        # if functional_acts:
+        #     f_filepath = os.path.join(minerl3161.actions_path, functional_acts_filename)
+        #     with open(f_filepath, "rb") as f:
+        #         action_set.extend(pickle.load(f))
 
-        # action set new approach
-        f_filepath = os.path.join(minerl3161.actions_path, "action-set.pickle")
+        #action set new approach
+        f_filepath = os.path.join(minerl3161.actions_path, "all-actions.pickle")
         with open(f_filepath, "rb") as f:
-            action_set = pickle.load(f)
+           action_set.extend(pickle.load(f))
         
         return action_set
 
