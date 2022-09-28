@@ -152,6 +152,8 @@ class BaseTrainer:
 
             next_state, reward, done, info = self.env.step(action)
 
+            # self.env.render()
+
             self.gathered_transitions.add(state, action, next_state, reward, done)
 
             self.env_interaction["episode_return"] += reward
@@ -399,7 +401,7 @@ class RainbowDQNTrainer(BaseTrainer):
         self.human_dataset_batch_size = human_dataset_batch_size
         self.gathered_xp_batch_size = gathered_xp_batch_size
         
-        beta = linear_decay(step=step, start_val=self.hp.beta_max, final_val=self.hp.beta_min, final_steps=self.hp.train_steps*0.2)
+        beta = linear_decay(step=step, start_val=self.hp.beta_max, final_val=self.hp.beta_min, final_steps=self.hp.sample_final_step)
 
         gathered_weights = np.empty((1,))
         gathered_indices = np.empty((1,))

@@ -31,15 +31,15 @@ class BaseHyperparameters:
 
     # sampling options
     sample_max: float = 1.0
-    sample_min: float = 0.1
-    sample_final_step: int = 1_500_000
+    sample_min: float = 0.05
+    sample_final_step: int = 15_000
 
 
 @dataclass
 class DQNHyperparameters(BaseHyperparameters):
     gamma: float = 0.99  # discount factor for Bellman Equation
     lr: float = 2.5e-4  # learning rate for model weights
-    eps_decay: float = 1_500_000  # decay factor for epsilon greedy strategy
+    eps_decay: float = 50_000  # decay factor for epsilon greedy strategy
     eps_min: float = 0.01  # min value for epsilon greedy strategy
     eps_max: float = 1.0  # max value for epsilon greedy strategy
     model_hidden_layer_size: int = 64  # layer size for hidden layers in neural net
