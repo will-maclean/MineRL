@@ -1,4 +1,5 @@
 from multiprocessing.sharedctypes import Value
+import atexit
 import os
 import wandb
 
@@ -6,7 +7,7 @@ from pathlib import Path
 
 
 class Checkpointer:
-    def __init__(self, agent, checkpoint_every: int = None, use_wandb: bool = True) -> None:
+    def __init__(self, agent, checkpoint_every: int = None, use_wandb: bool = True, use_atexit=True) -> None:
         """Checkpointer class manager agent checkpointing. Currently only checkpointing with wandb is supported.
 
         Args:
@@ -30,6 +31,9 @@ class Checkpointer:
         if self.active and not use_wandb:
             print("Currently, checkpointing only supports checkpointing with wandb")
             self.active = False
+        
+        if self.active and use_atexit:
+            atexit.register(self.make_checkpoint, "final.pth")
     
     def step(self, timestep: int) -> dict:
         """Decides whether or not checkpoint. Called every timestep
