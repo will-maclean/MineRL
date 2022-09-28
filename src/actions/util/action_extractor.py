@@ -16,8 +16,8 @@ from actions_utils import (CAT_VARS, NULL_ACTION, check_download, decode_batch,
 
 # Hyperparameters
 BIN_PROB_THRESHOLD = 0.05
-N_GENERAL_ACTIONS = 15
-N_CAM_ACTIONS = 15
+N_GENERAL_ACTIONS = 16
+N_CAM_ACTIONS = 17
 
 GENERAL_CFG = [
     ["ObtainDiamond", 100],
@@ -189,9 +189,9 @@ if __name__ == '__main__':
     general_df = extract_actions(GENERAL_CFG)
     log("Collected General Actions", "SUCCESS")
 
-    log("Collecting Functional Actions...")
-    functional_df = extract_actions(FUNCTIONAL_CFG)
-    log("Collected Functional Actions", "SUCCESS")
+    # log("Collecting Functional Actions...")
+    # functional_df = extract_actions(FUNCTIONAL_CFG)
+    # log("Collected Functional Actions", "SUCCESS")
 
     log("Collecting Camera Attack Actions...")
     cam_actions = generate_cam_actions()
@@ -204,14 +204,15 @@ if __name__ == '__main__':
 
     log("Clustering Functional Actions...")
     func_actions = []
-    for v in CAT_VARS:
-        gb = functional_df.groupby(v)
-        func_actions += [run_kprototypes(gb.get_group(grp))[0] for grp in gb.groups if grp != 'none']
-    log("Clustered Functional Actions", "SUCCESS")
+    # for v in CAT_VARS:
+    #     gb = functional_df.groupby(v)
+    #     func_actions += [run_kprototypes(gb.get_group(grp))[0] for grp in gb.groups if grp != 'none']
+    # log("Clustered Functional Actions", "SUCCESS")
     
     # 4. Save
     log("Saving actions...")
     out_path = ACTIONS_PATH.joinpath(f'{OUTPUT_NAME}.pickle')
     with open(out_path, 'wb') as f:
+        # pickle.dump(gen_actions + func_actions, f)
         pickle.dump(gen_actions + cam_actions + func_actions, f)
     log(f"saved at {out_path}", level="SUCCESS")
