@@ -399,7 +399,7 @@ class RainbowDQNTrainer(BaseTrainer):
         self.human_dataset_batch_size = human_dataset_batch_size
         self.gathered_xp_batch_size = gathered_xp_batch_size
         
-        beta = linear_decay(step=step, start_val=self.hp.beta_max, final_val=self.hp.beta_min, final_steps=self.hp.train_steps*0.8)
+        beta = linear_decay(step=step, start_val=self.hp.beta_max, final_val=self.hp.beta_min, final_steps=self.hp.train_steps*0.2)
 
         gathered_weights = np.empty((1,))
         gathered_indices = np.empty((1,))
@@ -422,7 +422,7 @@ class RainbowDQNTrainer(BaseTrainer):
                 np.concatenate((human_batch['action'], gathered_batch['action'])),
                 {key: np.concatenate(
                     (human_batch['state'][key], gathered_batch['state'][key])
-                    ) for key in dataset_batch['state']},
+                    ) for key in human_batch['state']},
                 {key: np.concatenate(
                     (human_batch['next_state'][key], gathered_batch['state'][key])
                     ) for key in human_batch['next_state']}
