@@ -337,6 +337,48 @@ class RainbowDQNTrainer(BaseTrainer):
         return log_dict
 
     def _calc_loss(self, batch: dict) -> torch.Tensor:
+        if self.human_transitions is None:
+            return self._calc_loss_gathered_only(batch)
+        else:
+            return self._calc_loss_combined(batch)
+
+    def _calc_loss_gathered_only(self, batch):
+
+        weights = torch.tensor(
+            batch["weights"].reshape(-1, 1)
+        ).to(self.device, dtype=torch.float32)
+        
+        # estimate q values for current states/actions using q1 network
+        q_values = self.agent.q1(batch["state"])
+        q_values = q_values.gather(1, batch["action"])
+
+        # estimate q values for next states/actions using q2 network
+        next_q_values = self.agent.q2(batch["next_state"])
+        next_actions = next_q_values.argmax(dim=1).unsqueeze(1)
+        next_q_values = next_q_values.gather(1, next_actions)
+
+        # calculate TD target for Bellman Equation
+        td_target = self.hp.reward_scale * torch.sign(batch[
+            "reward"
+        ]) + self.hp.gamma * next_q_values * (1 - batch["done"])
+
+        # Calculate loss for Bellman Equation
+        # Note that we use smooth_l1_loss instead of MSE as it is more stable for larger loss signals. RL problems
+        # typically suffer from high variance, so anything we can do to introduce more stability is usually a
+        # good thing.
+        loss = torch.nn.functional.smooth_l1_loss(q_values, td_target, reduction="none")
+
+        # update the weights
+        loss_for_prior = loss.detach().cpu().numpy()
+        new_priorities = loss_for_prior + self.hp.prior_eps
+
+        self.gathered_transitions.update_priorities(batch["indices"], new_priorities)
+
+        loss = loss * weights
+
+        return loss.mean()
+
+    def _calc_loss_combined(self, batch):
         gathered_batch_size = batch["gathered_batch_size"]
         human_batch_size = batch["human_batch_size"]
 
@@ -398,6 +440,16 @@ class RainbowDQNTrainer(BaseTrainer):
         return loss.mean()
     
     def sample(self, strategy: callable, step)-> Dict[str, np.ndarray]:
+        
+        # if we have not human transitions, then yeah obviously we can simplify this provess a bit
+        if self.human_transitions is None:
+            beta = linear_decay(step=step, start_val=self.hp.beta_max, final_val=self.hp.beta_min, final_steps=self.hp.sample_final_step)
+            return_batch, gathered_weights, gathered_indices =  self.gathered_transitions.sample(self.hp.batch_size, beta=beta)
+            return_batch["weights"] = gathered_weights
+            return_batch["indices"] = gathered_indices
+
+            return return_batch, {"beta": beta}
+        
         human_dataset_batch_size, gathered_xp_batch_size \
             = strategy(batch_size=self.hp.batch_size, 
                         step=step, 

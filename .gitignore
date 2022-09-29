@@ -138,4 +138,5 @@ wandb
 **/lightning_logs
 *.pkl
 *.ckpt
+*.pth
 weights

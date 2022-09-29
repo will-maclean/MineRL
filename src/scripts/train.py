@@ -40,7 +40,7 @@ def main():
     parser.add_argument('--no-gpu', action='store_false', dest="gpu",
                         help='sets if we use gpu hardware')
 
-    parser.add_argument('--human_exp_path', type=str, default="data/human-xp-navigate-dense-PER.pkl",
+    parser.add_argument('--human_exp_path', type=str, default=None,
                         help='pass in path to human experience pickle')
     
     parser.add_argument('--load_path', type=str, default=None,
@@ -58,10 +58,14 @@ def main():
 
     # Configure environment
     env = gym.make(args.env)
-    env = minerlWrapper(env, **dataclasses.asdict(hp))
+    env = minerlWrapper(env, repeat_action=5, **dataclasses.asdict(hp))
 
-
-    human_dataset = PrioritisedReplayBuffer.load(args.human_exp_path)
+    # handle human experience
+    if args.human_exp_path is None:
+        print("WARNING: not using any human experience")
+        human_dataset = None
+    else:
+        human_dataset = PrioritisedReplayBuffer.load(args.human_exp_path) if args.human_exp_path is not None else None
 
     # Initialising ActionWrapper to determine number of actions in use
     n_actions = env.action_space.n
@@ -79,7 +83,8 @@ def main():
         wandb.init(
             project="diamond-pick", 
             entity="minerl3161",
-            config=hp
+            config=hp,
+            tags=[args.env, args.policy]
         )
 
     # Initialise trainer and start training
