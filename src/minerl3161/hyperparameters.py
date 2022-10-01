@@ -39,7 +39,7 @@ class BaseHyperparameters:
 class DQNHyperparameters(BaseHyperparameters):
     gamma: float = 0.99  # discount factor for Bellman Equation
     lr: float = 2.5e-4  # learning rate for model weights
-    eps_decay: float = 50_000  # decay factor for epsilon greedy strategy
+    eps_decay: float = 100_000  # decay factor for epsilon greedy strategy
     eps_min: float = 0.01  # min value for epsilon greedy strategy
     eps_max: float = 1.0  # max value for epsilon greedy strategy
     model_hidden_layer_size: int = 64  # layer size for hidden layers in neural net
@@ -64,7 +64,8 @@ class DQNHyperparameters(BaseHyperparameters):
         # either set "all" or individually specify items
         "all",
     ])
-    mlp_output_size = 64
+    mlp_output_size: int = 64
+    sampling_strategy: callable = linear_sampling_strategy
 
 
 @dataclass
@@ -73,4 +74,3 @@ class RainbowDQNHyperparameters(DQNHyperparameters):
     alpha: float = 0.2
     beta_max: float = 1.0
     beta_min: float = 0.6
-    sampling_strategy: callable = linear_sampling_strategy
