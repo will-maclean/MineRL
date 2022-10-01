@@ -1,7 +1,7 @@
 """ BaseTrainer and implementations stored here
 """
 from abc import abstractmethod
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Union
 import time
 
 import gym
@@ -18,6 +18,7 @@ from minerl3161.buffer import ReplayBuffer, PrioritisedReplayBuffer
 from minerl3161.evaluator import Evaluator
 from minerl3161.hyperparameters import BaseHyperparameters, DQNHyperparameters
 from minerl3161.utils import np_dict_to_pt, linear_decay
+from minerl3161.termination import TerminationCondition
 
 
 # TODO: write tests
@@ -25,8 +26,17 @@ class BaseTrainer:
     """Abstract class for Trainers. At the least, all implementations must have _train_step()."""
 
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: BaseHyperparameters, human_dataset: Union[ReplayBuffer, None] = None, use_wandb: bool =False,
-        device="cpu", render=False, replay_buffer_class=ReplayBuffer, replay_buffer_kwargs={},
+        self, 
+        env: gym.Env, 
+        agent: BaseAgent, 
+        hyperparameters: BaseHyperparameters, 
+        human_dataset: Union[ReplayBuffer, None] = None, 
+        use_wandb: bool =False,
+        device="cpu", 
+        render=False, 
+        replay_buffer_class=ReplayBuffer, 
+        replay_buffer_kwargs: Dict={}, 
+        termination_conditions: Union[List[TerminationCondition], None] = None
     ) -> None:
         """Initialiser for BaseTrainer.
 
@@ -41,6 +51,14 @@ class BaseTrainer:
         self.use_wandb = use_wandb
         self.device = device
         self.render = render
+
+        if termination_conditions is not None:
+            if type(termination_conditions) != list:
+                termination_conditions = [termination_conditions]
+            
+            self.termination_conditions = termination_conditions
+        else:
+            self.termination_conditions = None
 
         self.checkpointer = Checkpointer(agent, checkpoint_every=self.hp.checkpoint_every, use_wandb=use_wandb)
 
@@ -63,6 +81,8 @@ class BaseTrainer:
             "episode_return": 0,
             "episode_length": 0,
         }
+
+        self.training = False
     
     def sample(self, strategy: callable)-> Dict[str, np.ndarray]:
         if self.human_transitions is None:
@@ -110,6 +130,8 @@ class BaseTrainer:
     def train(self) -> None:
         """main training function. This basic training loop should be enough for most conventional RL algorithms"""
 
+        self.training = True  # flag that lets termination conditions stop training
+
         for t in tqdm(range(self.hp.train_steps)):
             self.t = t
 
@@ -129,6 +151,9 @@ class BaseTrainer:
             log_dict.update(self._housekeeping(t))
 
             self._log(log_dict)
+
+            if not self.training:
+                break
         
         self.close()
 
@@ -168,6 +193,9 @@ class BaseTrainer:
             if done:
                 log_dict["episode_return"] = self.env_interaction["episode_return"]
                 log_dict["episode_length"] = self.env_interaction["episode_length"]
+
+                self._process_termination_conditions(self.env_interaction)
+
                 self.env_interaction["episode_return"] = 0
                 self.env_interaction["needs_reset"] = True
                 self.env_interaction["last_state"] = None
@@ -192,7 +220,14 @@ class BaseTrainer:
         )
         
         return log_dict
-
+    
+    def _process_termination_conditions(self, env_interation):
+        terminate_training = False
+        for t in self.termination_conditions:
+            terminate_training = terminate_training or t(**env_interation)
+        
+        if terminate_training:
+            self.training = False
 
     def _log(self, log_dict: dict) -> None:
         if self.use_wandb:
@@ -204,9 +239,17 @@ class BaseTrainer:
 # TODO: write tests
 class DQNTrainer(BaseTrainer):
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, human_dataset: ReplayBuffer, use_wandb: bool = False, device: str = "cpu", render=False
+        self, 
+        env: gym.Env, 
+        agent: BaseAgent, 
+        hyperparameters: DQNHyperparameters, 
+        human_dataset: ReplayBuffer, 
+        use_wandb: bool = False, 
+        device: str = "cpu", 
+        render=False, 
+        termination_conditions: Union[List[TerminationCondition], None] = None
     ) -> None:
-        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device, render=render)
+        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device, render=render, termination_conditions=termination_conditions)
 
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
@@ -285,9 +328,26 @@ class DQNTrainer(BaseTrainer):
 
 class RainbowDQNTrainer(BaseTrainer):
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, human_dataset: PrioritisedReplayBuffer, use_wandb: bool = False, device: str = "cpu", render=False
+        self, 
+        env: gym.Env, 
+        agent: BaseAgent, 
+        hyperparameters: DQNHyperparameters, 
+        human_dataset: PrioritisedReplayBuffer, 
+        use_wandb: bool = False, 
+        device: str = "cpu", 
+        render: bool = False,
+        termination_conditions: Union[List[TerminationCondition], None] = None
     ) -> None:
-        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device, replay_buffer_class=PrioritisedReplayBuffer, replay_buffer_kwargs={"alpha": hyperparameters.alpha}, render=render)
+        super().__init__(env=env, 
+            agent=agent,
+            human_dataset=human_dataset, 
+            hyperparameters=hyperparameters, 
+            use_wandb=use_wandb, 
+            device=device, 
+            replay_buffer_class=PrioritisedReplayBuffer, 
+            replay_buffer_kwargs={"alpha": hyperparameters.alpha}, 
+            render=render,
+            termination_conditions=termination_conditions)
 
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)

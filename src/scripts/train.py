@@ -1,5 +1,6 @@
 import argparse
 import dataclasses
+from webbrowser import get
 from minerl3161.buffer import ReplayBuffer, PrioritisedReplayBuffer
 import torch
 import wandb
@@ -11,6 +12,7 @@ from minerl3161.agent import DQNAgent, TinyDQNAgent
 from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
 from minerl3161.wrappers import minerlWrapper, cartPoleWrapper
+from minerl3161.termination import get_termination_condition
 
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'wrapper', 'params'])
@@ -70,13 +72,13 @@ def main():
     else:
         human_dataset = PrioritisedReplayBuffer.load(args.human_exp_path) if args.human_exp_path is not None else None
 
-    # Initialising ActionWrapper to determine number of actions in use
-    n_actions = env.action_space.n
+    # Setup termination conditions for the environment (if available)
+    termination_conditions = get_termination_condition(args.env)
 
     # Configure agent
     agent = POLICIES[args.policy].agent(
             obs_space=env.observation_space, 
-            n_actions=n_actions, 
+            n_actions=env.action_space.n, 
             device=device, 
             hyperparams=hp,
             load_path=args.load_path
@@ -91,7 +93,7 @@ def main():
         )
 
     # Initialise trainer and start training
-    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hp, use_wandb=args.wandb, device=device, render=args.render)
+    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hp, use_wandb=args.wandb, device=device, render=args.render, termination_conditions=termination_conditions)
     trainer.train()
 
 
