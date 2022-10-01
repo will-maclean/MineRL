@@ -317,7 +317,7 @@ class MineRLWrapper(gym.Wrapper):
         return state, observation_space, state_buffer 
     
     @staticmethod
-    def create_action_set(functional_acts: bool = True, extracted_acts: bool = True):
+    def create_action_set(functional_acts: bool, extracted_acts: bool):
         extracted_acts_filename = "custom-navigate-actions.pkl"
         functional_acts_filename = "functional-actions.pickle"
         action_set = []

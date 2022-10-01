@@ -13,6 +13,8 @@ from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
 from minerl3161.wrappers import minerlWrapper, cartPoleWrapper
 from minerl3161.termination import get_termination_condition
+from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
+from minerl3161.wrappers import minerlWrapper
 
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'wrapper', 'params'])
@@ -89,7 +91,7 @@ def main():
             project=args.env + "-" + args.policy, 
             entity="minerl3161",
             config=hp,
-            tags=[args.env, args.policy]
+            tags=[args.policy, args.env]
         )
 
     # Initialise trainer and start training
