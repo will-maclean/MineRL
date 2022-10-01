@@ -1,6 +1,7 @@
 """Defines BaseAgent classes and all current implementations.
 """
 
+from copy import deepcopy
 import pickle
 import random
 from abc import ABC, abstractmethod
@@ -45,6 +46,7 @@ class BaseAgent(ABC):
         Args:
             path (str): path in which to save the agent.
         """
+        #TODO: should put the model on CPU before save
         raise NotImplementedError()
 
     @staticmethod
@@ -170,7 +172,7 @@ class TinyDQNAgent(BaseAgent):
     """BaseAgent implementation that implements a Deep Q Learning algorithm. This include a PyTorch neural network."""
 
     def __init__(
-        self, obs_space: int, n_actions: int, device: str, *args, **kwargs
+        self, obs_space: int, n_actions: int, device: str, hyperparams=None, *args, **kwargs
     ) -> None:
         """Base agent initialiser
 
@@ -183,12 +185,14 @@ class TinyDQNAgent(BaseAgent):
         super().__init__()
         self.device = device
 
+        self.hp = hyperparams
+
         self.obs_space = obs_space
         self.n_action = n_actions
 
-        self.q1 = TinyDQN(S=obs_space.shape[0], A=n_actions).to(device)
+        self.q1 = TinyDQN(S=obs_space["state"].shape[0], A=n_actions).to(device)
+        self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
-        self.q2.eval()
 
     def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:
         """chooses action from action space based on state
@@ -223,7 +227,6 @@ class TinyDQNAgent(BaseAgent):
 
                 return action, {}
 
-    # TODO: Determine if pickle supports saving and loading of model weights
     def save(self, path: str):
         """saves the current agent
 

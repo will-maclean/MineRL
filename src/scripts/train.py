@@ -1,5 +1,6 @@
 import argparse
 import dataclasses
+from webbrowser import get
 from minerl3161.buffer import ReplayBuffer, PrioritisedReplayBuffer
 import torch
 import wandb
@@ -9,17 +10,21 @@ from collections import namedtuple
 
 from minerl3161.agent import DQNAgent, TinyDQNAgent
 from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
+from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
+from minerl3161.wrappers import minerlWrapper, cartPoleWrapper
+from minerl3161.termination import get_termination_condition
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
 from minerl3161.wrappers import minerlWrapper
-from os.path import exists
 
-Policy = namedtuple('Policy', ['agent', 'trainer', 'params'])
+
+Policy = namedtuple('Policy', ['agent', 'trainer', 'wrapper', 'params'])
 
 
 POLICIES = {
-    "vanilla-dqn": Policy(DQNAgent, DQNTrainer, DQNHyperparameters),
-    "rainbow-dqn": Policy(DQNAgent, RainbowDQNTrainer, RainbowDQNHyperparameters),
-    "tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, DQNHyperparameters)
+    "vanilla-dqn": Policy(DQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
+    "rainbow-dqn": Policy(DQNAgent, RainbowDQNTrainer, minerlWrapper, RainbowDQNHyperparameters),
+    "tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
+    "cartpole-dqn": Policy(TinyDQNAgent, DQNTrainer, cartPoleWrapper, CartpoleDQNHyperparameters),
 }
 
 def main():
@@ -44,6 +49,9 @@ def main():
     
     parser.add_argument('--load_path', type=str, default=None,
                         help='path to model checkpoint to load (optional)')
+    
+    parser.add_argument('--render', action='store_true', default=False,
+                        help='sets if we use gpu hardware')
 
     args = parser.parse_args()
 
@@ -57,7 +65,7 @@ def main():
 
     # Configure environment
     env = gym.make(args.env)
-    env = minerlWrapper(env, repeat_action=5, **dataclasses.asdict(hp))
+    env = POLICIES[args.policy].wrapper(env, **dataclasses.asdict(hp))
 
     # handle human experience
     if args.human_exp_path is None:
@@ -66,12 +74,13 @@ def main():
     else:
         human_dataset = PrioritisedReplayBuffer.load(args.human_exp_path) if args.human_exp_path is not None else None
 
-    n_actions = env.action_space.n
+    # Setup termination conditions for the environment (if available)
+    termination_conditions = get_termination_condition(args.env)
 
     # Configure agent
     agent = POLICIES[args.policy].agent(
             obs_space=env.observation_space, 
-            n_actions=n_actions, 
+            n_actions=env.action_space.n, 
             device=device, 
             hyperparams=hp,
             load_path=args.load_path
@@ -79,14 +88,14 @@ def main():
 
     if args.wandb:
         wandb.init(
-            project="diamond-pick", 
+            project=args.env + "-" + args.policy, 
             entity="minerl3161",
             config=hp,
             tags=[args.policy, args.env]
         )
 
     # Initialise trainer and start training
-    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hp, use_wandb=args.wandb, device=device)
+    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hp, use_wandb=args.wandb, device=device, render=args.render, termination_conditions=termination_conditions)
     trainer.train()
 
 
