@@ -11,7 +11,6 @@ from minerl3161.agent import DQNAgent, TinyDQNAgent
 from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
 from minerl3161.wrappers import minerlWrapper
-from minerl3161.wrappers import MineRLWrapper
 from os.path import exists
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'params'])
@@ -67,7 +66,6 @@ def main():
     else:
         human_dataset = PrioritisedReplayBuffer.load(args.human_exp_path) if args.human_exp_path is not None else None
 
-    # Initialising ActionWrapper to determine number of actions in use
     n_actions = env.action_space.n
 
     # Configure agent
@@ -84,7 +82,7 @@ def main():
             project="diamond-pick", 
             entity="minerl3161",
             config=hp,
-            tags=[args.env, args.policy]
+            tags=[args.policy, args.env]
         )
 
     # Initialise trainer and start training

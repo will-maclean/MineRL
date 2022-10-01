@@ -12,9 +12,9 @@ class BaseHyperparameters:
     evaluate_every: int = 50_000  # how many steps per evaluation call
     evaluate_episodes: int = 5  # how many episodes we complete each evaluation call
     batch_size: int = 256  # batch size for training
-    buffer_size_gathered: int = 75_000  # buffer size for gathered data
+    buffer_size_gathered: int = 100_000  # buffer size for gathered data
     buffer_size_dataset: int = (
-        50_000  # buffer size for the provided data i.e. how much provided data to use
+        75_000  # buffer size for the provided data i.e. how much provided data to use
     )
     gather_every: int = 1  # how often we collect transition data
     gather_n: int = 1  # how many transitions we collect at once
@@ -32,14 +32,14 @@ class BaseHyperparameters:
     # sampling options
     sample_max: float = 1.0
     sample_min: float = 0.05
-    sample_final_step: int = 15_000
+    sample_final_step: int = 1_500_000
 
 
 @dataclass
 class DQNHyperparameters(BaseHyperparameters):
     gamma: float = 0.99  # discount factor for Bellman Equation
     lr: float = 2.5e-4  # learning rate for model weights
-    eps_decay: float = 100_000  # decay factor for epsilon greedy strategy
+    eps_decay: float = 150_000  # decay factor for epsilon greedy strategy
     eps_min: float = 0.01  # min value for epsilon greedy strategy
     eps_max: float = 1.0  # max value for epsilon greedy strategy
     model_hidden_layer_size: int = 64  # layer size for hidden layers in neural net
@@ -70,7 +70,7 @@ class DQNHyperparameters(BaseHyperparameters):
 
 @dataclass
 class RainbowDQNHyperparameters(DQNHyperparameters):
-    prior_eps: float = 0.005
+    prior_eps: float = 1e-6
     alpha: float = 0.2
     beta_max: float = 1.0
     beta_min: float = 0.6
