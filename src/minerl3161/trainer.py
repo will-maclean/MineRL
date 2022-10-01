@@ -26,7 +26,7 @@ class BaseTrainer:
 
     def __init__(
         self, env: gym.Env, agent: BaseAgent, hyperparameters: BaseHyperparameters, human_dataset: Union[ReplayBuffer, None] = None, use_wandb: bool =False,
-        device="cpu", replay_buffer_class=ReplayBuffer, replay_buffer_kwargs={},
+        device="cpu", render=False, replay_buffer_class=ReplayBuffer, replay_buffer_kwargs={},
     ) -> None:
         """Initialiser for BaseTrainer.
 
@@ -40,6 +40,7 @@ class BaseTrainer:
         self.hp: BaseHyperparameters = hyperparameters
         self.use_wandb = use_wandb
         self.device = device
+        self.render = render
 
         self.checkpointer = Checkpointer(agent, checkpoint_every=self.hp.checkpoint_every, use_wandb=use_wandb)
 
@@ -156,7 +157,8 @@ class BaseTrainer:
 
             next_state, reward, done, info = self.env.step(action)
 
-            # self.env.render()
+            if self.render:
+                self.env.render()
 
             self.gathered_transitions.add(state, action, next_state, reward, done)
             self.env_interaction["episode_length"] += 1
@@ -202,9 +204,9 @@ class BaseTrainer:
 # TODO: write tests
 class DQNTrainer(BaseTrainer):
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, human_dataset: ReplayBuffer, use_wandb: bool = False, device: str = "cpu"
+        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, human_dataset: ReplayBuffer, use_wandb: bool = False, device: str = "cpu", render=False
     ) -> None:
-        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device)
+        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device, render=render)
 
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
@@ -283,9 +285,9 @@ class DQNTrainer(BaseTrainer):
 
 class RainbowDQNTrainer(BaseTrainer):
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, human_dataset: PrioritisedReplayBuffer, use_wandb: bool = False, device: str = "cpu"
+        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, human_dataset: PrioritisedReplayBuffer, use_wandb: bool = False, device: str = "cpu", render=False
     ) -> None:
-        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device, replay_buffer_class=PrioritisedReplayBuffer, replay_buffer_kwargs={"alpha": hyperparameters.alpha})
+        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device, replay_buffer_class=PrioritisedReplayBuffer, replay_buffer_kwargs={"alpha": hyperparameters.alpha}, render=render)
 
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
