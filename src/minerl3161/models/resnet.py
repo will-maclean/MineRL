@@ -1,3 +1,4 @@
+import torch as th
 import torch.nn as nn
 
 
@@ -60,7 +61,7 @@ class BasicBlock(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, depths, actions_size):
+    def __init__(self, block, depths, actions_size, sample_input=None):
         super(ResNet, self).__init__()
         self.block = block
         self.depths = depths
@@ -73,12 +74,36 @@ class ResNet(nn.Module):
         self.down1 = self._make_layer(12, 24, depths[0], downsample=False)
         self.down2 = self._make_layer(24, 36, depths[1])
         self.down3 = self._make_layer(36, 48, depths[2])
-        self.down4 = self._make_layer(48, actions_size, depths[3])
+        self.down4 = self._make_layer(48, 48, depths[3])
 
         # Output transition
-        # self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        # self.flatten = nn.Flatten(start_dim=1)
-        # self.fc = nn.Linear(in_features=512, out_features=num_classes)
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.flatten = nn.Flatten(start_dim=1)
+
+        if sample_input is not None:
+            fc_input = self._calc_fc_input_size(sample_input)
+        else:
+            fc_input = 512
+            
+
+        self.fc = nn.Linear(in_features=512, out_features=actions_size)
+    
+    def _calc_fc_input_size(self, x):
+        # Input
+        x = self.in1(x)
+        x = self.in2(x)
+
+        # Downsample
+        x = self.down1(x)
+        x = self.down2(x)
+        x = self.down3(x)
+        x = self.down4(x)
+
+        # Output
+        x = self.avg_pool(x)
+        x = self.flatten(x)
+
+        return x.shape[1]
 
     # Create a middle layer
     def _make_layer(self, in_channels, out_channels, depth, downsample=True):
@@ -106,12 +131,12 @@ class ResNet(nn.Module):
         x = self.down4(x)
 
         # Output
-        # x = self.avg_pool(x)
-        # x = self.flatten(x)
-        # x = self.fc(x)
+        x = self.avg_pool(x)
+        x = self.flatten(x)
+        x = self.fc(x)
 
         return x    
 
 
-def build_ResNet(action_size):
-    return ResNet(BasicBlock, [2, 2, 2, 2], action_size)
+def build_ResNet(sample_input: th.tensor, n_output):
+    return ResNet(BasicBlock, [3, 3, 3, 3], n_output, sample_input=sample_input)

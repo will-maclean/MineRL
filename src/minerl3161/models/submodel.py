@@ -1,6 +1,8 @@
 import torch as th
 from torch import nn
 
+from .resnet import build_ResNet
+
 
 class NothingNet(nn.Module):
     def __init__(self) -> None:
@@ -74,14 +76,21 @@ class MineRLFeatureExtraction(nn.Module):
 
         for feature in feature_names:
             if feature == "pov":
-                # add the CNN
-                self.layers[feature] = CNN(observation_space[feature].shape)
+                # add the Resnet
+                sample_input = th.rand((1, *(observation_space[feature].shape)))
+                self.layers[feature] = build_ResNet(sample_input=sample_input, n_output=mlp_hidden_size)
+
+            elif feature == "compass":
+                # we don't want to do any processing on the compass observation
+                self.layers[feature] = NothingNet()
+            
             else:
                 try:
                     # assume this needs a MLP
                     self.layers[feature] = MLP(
                         observation_space[feature].shape[0], mlp_hidden_size, softmax=False, layers_size=(mlp_hidden_size, mlp_hidden_size)
                     )
+                    
                 except TypeError as e:
                     # we aren't equipped to handle dictionary observation spaces
                     # therefore, we'll skip this observation
