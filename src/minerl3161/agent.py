@@ -10,7 +10,7 @@ from typing import Dict, Tuple, Union
 import numpy as np
 import torch as th
 from minerl3161.hyperparameters import DQNHyperparameters
-from minerl3161.models import DQNNet, TinyDQN
+from minerl3161.models.models import DQNNet, TinyDQN
 from minerl3161.utils import epsilon_decay, np_dict_to_pt
 
 from minerl3161.pl_pretraining.pl_model import DQNPretrainer

@@ -7,7 +7,7 @@ import torch as th
 from torch import nn
 from minerl3161.hyperparameters import DQNHyperparameters
 
-from minerl3161.submodel import MineRLFeatureExtraction
+from minerl3161.models.submodel import MineRLFeatureExtraction
 from minerl3161.utils import sample_pt_state
 
 
