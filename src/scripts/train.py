@@ -94,6 +94,8 @@ def main():
             tags=[args.policy, args.env]
         )
 
+        agent.watch_wandb()
+
     # Initialise trainer and start training
     trainer = POLICIES[args.policy].trainer(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hp, use_wandb=args.wandb, device=device, render=args.render, termination_conditions=termination_conditions)
     trainer.train()

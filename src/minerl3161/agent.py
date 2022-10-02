@@ -7,6 +7,7 @@ import random
 from abc import ABC, abstractmethod
 from typing import Dict, Tuple, Union
 
+import wandb
 import numpy as np
 import torch as th
 from minerl3161.hyperparameters import DQNHyperparameters
@@ -48,6 +49,12 @@ class BaseAgent(ABC):
         """
         #TODO: should put the model on CPU before save
         raise NotImplementedError()
+    
+    @abstractmethod
+    def watch_wandb(self):
+        """watch any relevant models with wandb
+        """
+        pass
 
     @staticmethod
     def load(path: str):
@@ -110,6 +117,10 @@ class DQNAgent(BaseAgent):
 
             self.q1.load_state_dict(pl_model.q1.state_dict())
             self.q2.load_state_dict(pl_model.q2.state_dict())
+    
+    def watch_wandb(self):
+        wandb.watch(self.q1)
+        wandb.watch(self.q2)
 
     def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:
         """chooses action from action space based on state
