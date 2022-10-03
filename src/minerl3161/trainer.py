@@ -147,6 +147,7 @@ class BaseTrainer:
                 log_dict.update(self.evaluator.evaluate(
                     self.agent, self.hp.evaluate_episodes
                 ))
+                self.env_interaction['needs_reset'] = True
 
             log_dict.update(self._housekeeping(t))
 
