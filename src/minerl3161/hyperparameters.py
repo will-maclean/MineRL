@@ -10,7 +10,7 @@ class BaseHyperparameters:
     burn_in: int = 10_000  # how many steps to loop for before starting training
     train_every: int = 1  # how many steps per train call
     evaluate_every: int = 50_000  # how many steps per evaluation call
-    evaluate_episodes: int = 5  # how many episodes we complete each evaluation call
+    evaluate_episodes: int = 1  # how many episodes we complete each evaluation call
     batch_size: int = 128  # batch size for training
     buffer_size_gathered: int = 250_000  # buffer size for gathered data
     buffer_size_dataset: int = (
