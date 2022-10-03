@@ -1,11 +1,20 @@
+import os
+from pathlib import Path
+
+import wandb
 from minerl3161.agent import BaseAgent
 import gym
 from minerl3161.configs import evaluator_video_path
 
 # TODO: write tests
 class Evaluator:
-    def __init__(self, env) -> None:
-        self.env = gym.wrappers.Monitor(env, evaluator_video_path + '/eval', force=True)
+    def __init__(self, env, use_wandb=True) -> None:
+        if use_wandb:
+            out_pth = os.path.join(wandb.run.dir, "media")
+        else:
+            out_pth = evaluator_video_path + "eval"
+        Path(out_pth).mkdir(exists=True, parents=True)
+        self.env = gym.wrappers.Monitor(env, out_pth, force=True)
         
         self.env_interaction = {
             "needs_reset": True,
@@ -53,6 +62,10 @@ class Evaluator:
             self.env_interaction["eval/episode_return"] = 0
             self.env_interaction["needs_reset"] = True
             self.env_interaction["last_state"] = None
+        
+        # Getting average from episodes
+        info["eval/episode_return"] = sum(info["eval/episode_return"])/len(info["eval/episode_return"])
+        info["eval/episode_length"] = sum(info["eval/episode_length"])/len(info["eval/episode_length"])
 
         return info
 
