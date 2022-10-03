@@ -24,15 +24,17 @@ class Evaluator:
             
         for _ in range(episodes):
             done = False
+            train_step = 0
             
             while not done:
+                train_step += 1
                 if self.env_interaction['needs_reset']:
                     state = self.env.reset()
                     self.env_interaction['needs_reset'] = False
                 else:
                     state = self.env_interaction["last_state"]
                 
-                action, _ = agent.act(state=state, train=True, step=self.t)
+                action, _ = agent.act(state=state, train=True, step=train_step)
                 action = action.detach().cpu().numpy().item()
 
                 next_state, reward, done, info = self.env.step(action)
