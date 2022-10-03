@@ -1,10 +1,11 @@
 from minerl3161.agent import BaseAgent
-
+import gym
+from configs import evaluator_video_path
 
 # TODO: write tests
 class Evaluator:
     def __init__(self, env) -> None:
-        self.env = env
+        self.env = gym.wrappers.Monitor(env, evaluator_video_path + '/eval', force=True)
         
         self.env_interaction = {
             "needs_reset": True,
