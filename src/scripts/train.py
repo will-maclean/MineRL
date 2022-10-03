@@ -62,10 +62,12 @@ def main():
 
     # Configure policy hyperparameters
     hp = POLICIES[args.policy].params()
+    print(f"Using the {args.policy} policy")
 
     # Configure environment
     env = gym.make(args.env)
     env = POLICIES[args.policy].wrapper(env, **dataclasses.asdict(hp))
+    print(f"Creating a(n) {args.env} environment to train the agent in")
 
     # handle human experience
     if args.human_exp_path is None:
@@ -73,6 +75,7 @@ def main():
         human_dataset = None
     else:
         human_dataset = PrioritisedReplayBuffer.load(args.human_exp_path) if args.human_exp_path is not None else None
+        print(f"Loading the human dataset from {args.human_xp_path}")
 
     # Setup termination conditions for the environment (if available)
     termination_conditions = get_termination_condition(args.env)
@@ -93,6 +96,8 @@ def main():
             config=hp,
             tags=[args.policy, args.env]
         )
+        print(f"Using wandb logging...")
+
 
     # Initialise trainer and start training
     trainer = POLICIES[args.policy].trainer(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hp, use_wandb=args.wandb, device=device, render=args.render, termination_conditions=termination_conditions)
