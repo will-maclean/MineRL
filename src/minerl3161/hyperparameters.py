@@ -11,15 +11,15 @@ class BaseHyperparameters:
     train_every: int = 1  # how many steps per train call
     evaluate_every: int = 50_000  # how many steps per evaluation call
     evaluate_episodes: int = 5  # how many episodes we complete each evaluation call
-    batch_size: int = 256  # batch size for training
-    buffer_size_gathered: int = 50_000  # buffer size for gathered data
+    batch_size: int = 128  # batch size for training
+    buffer_size_gathered: int = 250_000  # buffer size for gathered data
     buffer_size_dataset: int = (
         75_000  # buffer size for the provided data i.e. how much provided data to use
     )
     gather_every: int = 1  # how often we collect transition data
     gather_n: int = 1  # how many transitions we collect at once
     sampling_step: int = 1 # sampling strategy: batch includes one less human data item every time
-    checkpoint_every: Union[int, None] = 500_000  # how often we should save a copy of the agent 
+    checkpoint_every: Union[int, None] = 100_000  # how often we should save a copy of the agent 
 
     # observation space
     n_stack: int = 4  # how many frames to stack
@@ -48,7 +48,7 @@ class DQNHyperparameters(BaseHyperparameters):
     ] = 30_000  # how ofter to do a hard copy from q1 to q2
     soft_update_freq: Union[
         int, None
-    ] = 1  # how often to do a soft update from q1 to q2
+    ] = 0  # how often to do a soft update from q1 to q2
     polyak_tau: float = 1e-5  # controls the weight of the soft update
     reward_scale: float = 1.0  # controls whether we want to scale the rewards in the loss function
     

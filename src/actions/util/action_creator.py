@@ -18,7 +18,7 @@ NULL_ACTION = {
     'sprint': 0
 }
 
-x_angles = [-180, -135, -90, -45, 0, 45, 90, 135]
+x_angles = [-90, -45, 0, 45, 90]
 
 actions = []
 

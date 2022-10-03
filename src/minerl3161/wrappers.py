@@ -229,6 +229,8 @@ class MineRLWrapper(gym.Wrapper):
                 n_stack=4,
                 functional_acts=False,
                 extracted_acts=True,
+                extracted_acts_filename = "extracted-actions.pickle", 
+                functional_acts_filename = "functional-actions.pickle",
                 repeat_action = 1,
                 *args,
                 **kwargs,
@@ -249,7 +251,12 @@ class MineRLWrapper(gym.Wrapper):
         }
 
         # update action space
-        self.action_set = MineRLWrapper.create_action_set(functional_acts=functional_acts, extracted_acts=extracted_acts)
+        self.action_set = MineRLWrapper.create_action_set(
+            functional_acts=functional_acts, 
+            extracted_acts=extracted_acts, 
+            functional_acts_filename=functional_acts_filename, 
+            extracted_acts_filename=extracted_acts_filename
+            )
         _, self.action_space = MineRLWrapper.convert_action(action_space=self.action_space, action_set=self.action_set)
 
         # update observation space
@@ -317,9 +324,12 @@ class MineRLWrapper(gym.Wrapper):
         return state, observation_space, state_buffer 
     
     @staticmethod
-    def create_action_set(functional_acts: bool, extracted_acts: bool):
-        extracted_acts_filename = "custom-navigate-actions.pkl"
-        functional_acts_filename = "functional-actions.pickle"
+    def create_action_set(
+        functional_acts: bool, 
+        extracted_acts: bool, 
+        extracted_acts_filename: str, 
+        functional_acts_filename: str
+    ):
         action_set = []
 
         if extracted_acts:
@@ -386,5 +396,8 @@ def minerlWrapper(env, *args, **kwargs):
         n_stack=4,
         functional_acts=True,
         extracted_acts=True,
+        extracted_acts_filename = "extracted-actions.pickle", 
+        functional_acts_filename = "functional-actions.pickle",
+        repeat_action = 1
     """
     return MineRLWrapper(env, *args, **kwargs)

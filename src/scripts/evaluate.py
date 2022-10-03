@@ -30,6 +30,9 @@ def main():
 
     parser.add_argument('--ep_rew_pass', type=str, default=0,
                     help='the rew the agent must obtain in order for the episode to be considered a pass')
+    
+    parser.add_argument('--repeat_act', type=str, default=1,
+                    help='the number of times each action selected by the agent should be passed to the env')
 
     parser.add_argument('--csv_file_path', type=str, default="data/eval_data.csv",
                     help='where the csv file containing the eval data is output')
@@ -66,24 +69,24 @@ def main():
 
         while not done:
 
-            if random() < 0.9:
-                action, _ = agent.act(state=state, step=t, train=False)
-            else:
-                action = env.action_space.sample()
+            action, _ = agent.act(state=state, step=t, train=False)
 
-            next_state, reward, done, _ = env.step(action)
+            for _ in range(args.repeat_act):
+                next_state, reward, done, _ = env.step(action)
 
-            ep_rew += reward
+                ep_rew += reward
 
-            if done:
-                episode_rews.append(ep_rew)
-                episodes_t_steps.append(t)
+                if done:
+                    episode_rews.append(ep_rew)
+                    episodes_t_steps.append(t)
 
-                if ep_rew > args.ep_rew_pass: pass_amount += 1
+                    if ep_rew > args.ep_rew_pass: pass_amount += 1
 
-            else:
-                state = next_state
-                t += 1
+                    break
+
+                else:
+                    state = next_state
+                    t += 1
 
     avg_ep_rew = sum(episode_rews)/len(episode_rews)
     avg_ep_t = sum(episodes_t_steps)/len(episodes_t_steps)

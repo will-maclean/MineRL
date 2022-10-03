@@ -30,10 +30,10 @@ POLICIES = {
 def main():
     parser = argparse.ArgumentParser('Parse configuration file')
     parser.add_argument('--policy', type=str, default='vanilla-dqn')
-    parser.add_argument('--env', type=str, default="MineRLNavigateDense-v0")
+    parser.add_argument('--env', type=str, default="MineRLNavigate-v0")
 
     # Why can't argparse read bools from the command line? Who knows. Workaround:
-    parser.add_argument('--wandb', action='store_true', default=True,
+    parser.add_argument('--wandb', action='store_true', default=False,
                         help='sets if we use wandb logging')
     parser.add_argument('--no-wandb', action='store_false', dest="wandb",
                         help='sets if we use wandb logging')
@@ -50,7 +50,7 @@ def main():
     parser.add_argument('--load_path', type=str, default=None,
                         help='path to model checkpoint to load (optional)')
     
-    parser.add_argument('--render', action='store_true', default=False,
+    parser.add_argument('--render', action='store_true', default=True,
                         help='sets if we use gpu hardware')
 
     args = parser.parse_args()
@@ -65,7 +65,7 @@ def main():
 
     # Configure environment
     env = gym.make(args.env)
-    env = POLICIES[args.policy].wrapper(env, **dataclasses.asdict(hp))
+    env = POLICIES[args.policy].wrapper(env, **dataclasses.asdict(hp), extracted_acts_filename="custom-navigate-actions.pkl")
 
     # handle human experience
     if args.human_exp_path is None:

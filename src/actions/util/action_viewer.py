@@ -5,9 +5,9 @@ import minerl3161
 
 
 def load_actions() -> list:
-    # filepath = os.path.join(minerl3161.actions_path, f"actions-Navigate.pickle")
+    filepath = os.path.join(minerl3161.actions_path, f"custom-navigate-actions.pkl")
 
-    with open("custom-navigate-actions.pkl", "rb") as f:
+    with open(filepath, "rb") as f:
         return pickle.load(f)
 
 
