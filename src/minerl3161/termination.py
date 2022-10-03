@@ -5,7 +5,7 @@ import numpy as np
 
 class TerminationCondition:
     @abstractmethod
-    def episode_end(self, *args, **kwargs) -> bool:
+    def __call__(self, *args, **kwargs) -> bool:
         pass
 
 
@@ -16,7 +16,7 @@ class AvgEpisodeReturnTerminationCondition(TerminationCondition):
         assert termination_avg > 0, "Only termination averages > 0 are currently supported"
 
         self.termination_avg = termination_avg
-        self.window = 10
+        self.window = window
 
         self.buffer = np.zeros(self.window)
     
