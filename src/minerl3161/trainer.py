@@ -70,7 +70,7 @@ class BaseTrainer:
         self.human_dataset_batch_size = self.hp.batch_size 
         self.gathered_xp_batch_size = 0
 
-        self.evaluator = Evaluator(env)
+        self.evaluator = Evaluator(env, use_wandb=use_wandb)
 
         # store stuff used to interact with the environment here i.e. anything that 
         # would normally be a loop variable in a normal RL training script should
@@ -147,6 +147,7 @@ class BaseTrainer:
                 log_dict.update(self.evaluator.evaluate(
                     self.agent, self.hp.evaluate_episodes
                 ))
+                self.env_interaction['needs_reset'] = True
 
             log_dict.update(self._housekeeping(t))
 

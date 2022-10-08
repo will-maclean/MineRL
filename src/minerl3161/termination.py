@@ -64,4 +64,4 @@ def get_termination_condition(env_name):
         return conditions
 
     except KeyError:
-        return None
+        return [] 

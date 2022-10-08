@@ -132,11 +132,12 @@ dmypy.json
 .idea
 
 logs
-data/*
+data
 **/wandb
-wandb
+wandb/*
+weights
+video
 **/lightning_logs
 *.pkl
 *.ckpt
 *.pth
-weights

@@ -29,11 +29,11 @@ POLICIES = {
 
 def main():
     parser = argparse.ArgumentParser('Parse configuration file')
-    parser.add_argument('--policy', type=str, default='rainbow-dqn')
+    parser.add_argument('--policy', type=str, default='vanilla-dqn')
     parser.add_argument('--env', type=str, default="MineRLNavigateDense-v0")
 
     # Why can't argparse read bools from the command line? Who knows. Workaround:
-    parser.add_argument('--wandb', action='store_true', default=True,
+    parser.add_argument('--wandb', action='store_true', default=False,
                         help='sets if we use wandb logging')
     parser.add_argument('--no-wandb', action='store_false', dest="wandb",
                         help='sets if we use wandb logging')
@@ -66,7 +66,14 @@ def main():
 
     # Configure environment
     env = gym.make(args.env)
-    env = POLICIES[args.policy].wrapper(env, **dataclasses.asdict(hp))
+    env = POLICIES[args.policy].wrapper(
+        env, 
+        **dataclasses.asdict(hp), 
+        extracted_acts = True,
+        functional_acts = False, 
+        extracted_acts_filename="custom-navigate-actions.pkl",
+        repeat_action=5
+        )
     print(f"Creating a(n) {args.env} environment to train the agent in")
 
     # handle human experience
@@ -94,10 +101,13 @@ def main():
             project=args.env + "-" + args.policy, 
             entity="minerl3161",
             config=hp,
-            tags=[args.policy, args.env]
+            tags=[args.policy, args.env],
+            monitor_gym=True
         )
         print(f"Using wandb logging...")
 
+
+        agent.watch_wandb()
 
     # Initialise trainer and start training
     trainer = POLICIES[args.policy].trainer(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hp, use_wandb=args.wandb, device=device, render=args.render, termination_conditions=termination_conditions)
