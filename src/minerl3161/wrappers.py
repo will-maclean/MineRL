@@ -8,6 +8,7 @@ import gym
 import cv2
 import os
 import pickle
+import sys
 
 import minerl3161
 
@@ -271,8 +272,10 @@ class MineRLWrapper(gym.Wrapper):
     def step(self, action):
         action, _ = MineRLWrapper.convert_action(action=action, last_unprocessed_state=self.obs_kwargs["last_unprocessed_state"], action_set=self.action_set)
 
-        if (action["camera"][0] != 0 or action["attack"] == 1):
-            print(f"Error using incorrect action")
+        if (action["camera"][0] != 0):
+            with open("temp.pkl", "wb") as f:
+                pickle.dump(self.action_set, f)
+            sys.exit("Error using incorrect action - stopping run")
 
         reward_sum = 0
 

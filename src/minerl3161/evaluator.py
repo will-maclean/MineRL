@@ -9,11 +9,8 @@ from minerl3161.configs import evaluator_video_path
 # TODO: write tests
 class Evaluator:
     def __init__(self, env, use_wandb=True) -> None:
-        if use_wandb:
-            out_pth = os.path.join(wandb.run.dir, "media")
-        else:
-            out_pth = evaluator_video_path + "eval"
-        Path(out_pth).mkdir(exists=True, parents=True)
+        out_pth = evaluator_video_path + "eval"
+        Path(out_pth).mkdir(exist_ok=True, parents=True)
         self.env = gym.wrappers.Monitor(env, out_pth, force=True)
         
         self.env_interaction = {
@@ -43,8 +40,7 @@ class Evaluator:
                 else:
                     state = self.env_interaction["last_state"]
                 
-                action, _ = agent.act(state=state, train=True, step=train_step)
-                action = action.detach().cpu().numpy().item()
+                action, _ = agent.act(state=state, train=False)
 
                 next_state, reward, done, _ = self.env.step(action)
 

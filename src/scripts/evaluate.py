@@ -53,9 +53,15 @@ def main():
 
     # Configure environment
     env = gym.make(args.env)
-    env = minerlWrapper(env, **dataclasses.asdict(agent.hp))
+    env = minerlWrapper(
+        env, 
+        **dataclasses.asdict(agent.hp), 
+        extracted_acts_filename="custom-navigate-actions.pkl", 
+        functional_acts_filename = "functional-acts.pkl", 
+        functional_acts = False, 
+        extracted_acts = True
+        )
 
-    # TODO: Wrap env in mp4 wrapper
     env = gym.wrappers.Monitor(env, force=True, directory=args.mp4_file_path, video_callable=lambda x: True)
     
     episode_rews = []

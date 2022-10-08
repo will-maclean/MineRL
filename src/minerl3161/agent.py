@@ -259,3 +259,6 @@ class TinyDQNAgent(BaseAgent):
         """
         with open(path, "rb") as infile:
             return pickle.load(infile)
+    
+    def watch_wandb(self):
+        wandb.watch(self.q1)

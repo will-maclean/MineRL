@@ -30,7 +30,7 @@ The following is all task environment strings
 
 # Hyperparameters
 RANDOM_STATE = 123
-NUM_CLUSTERS = 12 # Number of Macro Actions we want to extract
+NUM_CLUSTERS = 6 # Number of Macro Actions we want to extract
 
 NUM_EPOCHS = 2
 BATCH_SIZE = 10
@@ -59,12 +59,12 @@ NULL_ACTION = {
 
 # Paths
 ROOT_PATH = Path(__file__).absolute().parent.parent.parent
-SRC_PATH = ROOT_PATH.joinpath('src')
+# SRC_PATH = ROOT_PATH.joinpath('src')
 DATA_PATH = ROOT_PATH.joinpath('data')
-ACTIONS_PATH = SRC_PATH.joinpath('actions')
+ACTIONS_PATH = ROOT_PATH.joinpath('actions')
 
 # Util functions
-StringBuilder = lambda ENV_STRING: (f'MineRL{ENV_STRING}-v0', str(ACTIONS_PATH.joinpath(f'actions-{ENV_STRING}.pickle')))
+StringBuilder = lambda ENV_STRING: (f'MineRL{ENV_STRING}-v0', str(ACTIONS_PATH.joinpath(f'actions-{ENV_STRING}.pkl')))
 
 def log(msg, level="INFO"):
     format_dict = {
@@ -219,10 +219,10 @@ if __name__ == "__main__":
 
     os.environ['MINERL_DATA_ROOT'] = data_path # Important
 
-    extract_actions("Treechop")
+    # extract_actions("Treechop")
     extract_actions("Navigate")
-    extract_actions("ObtainIronPickaxe")
-    extract_actions("ObtainDiamond")
-    merge_actions()
+    # extract_actions("ObtainIronPickaxe")
+    # extract_actions("ObtainDiamond")
+    # merge_actions()
 
 
