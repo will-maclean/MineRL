@@ -222,10 +222,10 @@ def obs_compass(state=None, observation_space=None, compass_name="compass", *arg
 class MineRLWrapper(gym.Wrapper):
     def __init__(self, 
                 env, 
-                extracted_acts_filename, 
-                functional_acts_filename,
-                functional_acts,
-                extracted_acts,
+                extracted_acts_filename = "extracted-actions.pickle", 
+                functional_acts_filename = "functional-actions.pickle",
+                functional_acts = True,
+                extracted_acts = True,
                 inventory_feature_names=None, 
                 include_equipped_items=False, 
                 resize_w=64, 
@@ -271,11 +271,6 @@ class MineRLWrapper(gym.Wrapper):
     
     def step(self, action):
         action, _ = MineRLWrapper.convert_action(action=action, last_unprocessed_state=self.obs_kwargs["last_unprocessed_state"], action_set=self.action_set)
-
-        if (action["camera"][0] != 0):
-            with open("temp.pkl", "wb") as f:
-                pickle.dump(self.action_set, f)
-            sys.exit("Error using incorrect action - stopping run")
 
         reward_sum = 0
 

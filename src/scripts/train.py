@@ -33,7 +33,7 @@ def main():
     parser.add_argument('--env', type=str, default="MineRLNavigateDense-v0")
 
     # Why can't argparse read bools from the command line? Who knows. Workaround:
-    parser.add_argument('--wandb', action='store_true', default=True,
+    parser.add_argument('--wandb', action='store_true', default=False,
                         help='sets if we use wandb logging')
     parser.add_argument('--no-wandb', action='store_false', dest="wandb",
                         help='sets if we use wandb logging')
@@ -69,10 +69,9 @@ def main():
     env = POLICIES[args.policy].wrapper(
         env, 
         **dataclasses.asdict(hp), 
-        extracted_acts_filename="custom-navigate-actions.pkl", 
-        functional_acts_filename = "functional-acts.pkl", 
-        functional_acts = False, 
         extracted_acts = True,
+        functional_acts = False, 
+        extracted_acts_filename="custom-navigate-actions.pkl",
         repeat_action=5
         )
     print(f"Creating a(n) {args.env} environment to train the agent in")
