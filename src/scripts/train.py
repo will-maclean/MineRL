@@ -10,7 +10,7 @@ from collections import namedtuple
 
 from minerl3161.agent import DQNAgent, TinyDQNAgent
 from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
-from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
+from minerl3161.hyperparameters import CartPoleRainbowDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
 from minerl3161.wrappers import minerlWrapper, cartPoleWrapper
 from minerl3161.termination import get_termination_condition
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
@@ -25,15 +25,16 @@ POLICIES = {
     "rainbow-dqn": Policy(DQNAgent, RainbowDQNTrainer, minerlWrapper, RainbowDQNHyperparameters),
     "tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
     "cartpole-dqn": Policy(TinyDQNAgent, DQNTrainer, cartPoleWrapper, CartpoleDQNHyperparameters),
+    "rainbow-cartpole-dqn": Policy(TinyDQNAgent, RainbowDQNTrainer, cartPoleWrapper, CartPoleRainbowDQNHyperparameters),
 }
 
 def main():
     parser = argparse.ArgumentParser('Parse configuration file')
-    parser.add_argument('--policy', type=str, default='vanilla-dqn')
+    parser.add_argument('--policy', type=str, default='rainbow-dqn')
     parser.add_argument('--env', type=str, default="MineRLNavigateDense-v0")
 
     # Why can't argparse read bools from the command line? Who knows. Workaround:
-    parser.add_argument('--wandb', action='store_true', default=False,
+    parser.add_argument('--wandb', action='store_true', default=True,
                         help='sets if we use wandb logging')
     parser.add_argument('--no-wandb', action='store_false', dest="wandb",
                         help='sets if we use wandb logging')
@@ -110,7 +111,16 @@ def main():
         agent.watch_wandb()
 
     # Initialise trainer and start training
-    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hp, use_wandb=args.wandb, device=device, render=args.render, termination_conditions=termination_conditions)
+    trainer = POLICIES[args.policy].trainer(
+        env=env, 
+        agent=agent, 
+        human_dataset=human_dataset, 
+        hyperparameters=hp,
+        device=device,  
+        use_wandb=args.wandb, 
+        render=args.render, 
+        termination_conditions=None)
+
     trainer.train()
 
 
