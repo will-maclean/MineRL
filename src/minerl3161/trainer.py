@@ -21,7 +21,6 @@ from minerl3161.utils import np_dict_to_pt, linear_decay
 from minerl3161.termination import TerminationCondition
 
 
-# TODO: write tests
 class BaseTrainer:
     """Abstract class for Trainers. At the least, all implementations must have _train_step()."""
 
@@ -238,14 +237,13 @@ class BaseTrainer:
     def close(self):
         pass
 
-# TODO: write tests
 class DQNTrainer(BaseTrainer):
     def __init__(
         self, 
         env: gym.Env, 
         agent: BaseAgent, 
         hyperparameters: DQNHyperparameters, 
-        human_dataset: ReplayBuffer, 
+        human_dataset: Union[ReplayBuffer, None] = None, 
         use_wandb: bool = False, 
         device: str = "cpu", 
         render=False, 
@@ -334,7 +332,7 @@ class RainbowDQNTrainer(BaseTrainer):
         env: gym.Env, 
         agent: BaseAgent, 
         hyperparameters: DQNHyperparameters, 
-        human_dataset: PrioritisedReplayBuffer, 
+        human_dataset: Union[PrioritisedReplayBuffer, None] = None, 
         use_wandb: bool = False, 
         device: str = "cpu", 
         render: bool = False,
