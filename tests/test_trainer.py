@@ -8,11 +8,8 @@ from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.wrappers import minerlWrapper
 from minerl3161.trainer import DQNTrainer
 
-wandb_entity = "minerl3161"
-wandb_project = "testing"
 
-
-def notest_DQNtrainer(minerl_env):
+def test_DQNtrainer(minerl_env):
     # just runs main.py for a few steps basically
     # Loading onto appropriate device
     using_gpu = torch.cuda.is_available()
@@ -37,7 +34,6 @@ def notest_DQNtrainer(minerl_env):
     # Configure environment
     env = minerlWrapper(minerl_env, hp.inventory_feature_names)  #FIXME: surely we need to pass in more shit than this
 
-
     # Initialising ActionWrapper to determine number of actions in use
     n_actions = env.action_space.n
 
@@ -48,27 +44,10 @@ def notest_DQNtrainer(minerl_env):
        hyperparams=hp
        )
 
-    wandb.init(
-        project=wandb_project, 
-        entity=wandb_entity,
-        config=hp
-    )
-    run_id = wandb.run.id
-
     # Initialise trainer and start training
-    trainer = DQNTrainer(env=env, agent=agent, hyperparameters=hp, use_wandb=True, device=device)
+    trainer = DQNTrainer(env=env, agent=agent, hyperparameters=hp, use_wandb=False, device=device)
 
     print("starting training")
     # run the trainer
     trainer.train()
     print("ending training")
-
-    # wandb.finish()
-
-     # tidy up by deleting the run
-    api = wandb.Api()
-    run = api.run(f"{wandb_entity}/{wandb_project}/{run_id}")
-    run.delete()
-    
-    print("run deleted")
-
