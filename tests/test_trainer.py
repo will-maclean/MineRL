@@ -1,3 +1,4 @@
+import dataclasses
 import torch
 import wandb
 import gym
@@ -32,7 +33,7 @@ def test_DQNtrainer(minerl_env):
     hp.mlp_output_size = 6
 
     # Configure environment
-    env = minerlWrapper(minerl_env, hp.inventory_feature_names)  #FIXME: surely we need to pass in more shit than this
+    env = minerlWrapper(minerl_env, **dataclasses.asdict(hp))  #FIXME: surely we need to pass in more shit than this
 
     # Initialising ActionWrapper to determine number of actions in use
     n_actions = env.action_space.n
