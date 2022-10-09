@@ -1,5 +1,6 @@
 # MineRL
 ![Build Passing](https://github.com/will-maclean/MineRL/workflows/main%20workflow/badge.svg)
+![Testing Coverage](./coverage.svg)
 
 Run example with CartPole:
 
