@@ -195,7 +195,8 @@ class BaseTrainer:
                 log_dict["episode_return"] = self.env_interaction["episode_return"]
                 log_dict["episode_length"] = self.env_interaction["episode_length"]
 
-                self._process_termination_conditions(self.env_interaction)
+                if self.termination_conditions is not None:
+                    self._process_termination_conditions(self.env_interaction)
 
                 self.env_interaction["episode_return"] = 0
                 self.env_interaction["needs_reset"] = True
@@ -506,7 +507,7 @@ class RainbowDQNTrainer(BaseTrainer):
         
         # if we have not human transitions, then yeah obviously we can simplify this provess a bit
         if self.human_transitions is None:
-            beta = linear_decay(step=step, start_val=self.hp.beta_min, final_val=self.hp.beta_max, final_steps=self.hp.sample_final_step)
+            beta = linear_decay(step=step, start_val=self.hp.beta_min, final_val=self.hp.beta_max, final_steps=self.hp.beta_final_step)
             return_batch, gathered_weights, gathered_indices =  self.gathered_transitions.sample(self.hp.batch_size, beta=beta)
             return_batch["weights"] = gathered_weights
             return_batch["indices"] = gathered_indices
@@ -527,7 +528,7 @@ class RainbowDQNTrainer(BaseTrainer):
         self.human_dataset_batch_size = human_dataset_batch_size
         self.gathered_xp_batch_size = gathered_xp_batch_size
         
-        beta = linear_decay(step=step, start_val=self.hp.beta_min, final_val=self.hp.beta_max, final_steps=self.hp.sample_final_step)
+        beta = linear_decay(step=step, start_val=self.hp.beta_min, final_val=self.hp.beta_max, final_steps=self.hp.beta_final_step)
 
         gathered_weights = np.empty((1,))
         gathered_indices = np.empty((1,))
