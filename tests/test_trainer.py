@@ -3,10 +3,11 @@ import torch
 import wandb
 import gym
 import minerl
-from minerl3161.agent import DQNAgent
+from minerl3161.agent import DQNAgent, TinyDQNAgent
 
-from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
-from minerl3161.wrappers import minerlWrapper
+from minerl3161.hyperparameters import CartpoleDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters
+from minerl3161.termination import get_termination_condition
+from minerl3161.wrappers import cartPoleWrapper, minerlWrapper
 from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
 
 
@@ -97,3 +98,39 @@ def test_rainbow_trainer(minerl_env):
     # run the trainer
     trainer.train()
     print("ending training")
+
+def test_cartpole():
+   # test cartpole on DQN trainer, just to check that we can deal with different environments
+
+   env_name = "CartPole-v0"
+   env = gym.make(env_name)
+   env = cartPoleWrapper(env)
+   hp = CartpoleDQNHyperparameters()
+   
+   # make some baby hyperparameters
+   hp.batch_size = 4
+   hp.buffer_size_gathered = 16
+   hp.train_steps = 32
+   hp.burn_in = 6
+   hp.feature_names = list(env.observation_space.keys())
+
+   agent = TinyDQNAgent(
+      obs_space=env.observation_space, 
+      n_actions=env.action_space.n, 
+      device="cpu", 
+      hyperparams=hp
+      )
+
+   tc = get_termination_condition(env_name)
+
+   trainer = DQNTrainer(
+      env=env,
+      agent=agent,
+      hyperparameters=hp,
+      use_wandb=False,
+      render=False,
+      termination_conditions=tc,
+      device="cpu"
+   )
+
+   trainer.train()
