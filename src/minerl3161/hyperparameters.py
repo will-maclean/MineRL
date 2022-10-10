@@ -124,3 +124,8 @@ class CartPoleRainbowDQNHyperparameters(CartpoleDQNHyperparameters):
     beta_max: float = 1.0
     beta_min: float = 0.6
     beta_final_step: int = 50_000
+
+    # sampling options
+    sample_max: float = 1.0
+    sample_min: float = 0.05
+    sample_final_step: int = 1_500_000

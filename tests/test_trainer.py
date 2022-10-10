@@ -212,7 +212,8 @@ def test_cartpole_rainbow_human_exp():
       use_wandb=False,
       render=False,
       termination_conditions=tc,
-      device="cpu"
+      device="cpu",
+      human_dataset=human_data,
    )
 
    trainer.train()
