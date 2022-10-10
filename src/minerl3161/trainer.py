@@ -12,12 +12,13 @@ import torch
 from minerl3161.checkpointer import Checkpointer
 from minerl3161.utils import copy_weights
 from torch.optim import Adam
+from torch.nn.utils import clip_grad_norm_
 
 from minerl3161.agent import BaseAgent
-from minerl3161.buffer import ReplayBuffer, PrioritisedReplayBuffer
+from minerl3161.buffer import ReplayBuffer, PrioritisedReplayBuffer, NStepReplayBuffer
 from minerl3161.evaluator import Evaluator
-from minerl3161.hyperparameters import BaseHyperparameters, DQNHyperparameters
-from minerl3161.utils import np_dict_to_pt, linear_decay
+from minerl3161.hyperparameters import BaseHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters
+from minerl3161.utils import linear_decay, np_batch_to_tensor_batch
 from minerl3161.termination import TerminationCondition
 
 
@@ -143,7 +144,7 @@ class BaseTrainer:
             if t > self.hp.burn_in and t % self.hp.train_every == 0:
                 log_dict.update(self._train_step(t))
 
-            if t % self.hp.evaluate_every == 0:
+            if t % self.hp.evaluate_every == 0 and t != 0:
                 log_dict.update(self.evaluator.evaluate(
                     self.agent, self.hp.evaluate_episodes
                 ))
@@ -174,7 +175,7 @@ class BaseTrainer:
                 self.env_interaction['needs_reset'] = False
             else:
                 state = self.env_interaction["last_state"]
-            
+                
             action, act_log_dict = self.agent.act(state=state, train=True, step=self.t)
 
             action = action.detach().cpu().numpy().item()
@@ -186,7 +187,7 @@ class BaseTrainer:
             if self.render:
                 self.env.render()
 
-            self.gathered_transitions.add(state, action, next_state, reward, done)
+            self.add_transition(state, action, next_state, reward, done)
             self.env_interaction["episode_length"] += 1
             self.env_interaction["episode_return"] += reward
             self.env_interaction["last_state"] = next_state
@@ -212,6 +213,9 @@ class BaseTrainer:
     @abstractmethod
     def _train_step(self, step: int) -> None:
         raise NotImplementedError()
+    
+    def add_transition(self, state, action, next_state, reward, done):
+        self.gathered_transitions.add(state, action, next_state, reward, done)
 
     def _housekeeping(self, step: int) -> None:
         log_dict = {}
@@ -263,20 +267,7 @@ class DQNTrainer(BaseTrainer):
         # Get a batch of experience from the gathered transitions
         batch = self.sample(self.hp.sampling_strategy)
 
-        # convert np transitions into torch tensors
-        batch["state"] = np_dict_to_pt(batch["state"], device=self.device)
-
-        batch["next_state"] = np_dict_to_pt(batch["next_state"], device=self.device)
-
-        batch["action"] = torch.tensor(
-            batch["action"], dtype=torch.long, device=self.device
-        )
-        batch["reward"] = torch.tensor(
-            batch["reward"], dtype=torch.float32, device=self.device
-        )
-        batch["done"] = torch.tensor(
-            batch["done"], dtype=torch.float32, device=self.device
-        )
+        batch = np_batch_to_tensor_batch(batch, self.device)
 
         # calculate loss signal
         loss = self._calc_loss(batch)
@@ -333,7 +324,7 @@ class RainbowDQNTrainer(BaseTrainer):
         self, 
         env: gym.Env, 
         agent: BaseAgent, 
-        hyperparameters: DQNHyperparameters, 
+        hyperparameters: RainbowDQNHyperparameters, 
         human_dataset: PrioritisedReplayBuffer, 
         use_wandb: bool = False, 
         device: str = "cpu", 
@@ -352,7 +343,47 @@ class RainbowDQNTrainer(BaseTrainer):
             termination_conditions=termination_conditions)
 
         # The optimiser keeps track of the model weights that we want to train
-        self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
+        self.optim = Adam(self.agent.q1.parameters(), lr=hyperparameters.lr)
+
+        # memory for N-step Learning
+        self.use_n_step = True if hyperparameters.n_step > 1 else False
+        if self.use_n_step:
+            self.n_step = hyperparameters.n_step
+            self.memory_n = NStepReplayBuffer(
+                n=env.action_space.n, 
+                obs_space=env.observation_space,
+                alpha=hyperparameters.alpha,
+                size=hyperparameters.buffer_size_gathered, 
+                batch_size=hyperparameters.batch_size, 
+                gamma=hyperparameters.gamma,
+                n_step=hyperparameters.n_step, 
+            )
+        
+        # memory for 1-step Learning
+        self.beta = hyperparameters.beta_min
+        self.prior_eps = hyperparameters.prior_eps
+
+        # Categorical DQN parameters
+        self.v_min = hyperparameters.v_min
+        self.v_max = hyperparameters.v_max
+        self.atom_size = hyperparameters.atom_size
+        self.support = torch.linspace(
+            self.v_min, self.v_max, self.atom_size
+        ).to(self.device)
+    
+    def add_transition(self, state, action, next_state, reward, done):
+        transition = (state, action, next_state, reward, done)
+        
+        # N-step transition
+        if self.use_n_step:
+            one_step_transition = self.memory_n.add(*transition)
+        # 1-step transition
+        else:
+            one_step_transition = transition
+
+        # add a single step transition
+        if one_step_transition:
+            self.gathered_transitions.add(*transition)
 
     def _train_step(self, step: int) -> None:
         log_dict = {}
@@ -362,27 +393,44 @@ class RainbowDQNTrainer(BaseTrainer):
         log_dict.update(sample_log_dict)
 
         # convert np transitions into torch tensors
-        batch["state"] = np_dict_to_pt(batch["state"], device=self.device)
-
-        batch["next_state"] = np_dict_to_pt(batch["next_state"], device=self.device)
-
-        batch["action"] = torch.tensor(
-            batch["action"], dtype=torch.long, device=self.device
-        )
-        batch["reward"] = torch.tensor(
-            batch["reward"], dtype=torch.float32, device=self.device
-        )
-        batch["done"] = torch.tensor(
-            batch["done"], dtype=torch.float32, device=self.device
+        batch = np_batch_to_tensor_batch(batch, self.device)
+        batch["weights"] = torch.tensor(
+            batch["weights"].reshape(-1, 1), dtype=torch.float32, device=self.device
         )
 
         # calculate loss signal
-        loss = self._calc_loss(batch)
+        elementwise_loss = self._calc_loss(batch)
+
+        # PER: importance sampling before average
+        loss = torch.mean(elementwise_loss * batch["weights"])
+
+        # N-step Learning loss
+        # we are gonna combine 1-step loss and n-step loss so as to
+        # prevent high-variance. The original rainbow employs n-step loss only.
+        if self.use_n_step:
+            gamma = self.hp.gamma ** self.n_step
+            sample = self.memory_n.sample_batch_from_idxs(self.gathered_transitions, batch["indices"])
+            sample = np_batch_to_tensor_batch(sample, self.device)
+            elementwise_loss_n_loss = self._calc_loss(sample, gamma)
+            elementwise_loss += elementwise_loss_n_loss
+            
+            # PER: importance sampling before average
+            loss = torch.mean(elementwise_loss * batch["weights"])
 
         # update model parameters
         self.optim.zero_grad()
         loss.backward()
+        clip_grad_norm_(self.agent.q1.parameters(), 10.0)
         self.optim.step()
+
+        # PER: update priorities
+        loss_for_prior = elementwise_loss.detach().cpu().numpy()
+        new_priorities = loss_for_prior + self.prior_eps
+        self.gathered_transitions.update_priorities(batch["indices"], new_priorities)
+        
+        # NoisyNet: reset noise
+        self.agent.q1.reset_noise()
+        self.agent.q2.reset_noise()
 
         # do q2 model update (also referred to as target network)
         if (
@@ -400,47 +448,58 @@ class RainbowDQNTrainer(BaseTrainer):
 
         return log_dict
 
-    def _calc_loss(self, batch: dict) -> torch.Tensor:
+    def _calc_loss(self, batch: dict, gamma: float = None) -> torch.Tensor:
+        gamma = self.hp.gamma if gamma is None else gamma
+        
         if self.human_transitions is None:
-            return self._calc_loss_gathered_only(batch)
+            return self._calc_loss_gathered_only(batch, gamma)
         else:
             return self._calc_loss_combined(batch)
 
-    def _calc_loss_gathered_only(self, batch):
-
-        weights = torch.tensor(
-            batch["weights"].reshape(-1, 1)
-        ).to(self.device, dtype=torch.float32)
+    def _calc_loss_gathered_only(self, batch, gamma):
+        state = batch["state"]["state"]
+        action = batch["action"]
+        reward = batch["reward"]
+        next_state = batch["next_state"]["state"]
+        done = batch["done"]
         
-        # estimate q values for current states/actions using q1 network
-        q_values = self.agent.q1(batch["state"])
-        q_values = q_values.gather(1, batch["action"])
+        # Categorical DQN algorithm
+        delta_z = float(self.v_max - self.v_min) / (self.atom_size - 1)
 
-        # estimate q values for next states/actions using q2 network
-        next_q_values = self.agent.q2(batch["next_state"])
-        next_actions = next_q_values.argmax(dim=1).unsqueeze(1)
-        next_q_values = next_q_values.gather(1, next_actions)
+        with torch.no_grad():
+            # Double DQN
+            next_action = self.agent.q1(next_state).argmax(1)
+            next_dist = self.agent.q2.dist(next_state)
+            next_dist = next_dist[range(self.hp.batch_size), next_action]
 
-        # calculate TD target for Bellman Equation
-        td_target = self.hp.reward_scale * torch.sign(batch[
-            "reward"
-        ]) + self.hp.gamma * next_q_values * (1 - batch["done"])
+            t_z = reward + (1 - done) * gamma * self.support
+            t_z = t_z.clamp(min=self.v_min, max=self.v_max)
+            b = (t_z - self.v_min) / delta_z
+            l = b.floor().long()
+            u = b.ceil().long()
 
-        # Calculate loss for Bellman Equation
-        # Note that we use smooth_l1_loss instead of MSE as it is more stable for larger loss signals. RL problems
-        # typically suffer from high variance, so anything we can do to introduce more stability is usually a
-        # good thing.
-        loss = torch.nn.functional.smooth_l1_loss(q_values, td_target, reduction="none")
+            offset = (
+                torch.linspace(
+                    0, (self.hp.batch_size - 1) * self.atom_size, self.hp.batch_size
+                ).long()
+                .unsqueeze(1)
+                .expand(self.hp.batch_size, self.atom_size)
+                .to(self.device)
+            )
 
-        # update the weights
-        loss_for_prior = loss.detach().cpu().numpy()
-        new_priorities = loss_for_prior + self.hp.prior_eps
+            proj_dist = torch.zeros(next_dist.size(), device=self.device)
+            proj_dist.view(-1).index_add_(
+                0, (l + offset).view(-1), (next_dist * (u.float() - b)).view(-1)
+            )
+            proj_dist.view(-1).index_add_(
+                0, (u + offset).view(-1), (next_dist * (b - l.float())).view(-1)
+            )
 
-        self.gathered_transitions.update_priorities(batch["indices"], new_priorities)
+        dist = self.agent.q1.dist(state)
+        log_p = torch.log(dist[range(self.hp.batch_size), action.squeeze(1)])
+        elementwise_loss = -(proj_dist * log_p).sum(1)
 
-        loss = loss * weights
-
-        return loss.mean()
+        return elementwise_loss
 
     def _calc_loss_combined(self, batch):
         gathered_batch_size = batch["gathered_batch_size"]

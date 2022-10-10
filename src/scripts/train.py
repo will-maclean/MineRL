@@ -8,7 +8,7 @@ import gym
 import minerl
 from collections import namedtuple
 
-from minerl3161.agent import DQNAgent, TinyDQNAgent
+from minerl3161.agent import DQNAgent, TinyDQNAgent, TinyRainbowDQNAgent
 from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
 from minerl3161.hyperparameters import CartPoleRainbowDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
 from minerl3161.wrappers import minerlWrapper, cartPoleWrapper
@@ -25,16 +25,16 @@ POLICIES = {
     "rainbow-dqn": Policy(DQNAgent, RainbowDQNTrainer, minerlWrapper, RainbowDQNHyperparameters),
     "tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
     "cartpole-dqn": Policy(TinyDQNAgent, DQNTrainer, cartPoleWrapper, CartpoleDQNHyperparameters),
-    "rainbow-cartpole-dqn": Policy(TinyDQNAgent, RainbowDQNTrainer, cartPoleWrapper, CartPoleRainbowDQNHyperparameters),
+    "rainbow-cartpole-dqn": Policy(TinyRainbowDQNAgent, RainbowDQNTrainer, cartPoleWrapper, CartPoleRainbowDQNHyperparameters),
 }
 
 def main():
     parser = argparse.ArgumentParser('Parse configuration file')
-    parser.add_argument('--policy', type=str, default='rainbow-dqn')
-    parser.add_argument('--env', type=str, default="MineRLNavigateDense-v0")
+    parser.add_argument('--policy', type=str, default='rainbow-cartpole-dqn')
+    parser.add_argument('--env', type=str, default="CartPole-v0")
 
     # Why can't argparse read bools from the command line? Who knows. Workaround:
-    parser.add_argument('--wandb', action='store_true', default=True,
+    parser.add_argument('--wandb', action='store_true', default=False,
                         help='sets if we use wandb logging')
     parser.add_argument('--no-wandb', action='store_false', dest="wandb",
                         help='sets if we use wandb logging')
@@ -51,7 +51,7 @@ def main():
     parser.add_argument('--load_path', type=str, default=None,
                         help='path to model checkpoint to load (optional)')
     
-    parser.add_argument('--render', action='store_true', default=False,
+    parser.add_argument('--render', action='store_true', default=True,
                         help='sets if we use gpu hardware')
 
     args = parser.parse_args()

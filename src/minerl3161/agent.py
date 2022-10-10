@@ -10,8 +10,8 @@ from typing import Dict, Tuple, Union
 import wandb
 import numpy as np
 import torch as th
-from minerl3161.hyperparameters import DQNHyperparameters
-from minerl3161.models.models import DQNNet, TinyDQN
+from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
+from minerl3161.models.models import DQNNet, TinyDQN, TinyRainbowDQN
 from minerl3161.utils import epsilon_decay, np_dict_to_pt
 
 from minerl3161.pl_pretraining.pl_model import DQNPretrainer
@@ -262,3 +262,55 @@ class TinyDQNAgent(BaseAgent):
     
     def watch_wandb(self):
         wandb.watch(self.q1)
+
+
+class TinyRainbowDQNAgent(BaseAgent):
+    def __init__(
+        self,
+        obs_space: Dict[str, np.ndarray],
+        n_actions: int,
+        device: str,
+        hyperparams: RainbowDQNHyperparameters,
+        load_path: str = None,
+    ):
+        super(TinyRainbowDQNAgent, self).__init__()
+
+        self.device = device
+
+        self.support = th.linspace(
+            hyperparams.v_min, hyperparams.v_max, hyperparams.atom_size
+        ).to(self.device)
+
+        # networks: dqn, dqn_target
+        self.q1 = TinyRainbowDQN(
+            obs_space, n_actions, hyperparams, hyperparams.atom_size, self.support, hyperparams.noisy_init
+        ).to(self.device)
+        self.q2 = TinyRainbowDQN(
+            obs_space, n_actions, hyperparams, hyperparams.atom_size, self.support, hyperparams.noisy_init
+        ).to(self.device)
+        self.q2.load_state_dict(self.q1.state_dict())
+        self.q2.eval()
+
+    def act(self, state: Dict[str, np.ndarray], train=False, step=None) -> Union[np.ndarray, dict]:
+        """Select an action from the input state."""
+        # NoisyNet: no epsilon greedy action selection required
+
+        selected_action = self.q1(
+            th.FloatTensor(state["state"]).to(self.device)
+        ).argmax()  
+        
+        return selected_action, {}
+    
+    def save(self, path: str):
+        """saves the current agent
+
+        Args:
+            path (str): path to save agent
+        """
+        with open(path, "wb") as outfile:
+            pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
+
+    def watch_wandb(self):
+        wandb.watch(self.q1)
+    
+

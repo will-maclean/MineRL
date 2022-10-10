@@ -42,7 +42,9 @@ class Evaluator:
                 
                 action, _ = agent.act(state=state, train=False)
 
-                next_state, reward, done, _ = self.env.step(action)
+                action = action.detach().cpu().numpy()
+
+                next_state, reward, done, _ = self.env.step(action=action) 
 
                 # self.env.render()
 

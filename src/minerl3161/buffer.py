@@ -1,7 +1,7 @@
 import os
 import pickle
-from collections import namedtuple
-from typing import Dict, List, Tuple
+from collections import deque, namedtuple
+from typing import Deque, Dict, List, Tuple
 from pathlib import Path
 import numpy as np
 import random
@@ -222,6 +222,9 @@ class PrioritisedReplayBuffer(ReplayBuffer):
         self.sum_tree[self.tree_ptr] = self.max_priority ** self.alpha
         self.min_tree[self.tree_ptr] = self.max_priority ** self.alpha
         self.tree_ptr = (self.tree_ptr + 1) % self.max_samples
+    
+    def __len__(self):
+        return self.max_samples if self.full else self.tree_ptr
 
     def sample(
         self, 
@@ -284,3 +287,87 @@ class PrioritisedReplayBuffer(ReplayBuffer):
         weight = weight / max_weight
         
         return weight
+
+
+class NStepReplayBuffer(PrioritisedReplayBuffer):
+
+    def __init__(
+        self,
+        n: int, 
+        obs_space: Dict[str, np.ndarray],
+        alpha: float,
+        size: int, 
+        batch_size: int, 
+        gamma: float,
+        n_step: int, 
+
+    ) -> None:
+        super(NStepReplayBuffer, self).__init__(n, obs_space, alpha)
+
+        self.size = size
+        self.batch_size = batch_size
+
+        # for N-step Learning
+        self.n_step_buffer = deque(maxlen=n_step)
+        self.n_step = n_step
+        self.gamma = gamma
+    
+    def add(
+        self,
+        state: np.ndarray,
+        action: np.ndarray,
+        reward: np.ndarray,
+        next_state: np.ndarray,
+        done: np.ndarray,
+    ) -> None:
+        transition = (state, action, reward, next_state, done)
+        self.n_step_buffer.append(transition)
+
+        # single step transition is not ready
+        if len(self.n_step_buffer) < self.n_step:
+            return ()
+        
+        # make a n-step transition
+        reward, next_state, done = self._get_n_step_info()
+        state, action = self.n_step_buffer[0][:2]
+        
+        super().add(state, action, next_state, reward, done)
+
+    @staticmethod
+    def sample_batch_from_idxs(buffer: ReplayBuffer, indices: np.ndarray) -> Dict[str, np.ndarray]:
+        # for N-step Learning
+        states = {}
+        next_states = {}
+        for k in buffer.feature_names:
+            states[k] = buffer.states[k][indices]
+            next_states[k] = buffer.next_states[k][indices]
+        
+        actions = buffer.actions[indices]
+        rewards = buffer.rewards[indices]
+        dones = buffer.dones[indices]
+
+        return ReplayBuffer.create_batch_sample(rewards, dones, actions, states, next_states)
+    
+    def sample(self) -> Dict[str, np.ndarray]:
+        indices = np.random.choice(self.size, size=self.batch_size, replace=False)
+
+        return NStepReplayBuffer.sample_batch_from_idxs(self, indices), indices
+    
+    def _get_n_step_info(self) -> Tuple[np.int64, np.ndarray, bool]:
+        """Return n step reward, next_state, and done."""
+        # info of the last transition
+        reward, next_state, done = self.n_step_buffer[-1][-3:]
+
+        for transition in reversed(list(self.n_step_buffer)[:-1]):
+            r, n_s, d = transition[-3:]
+
+            reward = r + self.gamma * reward * (1 - d)
+            next_state, done = (n_s, d) if d else (next_state, done)
+
+        return reward, next_state, done
+
+
+
+
+
+
