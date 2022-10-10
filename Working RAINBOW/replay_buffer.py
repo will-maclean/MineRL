@@ -3,7 +3,7 @@ import random
 from typing import Deque, Dict, List, Tuple
 from collections import deque
 
-from .segment_tree import MinSegmentTree, SumSegmentTree
+from segment_tree import MinSegmentTree, SumSegmentTree
 
 
 class ReplayBuffer:

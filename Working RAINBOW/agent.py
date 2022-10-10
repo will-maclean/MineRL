@@ -13,10 +13,10 @@ from torch.nn.utils import clip_grad_norm_
 import wandb
 import h5py
 
-from .replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
-from .network import Network
-from .utils import Stopper
-from .dataloader import Dataloader
+from replay_buffer import ReplayBuffer, PrioritizedReplayBuffer
+from network import Network
+from utils import Stopper
+from dataloader import Dataloader
 
 
 class DQNAgent:
@@ -90,6 +90,7 @@ class DQNAgent:
         self.batch_size = batch_size
         self.target_update = target_update
         self.gamma = gamma
+        self.burn_in = 500
         # NoisyNet: All attributes related to epsilon are removed
 
         # device: cpu / gpu
@@ -163,7 +164,7 @@ class DQNAgent:
     def step(self, action: np.ndarray, episode_reward: float, episode_time_steps: int) -> Tuple[np.ndarray, np.float64, bool]:
         """Take an action and return the response of the env."""
         # next_state, reward, done, _ = self.env.step(action, episode_reward, episode_time_steps)
-        next_state, reward, done, _ = self.env.step(action, episode_time_steps) # changed to work for mountaincar
+        next_state, reward, done, _ = self.env.step(action) # changed to work for mountaincar
 
         if not self.is_test:
             self.transition += [reward, next_state, done]
@@ -234,7 +235,7 @@ class DQNAgent:
         """Train the agent."""
         self.is_test = False
         
-        state = self.env.reset(seed=np.random.randint(1e3))
+        state = self.env.reset()
         # state = self.env.reset() # Changed to work for mountaincar
         update_cnt = 0
         losses = []
@@ -267,18 +268,18 @@ class DQNAgent:
 
             # if episode ends
             if done:
-                state = self.env.reset(seed=np.random.randint(1e3))
+                state = self.env.reset()
                 # state = self.env.reset() # changed to work for mountaincar
                 scores.append(score)
-                stopper.update(score)
+                # stopper.update(score)
 
-                # if len(losses) > 0:
+                if len(losses) > 0:
                     # self._plot(frame_idx, scores, losses, "test")
-                    # wandb.log({
-                    #     f'BC Benchmark - Training Graphs/{plot_title}/Score': score,
-                    #     f'BC Benchmark - Training Graphs/{plot_title}/Loss': losses[-1],
-                    #     f'BC Benchmark - Training Graphs/{plot_title}/Episode': episode
-                    # })
+                    wandb.log({
+                        f'BC Benchmark - Training Graphs/{plot_title}/Score': score,
+                        f'BC Benchmark - Training Graphs/{plot_title}/Loss': losses[-1],
+                        f'BC Benchmark - Training Graphs/{plot_title}/Episode': episode
+                    })
                 
                 time_steps += episode_time_steps
                 t_steps.append(episode_time_steps)
@@ -289,7 +290,7 @@ class DQNAgent:
                 
 
             # if training is ready
-            if len(self.memory) >= self.batch_size:
+            if self.memory.tree_ptr >= self.burn_in:
                 loss = self.update_model()
                 losses.append(loss)
                 update_cnt += 1
@@ -300,10 +301,10 @@ class DQNAgent:
                 if update_cnt % self.target_update == 0:
                     self._target_hard_update()
             
-            if stopper.check_cond():
-                torch.save(self.dqn.state_dict(), f"models/{self.folder_name}/{weights_filename}.pt")
-                print(f"Training finished after stop condition was consistenly met {stopper.size} times.")
-                break
+            # if stopper.check_cond():
+            #     torch.save(self.dqn.state_dict(), f"models/{self.folder_name}/{weights_filename}.pt")
+            #     print(f"Training finished after stop condition was consistenly met {stopper.size} times.")
+            #     break
                         
               
         print(f"Training time: {str(datetime.timedelta(seconds=time.time() - start)).split('.')[0]}")
