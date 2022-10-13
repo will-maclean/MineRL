@@ -5,7 +5,7 @@
 Run example with CartPole:
 
 ```
-python src/scripts --policy cartpole-dqn --env CartPole-v0 --render
+python src/scripts/train.py --policy cartpole-dqn --env CartPole-v0 --render
 ```
 
 Note that you will generally need to install `pyglet` to render CartPole. This can be done easily with `pip install pyglet`.
