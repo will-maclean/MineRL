@@ -382,7 +382,6 @@ class CartpoleWrapper(gym.ObservationWrapper):
         return {"state": observation}
 
 
-
 def cartPoleWrapper(env, *args, **kwargs):
     return CartpoleWrapper(env, *args, **kwargs)
 

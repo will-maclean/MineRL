@@ -8,7 +8,7 @@ import gym
 import minerl
 from collections import namedtuple
 
-from minerl3161.agent import DQNAgent, TinyDQNAgent
+from minerl3161.agent import DQNAgent, TinyDQNAgent, TinyRainbowDQNAgent, RainbowDQNAgent
 from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
 from minerl3161.hyperparameters import CartPoleRainbowDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
 from minerl3161.wrappers import minerlWrapper, cartPoleWrapper
@@ -22,10 +22,10 @@ Policy = namedtuple('Policy', ['agent', 'trainer', 'wrapper', 'params'])
 
 POLICIES = {
     "vanilla-dqn": Policy(DQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
-    "rainbow-dqn": Policy(DQNAgent, RainbowDQNTrainer, minerlWrapper, RainbowDQNHyperparameters),
+    "rainbow-dqn": Policy(RainbowDQNAgent, RainbowDQNTrainer, minerlWrapper, RainbowDQNHyperparameters),
     "tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
     "cartpole-dqn": Policy(TinyDQNAgent, DQNTrainer, cartPoleWrapper, CartpoleDQNHyperparameters),
-    "rainbow-cartpole-dqn": Policy(TinyDQNAgent, RainbowDQNTrainer, cartPoleWrapper, CartPoleRainbowDQNHyperparameters),
+    "rainbow-cartpole-dqn": Policy(TinyRainbowDQNAgent, RainbowDQNTrainer, cartPoleWrapper, CartPoleRainbowDQNHyperparameters),
 }
 
 def main():
@@ -72,8 +72,7 @@ def main():
         **dataclasses.asdict(hp), 
         extracted_acts = True,
         functional_acts = False, 
-        extracted_acts_filename="custom-navigate-actions.pkl",
-        repeat_action=5
+        extracted_acts_filename="custom-navigate-actions2.pkl",
         )
     print(f"Creating a(n) {args.env} environment to train the agent in")
 
@@ -119,7 +118,7 @@ def main():
         device=device,  
         use_wandb=args.wandb, 
         render=args.render, 
-        termination_conditions=None)
+        termination_conditions=termination_conditions)
 
     trainer.train()
 

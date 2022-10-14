@@ -4,7 +4,7 @@ import torch
 import wandb
 import gym
 import minerl
-from minerl3161.agent import DQNAgent, TinyDQNAgent
+from minerl3161.agent import DQNAgent, RainbowDQNAgent, TinyDQNAgent
 from minerl3161.buffer import PrioritisedReplayBuffer, ReplayBuffer
 
 from minerl3161.hyperparameters import CartpoleDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartPoleRainbowDQNHyperparameters
@@ -87,13 +87,13 @@ def test_rainbow_trainer():
    hp.mlp_output_size = 6
 
    # Configure environment
-   env = minerlWrapper(minerl_env, **dataclasses.asdict(hp))  #FIXME: surely we need to pass in more shit than this
+   env = minerlWrapper(minerl_env, **dataclasses.asdict(hp))
 
    # Initialising ActionWrapper to determine number of actions in use
    n_actions = env.action_space.n
 
    # Configure agent
-   agent = DQNAgent(obs_space=env.observation_space, 
+   agent = RainbowDQNAgent(obs_space=env.observation_space, 
       n_actions=n_actions, 
       device=device, 
       hyperparams=hp

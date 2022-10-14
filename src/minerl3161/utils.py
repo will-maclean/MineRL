@@ -148,3 +148,19 @@ def linear_sampling_strategy(batch_size, step, *args, **kwargs):
     human_r = int(np.rint(batch_size * r).item())
     gathered_r = int(np.rint(batch_size * (1-r)).item())
     return human_r, gathered_r
+
+def np_batch_to_tensor_batch(batch, device):
+    batch["state"] = np_dict_to_pt(batch["state"], device=device)
+
+    batch["next_state"] = np_dict_to_pt(batch["next_state"], device=device)
+
+    batch["action"] = th.tensor(
+        batch["action"], dtype=th.long, device=device
+    )
+    batch["reward"] = th.tensor(
+        batch["reward"], dtype=th.float32, device=device
+    )
+    batch["done"] = th.tensor(
+        batch["done"], dtype=th.float32, device=device
+    )
+    return batch
