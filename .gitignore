@@ -132,8 +132,7 @@ dmypy.json
 .idea
 
 logs
-data/MineRL*
-data/download*
+data
 **/wandb
 wandb/*
 weights
