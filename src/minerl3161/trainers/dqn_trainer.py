@@ -1,5 +1,5 @@
 from typing import Union, List
-from time import time
+from time import perf_counter
 
 import gym
 import torch as th
@@ -42,7 +42,7 @@ class DQNTrainer(BaseTrainer):
 
     def _train_step(self, step: int) -> None:
         log_dict = {}
-        start_time = time.perf_counter()
+        start_time = perf_counter()
 
         # Get a batch of experience from the gathered transitions
         batch = self.sample(self.hp.sampling_strategy)
@@ -69,7 +69,7 @@ class DQNTrainer(BaseTrainer):
         ):
             copy_weights(copy_from=self.agent.q1, copy_to=self.agent.q2, polyak=self.hp.polyak_tau)
         
-        end_time = time.perf_counter()
+        end_time = perf_counter()
         log_dict["train_fps"] = 1 / (end_time - start_time)
 
         return {"loss": loss.detach().cpu().item()}

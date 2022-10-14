@@ -1,5 +1,5 @@
 from typing import Union, Dict, List, Any
-from time import time, perf_counter
+from time import perf_counter
 from abc import abstractmethod
 
 import gym
