@@ -1,5 +1,6 @@
 import argparse
 import dataclasses
+from webbrowser import get
 from minerl3161.buffer import ReplayBuffer, PrioritisedReplayBuffer
 import torch
 import wandb
@@ -9,18 +10,22 @@ from collections import namedtuple
 
 from minerl3161.agent import DQNAgent, TinyDQNAgent
 from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
+from minerl3161.hyperparameters import CartPoleRainbowDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
+from minerl3161.wrappers import minerlWrapper, cartPoleWrapper
+from minerl3161.termination import get_termination_condition
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
 from minerl3161.wrappers import minerlWrapper
-from minerl3161.wrappers import MineRLWrapper
-from os.path import exists
 
-Policy = namedtuple('Policy', ['agent', 'trainer', 'params'])
+
+Policy = namedtuple('Policy', ['agent', 'trainer', 'wrapper', 'params'])
 
 
 POLICIES = {
-    "vanilla-dqn": Policy(DQNAgent, DQNTrainer, DQNHyperparameters),
-    "rainbow-dqn": Policy(DQNAgent, RainbowDQNTrainer, RainbowDQNHyperparameters),
-    "tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, DQNHyperparameters)
+    "vanilla-dqn": Policy(DQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
+    "rainbow-dqn": Policy(DQNAgent, RainbowDQNTrainer, minerlWrapper, RainbowDQNHyperparameters),
+    "tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
+    "cartpole-dqn": Policy(TinyDQNAgent, DQNTrainer, cartPoleWrapper, CartpoleDQNHyperparameters),
+    "rainbow-cartpole-dqn": Policy(TinyDQNAgent, RainbowDQNTrainer, cartPoleWrapper, CartPoleRainbowDQNHyperparameters),
 }
 
 def main():
@@ -40,11 +45,14 @@ def main():
     parser.add_argument('--no-gpu', action='store_false', dest="gpu",
                         help='sets if we use gpu hardware')
 
-    parser.add_argument('--human_exp_path', type=str, default="data/human-xp-navigate-dense-PER.pkl",
+    parser.add_argument('--human_exp_path', type=str, default=None,
                         help='pass in path to human experience pickle')
     
     parser.add_argument('--load_path', type=str, default=None,
                         help='path to model checkpoint to load (optional)')
+    
+    parser.add_argument('--render', action='store_true', default=False,
+                        help='sets if we use gpu hardware')
 
     args = parser.parse_args()
 
@@ -55,21 +63,35 @@ def main():
 
     # Configure policy hyperparameters
     hp = POLICIES[args.policy].params()
+    print(f"Using the {args.policy} policy")
 
     # Configure environment
     env = gym.make(args.env)
-    env = minerlWrapper(env, **dataclasses.asdict(hp))
+    env = POLICIES[args.policy].wrapper(
+        env, 
+        **dataclasses.asdict(hp), 
+        extracted_acts = True,
+        functional_acts = False, 
+        extracted_acts_filename="custom-navigate-actions.pkl",
+        repeat_action=5
+        )
+    print(f"Creating a(n) {args.env} environment to train the agent in")
 
+    # handle human experience
+    if args.human_exp_path is None:
+        print("WARNING: not using any human experience")
+        human_dataset = None
+    else:
+        human_dataset = PrioritisedReplayBuffer.load(args.human_exp_path) if args.human_exp_path is not None else None
+        print(f"Loading the human dataset from {args.human_xp_path}")
 
-    human_dataset = PrioritisedReplayBuffer.load(args.human_exp_path)
-
-    # Initialising ActionWrapper to determine number of actions in use
-    n_actions = env.action_space.n
+    # Setup termination conditions for the environment (if available)
+    termination_conditions = get_termination_condition(args.env)
 
     # Configure agent
     agent = POLICIES[args.policy].agent(
             obs_space=env.observation_space, 
-            n_actions=n_actions, 
+            n_actions=env.action_space.n, 
             device=device, 
             hyperparams=hp,
             load_path=args.load_path
@@ -77,13 +99,28 @@ def main():
 
     if args.wandb:
         wandb.init(
-            project="diamond-pick", 
+            project=args.env + "-" + args.policy, 
             entity="minerl3161",
-            config=hp
+            config=hp,
+            tags=[args.policy, args.env],
+            monitor_gym=True
         )
+        print(f"Using wandb logging...")
+
+
+        agent.watch_wandb()
 
     # Initialise trainer and start training
-    trainer = POLICIES[args.policy].trainer(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hp, use_wandb=args.wandb, device=device)
+    trainer = POLICIES[args.policy].trainer(
+        env=env, 
+        agent=agent, 
+        human_dataset=human_dataset, 
+        hyperparameters=hp,
+        device=device,  
+        use_wandb=args.wandb, 
+        render=args.render, 
+        termination_conditions=None)
+
     trainer.train()
 
 

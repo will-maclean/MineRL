@@ -1,15 +1,17 @@
 """Defines BaseAgent classes and all current implementations.
 """
 
+from copy import deepcopy
 import pickle
 import random
 from abc import ABC, abstractmethod
 from typing import Dict, Tuple, Union
 
+import wandb
 import numpy as np
 import torch as th
 from minerl3161.hyperparameters import DQNHyperparameters
-from minerl3161.models import DQNNet, TinyDQN
+from minerl3161.models.models import DQNNet, TinyDQN
 from minerl3161.utils import epsilon_decay, np_dict_to_pt
 
 from minerl3161.pl_pretraining.pl_model import DQNPretrainer
@@ -45,7 +47,14 @@ class BaseAgent(ABC):
         Args:
             path (str): path in which to save the agent.
         """
+        #TODO: should put the model on CPU before save
         raise NotImplementedError()
+    
+    @abstractmethod
+    def watch_wandb(self):
+        """watch any relevant models with wandb
+        """
+        pass
 
     @staticmethod
     def load(path: str):
@@ -108,6 +117,10 @@ class DQNAgent(BaseAgent):
 
             self.q1.load_state_dict(pl_model.q1.state_dict())
             self.q2.load_state_dict(pl_model.q2.state_dict())
+    
+    def watch_wandb(self):
+        wandb.watch(self.q1)
+        wandb.watch(self.q2)
 
     def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:
         """chooses action from action space based on state
@@ -170,7 +183,7 @@ class TinyDQNAgent(BaseAgent):
     """BaseAgent implementation that implements a Deep Q Learning algorithm. This include a PyTorch neural network."""
 
     def __init__(
-        self, obs_space: int, n_actions: int, device: str, *args, **kwargs
+        self, obs_space: int, n_actions: int, device: str, hyperparams=None, *args, **kwargs
     ) -> None:
         """Base agent initialiser
 
@@ -183,12 +196,14 @@ class TinyDQNAgent(BaseAgent):
         super().__init__()
         self.device = device
 
+        self.hp = hyperparams
+
         self.obs_space = obs_space
         self.n_action = n_actions
 
-        self.q1 = TinyDQN(S=obs_space.shape[0], A=n_actions).to(device)
+        self.q1 = TinyDQN(S=obs_space["state"].shape[0], A=n_actions).to(device)
+        self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
-        self.q2.eval()
 
     def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:
         """chooses action from action space based on state
@@ -223,7 +238,6 @@ class TinyDQNAgent(BaseAgent):
 
                 return action, {}
 
-    # TODO: Determine if pickle supports saving and loading of model weights
     def save(self, path: str):
         """saves the current agent
 
@@ -245,3 +259,6 @@ class TinyDQNAgent(BaseAgent):
         """
         with open(path, "rb") as infile:
             return pickle.load(infile)
+    
+    def watch_wandb(self):
+        wandb.watch(self.q1)

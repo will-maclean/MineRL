@@ -1,7 +1,7 @@
 """ BaseTrainer and implementations stored here
 """
 from abc import abstractmethod
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Union
 import time
 
 import gym
@@ -18,15 +18,24 @@ from minerl3161.buffer import ReplayBuffer, PrioritisedReplayBuffer
 from minerl3161.evaluator import Evaluator
 from minerl3161.hyperparameters import BaseHyperparameters, DQNHyperparameters
 from minerl3161.utils import np_dict_to_pt, linear_decay
+from minerl3161.termination import TerminationCondition
 
 
-# TODO: write tests
 class BaseTrainer:
     """Abstract class for Trainers. At the least, all implementations must have _train_step()."""
 
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: BaseHyperparameters, human_dataset: Union[ReplayBuffer, None] = None, use_wandb: bool =False,
-        device="cpu", replay_buffer_class=ReplayBuffer, replay_buffer_kwargs={},
+        self, 
+        env: gym.Env, 
+        agent: BaseAgent, 
+        hyperparameters: BaseHyperparameters, 
+        human_dataset: Union[ReplayBuffer, None] = None, 
+        use_wandb: bool =False,
+        device="cpu", 
+        render=False, 
+        replay_buffer_class=ReplayBuffer, 
+        replay_buffer_kwargs: Dict={}, 
+        termination_conditions: Union[List[TerminationCondition], None] = None
     ) -> None:
         """Initialiser for BaseTrainer.
 
@@ -40,6 +49,15 @@ class BaseTrainer:
         self.hp: BaseHyperparameters = hyperparameters
         self.use_wandb = use_wandb
         self.device = device
+        self.render = render
+
+        if termination_conditions is not None:
+            if type(termination_conditions) != list:
+                termination_conditions = [termination_conditions]
+            
+            self.termination_conditions = termination_conditions
+        else:
+            self.termination_conditions = None
 
         self.checkpointer = Checkpointer(agent, checkpoint_every=self.hp.checkpoint_every, use_wandb=use_wandb)
 
@@ -51,7 +69,7 @@ class BaseTrainer:
         self.human_dataset_batch_size = self.hp.batch_size 
         self.gathered_xp_batch_size = 0
 
-        self.evaluator = Evaluator(env)
+        self.evaluator = Evaluator(env, use_wandb=use_wandb)
 
         # store stuff used to interact with the environment here i.e. anything that 
         # would normally be a loop variable in a normal RL training script should
@@ -62,6 +80,8 @@ class BaseTrainer:
             "episode_return": 0,
             "episode_length": 0,
         }
+
+        self.training = False
     
     def sample(self, strategy: callable)-> Dict[str, np.ndarray]:
         if self.human_transitions is None:
@@ -109,6 +129,8 @@ class BaseTrainer:
     def train(self) -> None:
         """main training function. This basic training loop should be enough for most conventional RL algorithms"""
 
+        self.training = True  # flag that lets termination conditions stop training
+
         for t in tqdm(range(self.hp.train_steps)):
             self.t = t
 
@@ -124,10 +146,14 @@ class BaseTrainer:
                 log_dict.update(self.evaluator.evaluate(
                     self.agent, self.hp.evaluate_episodes
                 ))
+                self.env_interaction['needs_reset'] = True
 
             log_dict.update(self._housekeeping(t))
 
             self._log(log_dict)
+
+            if not self.training:
+                break
         
         self.close()
 
@@ -156,7 +182,8 @@ class BaseTrainer:
 
             next_state, reward, done, info = self.env.step(action)
 
-            # self.env.render()
+            if self.render:
+                self.env.render()
 
             self.gathered_transitions.add(state, action, next_state, reward, done)
             self.env_interaction["episode_length"] += 1
@@ -166,6 +193,10 @@ class BaseTrainer:
             if done:
                 log_dict["episode_return"] = self.env_interaction["episode_return"]
                 log_dict["episode_length"] = self.env_interaction["episode_length"]
+
+                if self.termination_conditions is not None:
+                    self._process_termination_conditions(self.env_interaction)
+
                 self.env_interaction["episode_return"] = 0
                 self.env_interaction["needs_reset"] = True
                 self.env_interaction["last_state"] = None
@@ -190,7 +221,14 @@ class BaseTrainer:
         )
         
         return log_dict
-
+    
+    def _process_termination_conditions(self, env_interation):
+        terminate_training = False
+        for t in self.termination_conditions:
+            terminate_training = terminate_training or t(**env_interation)
+        
+        if terminate_training:
+            self.training = False
 
     def _log(self, log_dict: dict) -> None:
         if self.use_wandb:
@@ -199,12 +237,19 @@ class BaseTrainer:
     def close(self):
         pass
 
-# TODO: write tests
 class DQNTrainer(BaseTrainer):
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, human_dataset: ReplayBuffer, use_wandb: bool = False, device: str = "cpu"
+        self, 
+        env: gym.Env, 
+        agent: BaseAgent, 
+        hyperparameters: DQNHyperparameters, 
+        human_dataset: Union[ReplayBuffer, None] = None, 
+        use_wandb: bool = False, 
+        device: str = "cpu", 
+        render=False, 
+        termination_conditions: Union[List[TerminationCondition], None] = None
     ) -> None:
-        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device)
+        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device, render=render, termination_conditions=termination_conditions)
 
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
@@ -283,9 +328,26 @@ class DQNTrainer(BaseTrainer):
 
 class RainbowDQNTrainer(BaseTrainer):
     def __init__(
-        self, env: gym.Env, agent: BaseAgent, hyperparameters: DQNHyperparameters, human_dataset: PrioritisedReplayBuffer, use_wandb: bool = False, device: str = "cpu"
+        self, 
+        env: gym.Env, 
+        agent: BaseAgent, 
+        hyperparameters: DQNHyperparameters, 
+        human_dataset: Union[PrioritisedReplayBuffer, None] = None, 
+        use_wandb: bool = False, 
+        device: str = "cpu", 
+        render: bool = False,
+        termination_conditions: Union[List[TerminationCondition], None] = None
     ) -> None:
-        super().__init__(env=env, agent=agent, human_dataset=human_dataset, hyperparameters=hyperparameters, use_wandb=use_wandb, device=device, replay_buffer_class=PrioritisedReplayBuffer, replay_buffer_kwargs={"alpha": hyperparameters.alpha})
+        super().__init__(env=env, 
+            agent=agent,
+            human_dataset=human_dataset, 
+            hyperparameters=hyperparameters, 
+            use_wandb=use_wandb, 
+            device=device, 
+            replay_buffer_class=PrioritisedReplayBuffer, 
+            replay_buffer_kwargs={"alpha": hyperparameters.alpha}, 
+            render=render,
+            termination_conditions=termination_conditions)
 
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
@@ -337,6 +399,48 @@ class RainbowDQNTrainer(BaseTrainer):
         return log_dict
 
     def _calc_loss(self, batch: dict) -> torch.Tensor:
+        if self.human_transitions is None:
+            return self._calc_loss_gathered_only(batch)
+        else:
+            return self._calc_loss_combined(batch)
+
+    def _calc_loss_gathered_only(self, batch):
+
+        weights = torch.tensor(
+            batch["weights"].reshape(-1, 1)
+        ).to(self.device, dtype=torch.float32)
+        
+        # estimate q values for current states/actions using q1 network
+        q_values = self.agent.q1(batch["state"])
+        q_values = q_values.gather(1, batch["action"])
+
+        # estimate q values for next states/actions using q2 network
+        next_q_values = self.agent.q2(batch["next_state"])
+        next_actions = next_q_values.argmax(dim=1).unsqueeze(1)
+        next_q_values = next_q_values.gather(1, next_actions)
+
+        # calculate TD target for Bellman Equation
+        td_target = self.hp.reward_scale * torch.sign(batch[
+            "reward"
+        ]) + self.hp.gamma * next_q_values * (1 - batch["done"])
+
+        # Calculate loss for Bellman Equation
+        # Note that we use smooth_l1_loss instead of MSE as it is more stable for larger loss signals. RL problems
+        # typically suffer from high variance, so anything we can do to introduce more stability is usually a
+        # good thing.
+        loss = torch.nn.functional.smooth_l1_loss(q_values, td_target, reduction="none")
+
+        # update the weights
+        loss_for_prior = loss.detach().cpu().numpy()
+        new_priorities = loss_for_prior + self.hp.prior_eps
+
+        self.gathered_transitions.update_priorities(batch["indices"], new_priorities)
+
+        loss = loss * weights
+
+        return loss.mean()
+
+    def _calc_loss_combined(self, batch):
         gathered_batch_size = batch["gathered_batch_size"]
         human_batch_size = batch["human_batch_size"]
 
@@ -398,6 +502,16 @@ class RainbowDQNTrainer(BaseTrainer):
         return loss.mean()
     
     def sample(self, strategy: callable, step)-> Dict[str, np.ndarray]:
+        
+        # if we have not human transitions, then yeah obviously we can simplify this provess a bit
+        if self.human_transitions is None:
+            beta = linear_decay(step=step, start_val=self.hp.beta_min, final_val=self.hp.beta_max, final_steps=self.hp.beta_final_step)
+            return_batch, gathered_weights, gathered_indices =  self.gathered_transitions.sample(self.hp.batch_size, beta=beta)
+            return_batch["weights"] = gathered_weights
+            return_batch["indices"] = gathered_indices
+
+            return return_batch, {"beta": beta}
+        
         human_dataset_batch_size, gathered_xp_batch_size \
             = strategy(batch_size=self.hp.batch_size, 
                         step=step, 
@@ -412,7 +526,7 @@ class RainbowDQNTrainer(BaseTrainer):
         self.human_dataset_batch_size = human_dataset_batch_size
         self.gathered_xp_batch_size = gathered_xp_batch_size
         
-        beta = linear_decay(step=step, start_val=self.hp.beta_max, final_val=self.hp.beta_min, final_steps=self.hp.sample_final_step)
+        beta = linear_decay(step=step, start_val=self.hp.beta_min, final_val=self.hp.beta_max, final_steps=self.hp.beta_final_step)
 
         gathered_weights = np.empty((1,))
         gathered_indices = np.empty((1,))

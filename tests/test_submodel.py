@@ -3,7 +3,7 @@ import numpy as np
 import gym
 import minerl
 
-from minerl3161.submodel import CNN, MLP, MineRLFeatureExtraction
+from minerl3161.models.submodel import CNN, MLP, MineRLFeatureExtraction
 from minerl3161.utils import sample_pt_state
 from minerl3161.wrappers import minerlWrapper
 

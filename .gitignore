@@ -135,8 +135,10 @@ logs
 data/MineRL*
 data/download*
 **/wandb
-wandb
+wandb/*
+weights
+video
 **/lightning_logs
 *.pkl
 *.ckpt
-weights
+*.pth

@@ -16,7 +16,7 @@ def convert_dataset(env_name, out_path, hyperparams, save_every=5):
 
     _, observation_space, empty_buffer = MineRLWrapper.convert_state(observation_space=env.observation_space, **dataclasses.asdict(hyperparams))
 
-    buffer = PrioritisedReplayBuffer(hyperparams.buffer_size_dataset, observation_space, hyperparams.alpha)
+    buffer = ReplayBuffer(hyperparams.buffer_size_dataset, observation_space)
     data = minerl.data.make(env_name)
     trajectory_names = data.get_trajectory_names()
 

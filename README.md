@@ -1,5 +1,14 @@
 # MineRL
 ![Build Passing](https://github.com/will-maclean/MineRL/workflows/main%20workflow/badge.svg)
+![Testing Coverage](./coverage.svg)
+
+Run example with CartPole:
+
+```
+python src/scripts/train.py --policy cartpole-dqn --env CartPole-v0 --render
+```
+
+Note that you will generally need to install `pyglet` to render CartPole. This can be done easily with `pip install pyglet`.
 
 ## How to run with docker:
 <br />

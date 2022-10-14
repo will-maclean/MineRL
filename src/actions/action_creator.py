@@ -18,7 +18,7 @@ NULL_ACTION = {
     'sprint': 0
 }
 
-x_angles = [-180, -135, -90, -45, 0, 45, 90, 135]
+x_angles = [-15, -5, 0, 5, 15]
 
 actions = []
 
@@ -27,5 +27,12 @@ for angle in x_angles:
     new_action["camera"][1] = angle
     actions.append(new_action)
 
-with open("custom-navigate-actions.pkl", "wb") as f:
+new_action = dc(NULL_ACTION)
+new_action["attack"] = 1
+new_action["forward"] = 1
+new_action["jump"] = 0
+
+actions.append(new_action)
+
+with open("custom-navigate-actions4.pkl", "wb") as f:
     dump(actions, f)
