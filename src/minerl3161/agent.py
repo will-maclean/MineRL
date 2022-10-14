@@ -201,7 +201,7 @@ class TinyDQNAgent(BaseAgent):
         self.obs_space = obs_space
         self.n_action = n_actions
 
-        self.q1 = TinyDQN(S=obs_space.shape[0], A=n_actions).to(device)
+        self.q1 = TinyDQN(S=obs_space["state"].shape[0], A=n_actions).to(device)
         self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
 
