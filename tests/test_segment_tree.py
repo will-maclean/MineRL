@@ -1,6 +1,6 @@
 import numpy as np
 
-from minerl3161.segment_tree import SumSegmentTree, MinSegmentTree
+from minerl3161.utils.segment_tree import SumSegmentTree, MinSegmentTree
 
 def test_sum_segment_tree():
     n_init = 16

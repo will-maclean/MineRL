@@ -4,20 +4,18 @@ import torch
 import wandb
 import gym
 import minerl
-from minerl3161.agent import DQNAgent, RainbowDQNAgent, TinyDQNAgent
-from minerl3161.buffer import PrioritisedReplayBuffer, ReplayBuffer
 
+from minerl3161.agents import DQNAgent, RainbowDQNAgent, TinyDQNAgent
+from minerl3161.buffers import PrioritisedReplayBuffer, ReplayBuffer
+from minerl3161.trainers import DQNTrainer, RainbowDQNTrainer
 from minerl3161.hyperparameters import CartpoleDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartPoleRainbowDQNHyperparameters
-from minerl3161.termination import get_termination_condition
-from minerl3161.wrappers import cartPoleWrapper, minerlWrapper
-from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
+from minerl3161.utils.termination import get_termination_condition
+from minerl3161.utils.wrappers import cartPoleWrapper, minerlWrapper
 
 
-def test_DQNtrainer():
+def test_DQNtrainer(minerl_env):
     # just runs main.py for a few steps basically
     # Loading onto appropriate device
-    env_name = "MineRLObtainDiamond-v0"
-    minerl_env = gym.make(env_name)
 
     using_gpu = torch.cuda.is_available()
     device = torch.device("cuda:0" if using_gpu else "cpu")
@@ -53,16 +51,14 @@ def test_DQNtrainer():
        )
 
     # Initialise trainer and start training
-    trainer = DQNTrainer(env=env, agent=agent, hyperparameters=hp, use_wandb=False, device=device)
+    trainer = DQNTrainer(env=env, agent=agent, hyperparameters=hp, use_wandb=False, device=device, capture_eval_video=False)
 
     print("starting training")
     # run the trainer
     trainer.train()
     print("ending training")
 
-def test_rainbow_trainer():
-   env_name = "MineRLObtainDiamond-v0"
-   minerl_env = gym.make(env_name)
+def test_rainbow_trainer(minerl_env):
 
    # just runs main.py for a few steps basically
    # Loading onto appropriate device
@@ -100,7 +96,7 @@ def test_rainbow_trainer():
       )
 
    # Initialise trainer and start training
-   trainer = RainbowDQNTrainer(env=env, agent=agent, hyperparameters=hp, use_wandb=False, device=device)
+   trainer = RainbowDQNTrainer(env=env, agent=agent, hyperparameters=hp, use_wandb=False, device=device, capture_eval_video=False)
 
    print("starting training")
    # run the trainer
@@ -138,7 +134,8 @@ def test_cartpole():
       use_wandb=False,
       render=False,
       termination_conditions=tc,
-      device="cpu"
+      device="cpu",
+      capture_eval_video=False
    )
 
    trainer.train()
@@ -178,7 +175,8 @@ def test_cartpole_human_exp():
       use_wandb=False,
       render=False,
       termination_conditions=tc,
-      device="cpu"
+      device="cpu",
+      capture_eval_video=False
    )
 
    trainer.train()
@@ -222,6 +220,7 @@ def notest_cartpole_rainbow_human_exp():
       termination_conditions=tc,
       device="cpu",
       human_dataset=human_data,
+      capture_eval_video=False
    )
 
    trainer.train()

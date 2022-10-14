@@ -1,4 +1,4 @@
-from minerl3161.termination import *
+from minerl3161.utils.termination import *
 
 def test_avg_ep_ret_con():
     termination = AvgEpisodeReturnTerminationCondition(termination_avg=100, window=10)

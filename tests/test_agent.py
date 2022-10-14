@@ -4,10 +4,10 @@ import os
 import gym
 import minerl
 import numpy as np
-from minerl3161.agent import DQNAgent
+from minerl3161.agents import DQNAgent
 from minerl3161.hyperparameters import DQNHyperparameters
-from minerl3161.utils import pt_dict_to_np, sample_pt_state
-from minerl3161.wrappers import minerlWrapper
+from minerl3161.utils.utils import pt_dict_to_np, sample_pt_state
+from minerl3161.utils.wrappers import minerlWrapper
 
 
 def compare_models(model1, model2):

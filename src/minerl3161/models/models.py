@@ -8,9 +8,9 @@ from torch import nn
 import torch.nn.functional as F
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
 
-from minerl3161.models.submodel import MineRLFeatureExtraction
-from minerl3161.models.noisy_linear import NoisyLinear
 from minerl3161.utils import sample_pt_state
+from .submodel import MineRLFeatureExtraction
+from .noisy_linear import NoisyLinear
 
 
 # TODO: write tests

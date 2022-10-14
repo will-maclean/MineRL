@@ -11,10 +11,10 @@ from collections import namedtuple
 from minerl3161.agent import DQNAgent, TinyDQNAgent, TinyRainbowDQNAgent, RainbowDQNAgent
 from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
 from minerl3161.hyperparameters import CartPoleRainbowDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
-from minerl3161.wrappers import minerlWrapper, cartPoleWrapper
+from minerl3161.utils.wrappers import minerlWrapper, cartPoleWrapper
 from minerl3161.termination import get_termination_condition
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
-from minerl3161.wrappers import minerlWrapper
+from minerl3161.utils.wrappers import minerlWrapper
 
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'wrapper', 'params'])

@@ -4,7 +4,7 @@ import gym
 import minerl
 from minerl3161.hyperparameters import DQNHyperparameters
 
-from minerl3161.wrappers import minerlWrapper
+from minerl3161.utils.wrappers import minerlWrapper
 
 
 @pytest.fixture(scope="session")

@@ -5,7 +5,7 @@ from torch.utils.data.dataloader import DataLoader
 
 from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.pl_pretraining import pl_dataset, pl_model
-from minerl3161.buffer import ReplayBuffer
+from minerl3161.buffers import ReplayBuffer
 from minerl3161.utils import sample_pt_state
 
 def test_pl_dataset():
