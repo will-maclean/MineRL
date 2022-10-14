@@ -144,7 +144,7 @@ class BaseTrainer:
             if t > self.hp.burn_in and t % self.hp.train_every == 0:
                 log_dict.update(self._train_step(t))
 
-            if t % self.hp.evaluate_every == 0 and t != 0:
+            if t % self.hp.evaluate_every == 0:
                 log_dict.update(self.evaluator.evaluate(
                     self.agent, self.hp.evaluate_episodes
                 ))
@@ -350,16 +350,12 @@ class RainbowDQNTrainer(BaseTrainer):
         if self.use_n_step:
             self.n_step = hyperparameters.n_step
             self.memory_n = NStepReplayBuffer(
-                n=env.action_space.n, 
-                obs_space=env.observation_space,
-                alpha=hyperparameters.alpha,
                 size=hyperparameters.buffer_size_gathered, 
                 batch_size=hyperparameters.batch_size, 
                 gamma=hyperparameters.gamma,
                 n_step=hyperparameters.n_step, 
             )
         
-        # memory for 1-step Learning
         self.beta = hyperparameters.beta_min
         self.prior_eps = hyperparameters.prior_eps
 
@@ -367,9 +363,6 @@ class RainbowDQNTrainer(BaseTrainer):
         self.v_min = hyperparameters.v_min
         self.v_max = hyperparameters.v_max
         self.atom_size = hyperparameters.atom_size
-        self.support = torch.linspace(
-            self.v_min, self.v_max, self.atom_size
-        ).to(self.device)
     
     def add_transition(self, state, action, next_state, reward, done):
         transition = (state, action, next_state, reward, done)
@@ -383,7 +376,7 @@ class RainbowDQNTrainer(BaseTrainer):
 
         # add a single step transition
         if one_step_transition:
-            self.gathered_transitions.add(*transition)
+            self.gathered_transitions.add(*one_step_transition)
 
     def _train_step(self, step: int) -> None:
         log_dict = {}
@@ -398,7 +391,7 @@ class RainbowDQNTrainer(BaseTrainer):
             batch["weights"].reshape(-1, 1), dtype=torch.float32, device=self.device
         )
 
-        # calculate loss signal
+        # 1-step Learning loss
         elementwise_loss = self._calc_loss(batch)
 
         # PER: importance sampling before average
@@ -457,10 +450,10 @@ class RainbowDQNTrainer(BaseTrainer):
             return self._calc_loss_combined(batch)
 
     def _calc_loss_gathered_only(self, batch, gamma):
-        state = batch["state"]["state"]
+        state = batch["state"]
         action = batch["action"]
         reward = batch["reward"]
-        next_state = batch["next_state"]["state"]
+        next_state = batch["next_state"]
         done = batch["done"]
         
         # Categorical DQN algorithm
@@ -472,7 +465,7 @@ class RainbowDQNTrainer(BaseTrainer):
             next_dist = self.agent.q2.dist(next_state)
             next_dist = next_dist[range(self.hp.batch_size), next_action]
 
-            t_z = reward + (1 - done) * gamma * self.support
+            t_z = reward + (1 - done) * gamma * self.agent.support
             t_z = t_z.clamp(min=self.v_min, max=self.v_max)
             b = (t_z - self.v_min) / delta_z
             l = b.floor().long()

@@ -10,6 +10,7 @@ from random import random, randint
 
 from minerl3161.agent import DQNAgent
 from minerl3161.wrappers import minerlWrapper, MineRLWrapper
+from minerl3161.hyperparameters import RainbowDQNHyperparameters
 
 
 def main():
@@ -22,7 +23,7 @@ def main():
     parser.add_argument('--no-gpu', action='store_false', dest="gpu",
                         help='sets if we use gpu hardware')
 
-    parser.add_argument('--eval_episodes', type=int, default=5,
+    parser.add_argument('--eval_episodes', type=int, default=2,
                         help='number of episodes to evaluate the agent')   
 
     parser.add_argument('--weights_path', type=str,
@@ -31,7 +32,7 @@ def main():
     parser.add_argument('--ep_rew_pass', type=str, default=0,
                     help='the rew the agent must obtain in order for the episode to be considered a pass')
     
-    parser.add_argument('--repeat_act', type=str, default=1,
+    parser.add_argument('--repeat_act', type=str, default=5,
                     help='the number of times each action selected by the agent should be passed to the env')
 
     parser.add_argument('--csv_file_path', type=str, default="data/eval_data.csv",
@@ -53,9 +54,10 @@ def main():
 
     # Configure environment
     env = gym.make(args.env)
+
     env = minerlWrapper(
         env, 
-        **dataclasses.asdict(agent.hp), 
+        **dataclasses.asdict(RainbowDQNHyperparameters()), 
         extracted_acts_filename="custom-navigate-actions.pkl", 
         functional_acts_filename = "functional-acts.pkl", 
         functional_acts = False, 
@@ -75,7 +77,10 @@ def main():
 
         while not done:
 
-            action, _ = agent.act(state=state, step=t, train=False)
+            if random() > 0.25:
+                action, _ = agent.act(state=state, step=t, train=False)
+            else:
+                action = env.action_space.sample()
 
             for _ in range(args.repeat_act):
                 next_state, reward, done, _ = env.step(action)

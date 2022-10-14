@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import torch as th
 
 import wandb
 from minerl3161.agent import BaseAgent
@@ -11,7 +12,7 @@ class Evaluator:
     def __init__(self, env, use_wandb=True) -> None:
         out_pth = evaluator_video_path + "eval"
         Path(out_pth).mkdir(exist_ok=True, parents=True)
-        self.env = gym.wrappers.Monitor(env, out_pth, force=True)
+        self.env = gym.wrappers.Monitor(env, out_pth, force=True, video_callable=lambda x: True)
         
         self.env_interaction = {
             "needs_reset": True,
@@ -42,7 +43,7 @@ class Evaluator:
                 
                 action, _ = agent.act(state=state, train=False)
 
-                action = action.detach().cpu().numpy()
+                action = action.detach().cpu().numpy() if type(action) == th.Tensor else action
 
                 next_state, reward, done, _ = self.env.step(action=action) 
 
@@ -64,6 +65,8 @@ class Evaluator:
         # Getting average from episodes
         info["eval/episode_return"] = sum(info["eval/episode_return"])/len(info["eval/episode_return"])
         info["eval/episode_length"] = sum(info["eval/episode_length"])/len(info["eval/episode_length"])
+
+        self.env.reset()
 
         return info
 

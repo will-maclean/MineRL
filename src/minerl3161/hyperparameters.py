@@ -7,12 +7,12 @@ from minerl3161.utils import linear_sampling_strategy
 @dataclass
 class BaseHyperparameters:
     train_steps: int = 2_000_000  # number of train_loop steps
-    burn_in: int = 10_000  # how many steps to loop for before starting training
+    burn_in: int = 5_000  # how many steps to loop for before starting training
     train_every: int = 1  # how many steps per train call
     evaluate_every: int = 50_000  # how many steps per evaluation call
     evaluate_episodes: int = 1  # how many episodes we complete each evaluation call
     batch_size: int = 128  # batch size for training
-    buffer_size_gathered: int = 250_000  # buffer size for gathered data
+    buffer_size_gathered: int = 50_000  # buffer size for gathered data
     buffer_size_dataset: int = (
         75_000  # buffer size for the provided data i.e. how much provided data to use
     )
@@ -39,10 +39,10 @@ class BaseHyperparameters:
 class DQNHyperparameters(BaseHyperparameters):
     gamma: float = 0.99  # discount factor for Bellman Equation
     lr: float = 2.5e-4  # learning rate for model weights
-    eps_decay: float = 250_000  # decay factor for epsilon greedy strategy
+    eps_decay: float = 300_000  # decay factor for epsilon greedy strategy
     eps_min: float = 0.02  # min value for epsilon greedy strategy
     eps_max: float = 1.0  # max value for epsilon greedy strategy
-    model_hidden_layer_size: int = 64  # layer size for hidden layers in neural net
+    model_hidden_layer_size: int = 128  # layer size for hidden layers in neural net
     hard_update_freq: Union[
         int, None
     ] = 30_000  # how ofter to do a hard copy from q1 to q2
@@ -77,12 +77,12 @@ class RainbowDQNHyperparameters(DQNHyperparameters):
     beta_min: float = 0.6
     beta_final_step: int = 1_500_000
     # Categorical DQN parameters
-    v_min: float = 0.0
+    v_min: float = -200.0
     v_max: float = 200.0
     atom_size: int = 51
     # N-step Learning
     n_step: int = 3
-    noisy_init: float = 0.1
+    noisy_init: float = 0.5
 
 @dataclass
 class CartpoleDQNHyperparameters:
@@ -92,7 +92,7 @@ class CartpoleDQNHyperparameters:
     evaluate_every: int = 1_000  # how many steps per evaluation call
     evaluate_episodes: int = 5  # how many episodes we complete each evaluation call
     batch_size: int = 16  # batch size for training
-    buffer_size_gathered: int = 75_000  # buffer size for gathered data
+    buffer_size_gathered: int = 50_000  # buffer size for gathered data
     buffer_size_dataset: int = (
         50_000  # buffer size for the provided data i.e. how much provided data to use
     )
@@ -109,10 +109,10 @@ class CartpoleDQNHyperparameters:
     model_hidden_layer_size: int = 16  # layer size for hidden layers in neural net
     hard_update_freq: Union[
         int, None
-    ] = 0  # how ofter to do a hard copy from q1 to q2
+    ] = 5000  # how ofter to do a hard copy from q1 to q2
     soft_update_freq: Union[
         int, None
-    ] = 1  # how often to do a soft update from q1 to q2
+    ] = 0  # how often to do a soft update from q1 to q2
     polyak_tau: float = 0.001  # controls the weight of the soft update
     reward_scale: float = 1.0  # controls whether we want to scale the rewards in the loss function
     
@@ -135,8 +135,9 @@ class CartPoleRainbowDQNHyperparameters(CartpoleDQNHyperparameters):
     beta_final_step: int = 50_000
     # Categorical DQN parameters
     v_min: float = 0.0
-    v_max: float = 200.0
+    v_max: float = 300.0
     atom_size: int = 51
     # N-step Learning
-    n_step: int = 1
+    n_step: int = 3
     noisy_init: float = 0.1
+    model_hidden_layer_size: int = 128  # layer size for hidden layers in neural net

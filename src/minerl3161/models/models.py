@@ -117,8 +117,7 @@ class TinyRainbowDQN(nn.Module):
         n_actions: int, 
         dqn_hyperparams: RainbowDQNHyperparameters,
         support: th.Tensor,
-        layer_size: int = 64, 
-        std_init: float = 0.5
+        std_init: float = 0.1
     ):
         super().__init__()
         
@@ -128,17 +127,99 @@ class TinyRainbowDQN(nn.Module):
 
         # set common feature layer
         self.feature_layer = nn.Sequential(
-            nn.Linear(state_shape["state"].shape[0], 32), 
+            nn.Linear(state_shape["state"].shape[0], dqn_hyperparams.model_hidden_layer_size), 
             nn.ReLU(),
         )
         
         # set advantage layer
-        self.advantage_hidden_layer = NoisyLinear(32, 32, std_init)
-        self.advantage_layer = NoisyLinear(32, self.n_actions * self.atom_size, std_init)
+        self.advantage_hidden_layer = NoisyLinear(dqn_hyperparams.model_hidden_layer_size, dqn_hyperparams.model_hidden_layer_size, std_init)
+        self.advantage_layer = NoisyLinear(dqn_hyperparams.model_hidden_layer_size, self.n_actions * self.atom_size, std_init)
 
         # set value layer
-        self.value_hidden_layer = NoisyLinear(32, 32, std_init)
-        self.value_layer = NoisyLinear(32, self.atom_size, std_init)
+        self.value_hidden_layer = NoisyLinear(dqn_hyperparams.model_hidden_layer_size, dqn_hyperparams.model_hidden_layer_size, std_init)
+        self.value_layer = NoisyLinear(dqn_hyperparams.model_hidden_layer_size, self.atom_size, std_init)
+    
+    def forward(self, x):
+        if type(x) == dict:
+            x = x["state"]
+        
+        dist = self.dist(x)
+        q = th.sum(dist * self.support, dim=2)
+        
+        return q
+    
+    def dist(self, x: th.Tensor) -> th.Tensor:
+        """Get distribution for atoms."""
+        if type(x) == dict:
+            x = x["state"]
+        
+        feature = self.feature_layer(x)
+        adv_hid = F.relu(self.advantage_hidden_layer(feature))
+        val_hid = F.relu(self.value_hidden_layer(feature))
+        
+        advantage = self.advantage_layer(adv_hid).view(
+            -1, self.n_actions, self.atom_size
+        )
+        value = self.value_layer(val_hid).view(-1, 1, self.atom_size)
+        q_atoms = value + advantage - advantage.mean(dim=1, keepdim=True)
+        
+        dist = F.softmax(q_atoms, dim=-1)
+        dist = dist.clamp(min=1e-3)  # for avoiding nans
+        
+        return dist
+    
+    def reset_noise(self):
+        """Reset all noisy layers."""
+        self.advantage_hidden_layer.reset_noise()
+        self.advantage_layer.reset_noise()
+        self.value_hidden_layer.reset_noise()
+        self.value_layer.reset_noise()
+
+
+
+class RainbowDQN(nn.Module):
+    def __init__(self, 
+        state_shape: Dict[str, Tuple[int]],
+        n_actions: int, 
+        dqn_hyperparams: RainbowDQNHyperparameters,
+        support: th.Tensor,
+        std_init: float = 0.1
+    ):
+        super().__init__()
+        
+        self.support = support
+        self.n_actions = n_actions
+        self.atom_size = dqn_hyperparams.atom_size
+
+        feature_names = DQNNet._feature_names(
+            state_shape=state_shape,
+            dqn_hyperparams=dqn_hyperparams
+        )             
+
+        self.feature_extractor = MineRLFeatureExtraction(
+            observation_space=state_shape,
+            feature_names=feature_names,
+            mlp_hidden_size=dqn_hyperparams.mlp_output_size
+            if dqn_hyperparams is not None
+            else 64,
+        )
+
+        sample_input = sample_pt_state(
+            observation_space=state_shape, 
+            features=feature_names, 
+            device="cpu",
+            batch=1,
+        )
+
+        n_hidden_features = self.feature_extractor(sample_input).shape[1]
+        
+        # set advantage layer
+        self.advantage_hidden_layer = NoisyLinear(n_hidden_features, dqn_hyperparams.model_hidden_layer_size, std_init)
+        self.advantage_layer = NoisyLinear(dqn_hyperparams.model_hidden_layer_size, self.n_actions * self.atom_size, std_init)
+
+        # set value layer
+        self.value_hidden_layer = NoisyLinear(n_hidden_features, dqn_hyperparams.model_hidden_layer_size, std_init)
+        self.value_layer = NoisyLinear(dqn_hyperparams.model_hidden_layer_size, self.atom_size, std_init)
     
     def forward(self, x):
         dist = self.dist(x)
@@ -148,7 +229,7 @@ class TinyRainbowDQN(nn.Module):
     
     def dist(self, x: th.Tensor) -> th.Tensor:
         """Get distribution for atoms."""
-        feature = self.feature_layer(x)
+        feature = self.feature_extractor(x)
         adv_hid = F.relu(self.advantage_hidden_layer(feature))
         val_hid = F.relu(self.value_hidden_layer(feature))
         
