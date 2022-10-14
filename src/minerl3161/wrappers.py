@@ -203,7 +203,7 @@ def obs_compass(state=None, observation_space=None, compass_name="compass", *arg
             state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
         except KeyError:
             pass
-
+        
         if "compass" in state.keys():
             if type(state[compass_name]) == np.ndarray:
                 state[compass_name] = np.atleast_1d(state[compass_name] / 180)

@@ -50,6 +50,7 @@ RUN dpkg --add-architecture i386 && \
         cups-common \
         cups-pdf \
         curl \
+        ffmpeg \
         file \
         wget \
         bzip2 \

@@ -1,16 +1,16 @@
 import os
 from pathlib import Path
 import torch as th
+import gym
 
 import wandb
 from minerl3161.agent import BaseAgent
-import gym
-from minerl3161.configs import evaluator_video_path
+from minerl3161 import evaluator_video_path
 
 # TODO: write tests
 class Evaluator:
     def __init__(self, env, use_wandb=True) -> None:
-        out_pth = evaluator_video_path + "eval"
+        out_pth = evaluator_video_path + "/eval"
         Path(out_pth).mkdir(exist_ok=True, parents=True)
         self.env = gym.wrappers.Monitor(env, out_pth, force=True, video_callable=lambda x: True)
         
