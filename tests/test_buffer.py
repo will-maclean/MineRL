@@ -87,12 +87,12 @@ def test_create_batch_sample():
 
     buffer = ReplayBuffer(n=n, obs_space=state_space)
 
-    rewards = [1, 2, 3, 4, 5]
-    dones = [1, 1, 0, 0, 0]
-    actions = []
-    states = {'pov':[[1],[2],[3],[4],[5]], 'inventory':{'coal':[]}, 'equipped_items':{'main_hand':{'damage':{}}}}
-    next_states = {'pov':[[1],[2],[3],[4],[5]], 'inventory':{'coal':[]}, 'equipped_items':{'main_hand':{'damage':{}}}}
+    states = {'pov':[np.ones((3, 4, 4)) for _ in range(5)], 'inventory': [np.ones(3) for _ in range(5)]}
+    actions = [np.ones(3) for _ in range(5)]
+    next_states = {'pov':[np.ones((3, 4, 4)) for _ in range(5)], 'inventory': [np.ones(3) for _ in range(5)]}
+    rewards = [np.ones(3) for _ in range(5)]
+    dones = [np.ones(1) for _ in range(5)]
 
-    sample = buffer.create_batch_sample(rewards, dones, actions, states, next_states)
+    sample = buffer.create_batch_sample(states, actions, next_states, rewards, dones)
     for key in ['reward', 'done', 'action', 'state', 'next_state']:
         assert key in sample
