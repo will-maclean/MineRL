@@ -1,18 +1,19 @@
 import argparse
 import dataclasses
-from webbrowser import get
-from minerl3161.buffer import ReplayBuffer, PrioritisedReplayBuffer
+from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer
 import torch
 import wandb
 import gym
 import minerl
 from collections import namedtuple
 
-from minerl3161.agent import DQNAgent, TinyDQNAgent, TinyRainbowDQNAgent, RainbowDQNAgent
-from minerl3161.trainer import DQNTrainer, RainbowDQNTrainer
+from stable_baselines3.common.vec_env import SubprocVecEnv
+
+from minerl3161.agents import DQNAgent, TinyDQNAgent, TinyRainbowDQNAgent, RainbowDQNAgent
+from minerl3161.trainers import DQNTrainer, RainbowDQNTrainer
 from minerl3161.hyperparameters import CartPoleRainbowDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
 from minerl3161.utils.wrappers import minerlWrapper, cartPoleWrapper
-from minerl3161.termination import get_termination_condition
+from minerl3161.utils.termination import get_termination_condition
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
 from minerl3161.utils.wrappers import minerlWrapper
 
@@ -53,6 +54,8 @@ def main():
     
     parser.add_argument('--render', action='store_true', default=False,
                         help='sets if we use gpu hardware')
+    
+    parser.add_argument('--n_envs', default=2, type=int)
 
     args = parser.parse_args()
 
@@ -66,14 +69,20 @@ def main():
     print(f"Using the {args.policy} policy")
 
     # Configure environment
-    env = gym.make(args.env)
-    env = POLICIES[args.policy].wrapper(
-        env, 
-        **dataclasses.asdict(hp), 
-        extracted_acts = True,
-        functional_acts = False, 
-        extracted_acts_filename="custom-navigate-actions2.pkl",
-        )
+    def _make_env():
+        env = gym.make(args.env)
+        env = POLICIES[args.policy].wrapper(
+            env, 
+            **dataclasses.asdict(hp), 
+            extracted_acts = True,
+            functional_acts = False, 
+            )
+        return env
+    
+    env = SubprocVecEnv([_make_env for _ in range(args.n_envs)])
+
+    eval_env = _make_env()
+
     print(f"Creating a(n) {args.env} environment to train the agent in")
 
     # handle human experience
@@ -112,6 +121,7 @@ def main():
     # Initialise trainer and start training
     trainer = POLICIES[args.policy].trainer(
         env=env, 
+        eval_env=eval_env,
         agent=agent, 
         human_dataset=human_dataset, 
         hyperparameters=hp,

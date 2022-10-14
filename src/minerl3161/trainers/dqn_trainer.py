@@ -19,6 +19,7 @@ class DQNTrainer(BaseTrainer):
         env: gym.Env, 
         agent: BaseAgent, 
         hyperparameters: DQNHyperparameters, 
+        eval_env: Union[gym.Env, None] = None, 
         human_dataset: Union[ReplayBuffer, None] = None, 
         use_wandb: bool = False, 
         device: str = "cpu", 
@@ -34,7 +35,8 @@ class DQNTrainer(BaseTrainer):
             use_wandb=use_wandb, device=device, 
             render=render, 
             termination_conditions=termination_conditions, 
-            capture_eval_video=capture_eval_video
+            capture_eval_video=capture_eval_video,
+            eval_env = eval_env, 
         )
 
         # The optimiser keeps track of the model weights that we want to train

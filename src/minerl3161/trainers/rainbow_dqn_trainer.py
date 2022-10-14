@@ -20,6 +20,7 @@ class RainbowDQNTrainer(BaseTrainer):
         env: gym.Env, 
         agent: BaseAgent, 
         hyperparameters: RainbowDQNHyperparameters, 
+        eval_env: Union[gym.Env, None] = None, 
         human_dataset: Union[PrioritisedReplayBuffer, None] = None, 
         use_wandb: bool = False, 
         device: str = "cpu", 
@@ -37,7 +38,8 @@ class RainbowDQNTrainer(BaseTrainer):
             replay_buffer_kwargs={"alpha": hyperparameters.alpha}, 
             render=render,
             termination_conditions=termination_conditions,
-            capture_eval_video=capture_eval_video
+            capture_eval_video=capture_eval_video,
+            eval_env=eval_env,
         )
 
         # The optimiser keeps track of the model weights that we want to train

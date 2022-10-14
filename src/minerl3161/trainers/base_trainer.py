@@ -20,9 +20,10 @@ class BaseTrainer:
 
     def __init__(
         self, 
-        env: gym.Env, 
+        env: gym.Env,
         agent: BaseAgent, 
         hyperparameters: BaseHyperparameters, 
+        eval_env: Union[gym.Env, None] = None, 
         human_dataset: Union[ReplayBuffer, None] = None, 
         use_wandb: bool =False,
         device="cpu", 
@@ -45,6 +46,7 @@ class BaseTrainer:
         self.use_wandb = use_wandb
         self.device = device
         self.render = render
+        self.eval_env = eval_env
 
         if termination_conditions is not None:
             if type(termination_conditions) != list:
@@ -64,7 +66,7 @@ class BaseTrainer:
         self.human_dataset_batch_size = self.hp.batch_size 
         self.gathered_xp_batch_size = 0
 
-        self.evaluator = Evaluator(env, capture_video=capture_eval_video)
+        self.evaluator = Evaluator(eval_env if eval_env is not None else env, capture_video=capture_eval_video)
 
         # store stuff used to interact with the environment here i.e. anything that 
         # would normally be a loop variable in a normal RL training script should
