@@ -1,7 +1,8 @@
 from typing import Dict
+
 import numpy as np
-from torch import nn
 import torch as th
+from torch import nn
 
 
 # TODO: write tests

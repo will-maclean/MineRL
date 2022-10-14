@@ -2,7 +2,7 @@ from multiprocessing.sharedctypes import Value
 import pytest
 import wandb
 
-from minerl3161.checkpointer import Checkpointer
+from minerl3161.utils.checkpointer import Checkpointer
 
 wandb_entity = "minerl3161"
 wandb_project = "testing"

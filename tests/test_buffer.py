@@ -1,8 +1,8 @@
 import os
 
 import numpy as np
-from minerl3161.buffer import ReplayBuffer, Transition
-from minerl3161.utils import sample_np_state
+from minerl3161.buffers import ReplayBuffer, Transition
+from minerl3161.utils.utils import sample_np_state
 
 
 def test_create_buffer():

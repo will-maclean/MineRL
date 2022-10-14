@@ -1,7 +1,7 @@
 import torch as th
 from torch.utils.data import Dataset
 
-from minerl3161.buffer import ReplayBuffer
+from minerl3161.buffers import ReplayBuffer
 
 class MineRLDataset(Dataset):
     def __init__(self, buffer: ReplayBuffer):

@@ -1,16 +1,15 @@
 from copy import deepcopy
-import stat
-from typing import Dict, List, Optional
+from typing import Dict
+import os
+import pickle
 
 import numpy as np
 import pandas as pd
 import gym
 import cv2
-import os
-import pickle
-import sys
 
 import minerl3161
+
 
 def decode_action(obj: dict, camera_shrink_factor=100) -> list:
     """Decodes an action to fit into a dataframe.
