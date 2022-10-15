@@ -1,19 +1,21 @@
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Union, Self
 
 import numpy as np
 
 
 class BaseAgent(ABC):
-    """Provides an abstract agent class for interacting with the minerl environments.
+    """
+    Provides an abstract agent class for interacting with the minerl environments.
 
     Extending classes must implement the act() method, and must also implement saving
     and loading if that functionality will be required.
     """
 
     @abstractmethod
-    def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:
-        """Chooses an action based on the given state
+    def act(self, state: np.ndarray, train: bool = False, step: int = None) -> Union[np.ndarray, dict]:
+        """
+        Chooses an action based on the given state
 
         Args:
             state (np.ndarray): the environment state
@@ -26,8 +28,9 @@ class BaseAgent(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def save(self, path: str):
-        """save the current agent
+    def save(self, path: str) -> None:
+        """
+        Save the current agent
 
         Args:
             path (str): path in which to save the agent.
@@ -36,14 +39,16 @@ class BaseAgent(ABC):
         raise NotImplementedError()
     
     @abstractmethod
-    def watch_wandb(self):
-        """watch any relevant models with wandb
+    def watch_wandb(self) -> None:
+        """
+        Watch any relevant models with wandb
         """
         pass
 
     @staticmethod
-    def load(path: str):
-        """Loads an agent from a path
+    def load(path: str) -> Self:
+        """
+        Loads an agent from a path
 
         Args:
             path (str): path from which to load agent

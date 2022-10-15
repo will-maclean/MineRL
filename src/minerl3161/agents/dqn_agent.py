@@ -1,5 +1,5 @@
 import pickle
-from typing import Dict, Union
+from typing import Dict, Union, Self
 import random
 
 import numpy as np
@@ -14,7 +14,10 @@ from minerl3161.agents import BaseAgent
 
 
 class DQNAgent(BaseAgent):
-    """BaseAgent implementation that implements a Deep Q Learning algorithm. This include a PyTorch neural network."""
+    """
+    Deep Q Learning algorithm that inherits from BaseAgent. 
+    This include a PyTorch neural network which acts as the function approximator.
+    """
 
     def __init__(
         self,
@@ -24,13 +27,15 @@ class DQNAgent(BaseAgent):
         hyperparams: DQNHyperparameters,
         load_path: str = None,
     ) -> None:
-        """Base agent initialiser
+        """
+        Base agent initialiser
 
         Args:
             obs_space (Dict[str, np.ndarray]): environment observation space
             n_actions (int): number of actions in the action space
             device (str): PyTorch device to store agent on (generally either "cpu" for CPU training or "cuda:0" for GPU training)
             hyperparams (DQNHyperparameters): DQNHyperparameters instance stores specific hyperparameters for DQN training
+            load_path (str): the path that a previously trained agent is stored which can be imported when training begins
         """
         super().__init__()
         self.device = device
@@ -61,15 +66,21 @@ class DQNAgent(BaseAgent):
             self.q1.load_state_dict(pl_model.q1.state_dict())
             self.q2.load_state_dict(pl_model.q2.state_dict())
     
-    def watch_wandb(self):
+    def watch_wandb(self) -> None:
+        """
+        Watch any relevant models with wandb
+        """
         wandb.watch(self.q1)
         wandb.watch(self.q2)
 
-    def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:
-        """chooses action from action space based on state
+    def act(self, state: np.ndarray, train: bool = False, step: int = None) -> Union[np.ndarray, dict]:
+        """
+        Chooses action from action space based on state
 
         Args:
             state (np.ndarray): environment state
+            train (bool): determines if client code requires train or eval functionality (eval shoud not use eps)
+            step (int): the current time step in training, used to determine current eps value
 
         Returns:
             np.ndarray, dict: chosen action, log dictionary
@@ -99,8 +110,9 @@ class DQNAgent(BaseAgent):
                 return action, {}
 
     # TODO: Determine if pickle supports saving and loading of model weights
-    def save(self, path: str):
-        """saves the current agent
+    def save(self, path: str) -> None:
+        """
+        Saves the current agent
 
         Args:
             path (str): path to save agent
@@ -109,14 +121,15 @@ class DQNAgent(BaseAgent):
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
-    def load(path: str):
-        """Load agent
+    def load(path: str) -> Self:
+        """
+        Loads an agent from a path
 
         Args:
-            path (str): path to load from
+            path (str): path from which to load agent
 
         Returns:
-            DQNAgent: loaded DQNAgent instance
+            DQNAgent: loaded instance of a DQNAgent
         """
         with open(path, "rb") as infile:
             return pickle.load(infile)
