@@ -16,7 +16,7 @@ from minerl3161.agents import BaseAgent
 class DQNAgent(BaseAgent):
     """
     Deep Q Learning algorithm that inherits from BaseAgent. 
-    This include a PyTorch neural network which acts as the function approximator.
+    This includes a PyTorch neural network which acts as the function approximator.
     """
 
     def __init__(

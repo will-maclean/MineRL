@@ -13,6 +13,17 @@ from minerl3161.agents import BaseAgent
 
 
 class TinyRainbowDQNAgent(BaseAgent):
+    """
+    Tiny version of the RainbowDQNAgent that inherits from the BaseAgent. This includes a PyTorch neural network.
+    The neural network is a TinyRainbowDQN which is far smaller and simpler compared to the RainbowDQN network. This agent
+    is more appropriate for simpler environments such as CartPole. This algorithm implements the following improvements from the 
+    DQNAgent/DQNTrainer:
+        - Prioritised Experience Replay
+        - Noisy Model Architecture
+        - N-Step Learning
+        - Distributional RL
+    """
+
     def __init__(
         self,
         obs_space: Dict[str, np.ndarray],
@@ -20,7 +31,18 @@ class TinyRainbowDQNAgent(BaseAgent):
         device: str,
         hyperparams: RainbowDQNHyperparameters,
         load_path: str = None,
-    ):
+    ) -> None:
+        """
+        TinyRainbowDQNAgent initialiser
+
+        Args:
+            obs_space (Dict[str, np.ndarray]): environment observation space
+            n_actions (int): number of actions in the action space
+            device (str): PyTorch device to store agent on (generally either "cpu" for CPU training or "cuda:0" for GPU training)
+            hyperparams (RainbowDQNHyperparameters): RainbowDQNHyperparameters instance stores specific hyperparameters for DQN training
+            load_path (str): the path that a previously trained agent is stored which can be imported when training begins
+        """
+
         super(TinyRainbowDQNAgent, self).__init__()
 
         self.device = device
@@ -40,18 +62,25 @@ class TinyRainbowDQNAgent(BaseAgent):
         self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
 
-    def act(self, state: Dict[str, np.ndarray], train=False, step=None) -> Union[np.ndarray, dict]:
-        """Select an action from the input state."""
-        # NoisyNet: no epsilon greedy action selection required
+    def act(self, state: Dict[str, np.ndarray], train:bool = False, step: int = None) -> Union[np.ndarray, dict]:
+        """
+        Chooses action from action space based on state
 
+        Args:
+            state (np.ndarray): environment state
+
+        Returns:
+            np.ndarray, dict: chosen action, log dictionary
+        """
         state = np_dict_to_pt(state, device=self.device, unsqueeze=True)
 
         selected_action = self.q1(state).argmax()  
         
         return selected_action, {}
     
-    def save(self, path: str):
-        """saves the current agent
+    def save(self, path: str) -> None:
+        """
+        Saves the current agent
 
         Args:
             path (str): path to save agent
@@ -59,5 +88,8 @@ class TinyRainbowDQNAgent(BaseAgent):
         with open(path, "wb") as outfile:
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
 
-    def watch_wandb(self):
+    def watch_wandb(self) -> None:
+        """
+        Watch any relevant models with wandb
+        """
         wandb.watch(self.q1)

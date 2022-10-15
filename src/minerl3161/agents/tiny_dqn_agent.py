@@ -6,6 +6,7 @@ from typing import Union
 import numpy as np
 import torch as th
 import wandb
+from minerl3161.hyperparameters.dqn_hp import DQNHyperparameters
 
 from minerl3161.models.models import TinyDQN
 from minerl3161.utils.utils import epsilon_decay, np_dict_to_pt
@@ -13,12 +14,23 @@ from minerl3161.agents import BaseAgent
 
 
 class TinyDQNAgent(BaseAgent):
-    """BaseAgent implementation that implements a Deep Q Learning algorithm. This include a PyTorch neural network."""
+    """
+    Tiny version of the DQNAgent that inherits from the BaseAgent. This includes a PyTorch neural network.
+    The neural network is a TinyDQN which is far smaller and simpler compared to the DQN network. This agent
+    is more appropriate for simpler environments such as CartPole.
+    """
 
     def __init__(
-        self, obs_space: int, n_actions: int, device: str, hyperparams=None, *args, **kwargs
+        self, 
+        obs_space: int, 
+        n_actions: int, 
+        device: str, 
+        hyperparams: DQNHyperparameters = None, 
+        *args, 
+        **kwargs
     ) -> None:
-        """Base agent initialiser
+        """
+        TinyDQNAgent initialiser
 
         Args:
             obs_space (Dict[str, np.ndarray]): environment observation space
@@ -38,8 +50,9 @@ class TinyDQNAgent(BaseAgent):
         self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
 
-    def act(self, state: np.ndarray, train=False, step=None) -> Union[np.ndarray, dict]:
-        """chooses action from action space based on state
+    def act(self, state: np.ndarray, train: bool = False, step:int = None) -> Union[np.ndarray, dict]:
+        """
+        Chooses action from action space based on state
 
         Args:
             state (np.ndarray): environment state
@@ -71,8 +84,9 @@ class TinyDQNAgent(BaseAgent):
 
                 return action, {}
 
-    def save(self, path: str):
-        """saves the current agent
+    def save(self, path: str) -> None:
+        """
+        Saves the current agent
 
         Args:
             path (str): path to save agent
@@ -81,17 +95,21 @@ class TinyDQNAgent(BaseAgent):
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
-    def load(path: str):
-        """Load agent
+    def load(path: str) -> None:
+        """
+        Loads agent
 
         Args:
             path (str): path to load from
 
         Returns:
-            DQNAgent: loaded DQNAgent instance
+            TinyDQNAgent: loaded TinyDQNAgent instance
         """
         with open(path, "rb") as infile:
             return pickle.load(infile)
     
-    def watch_wandb(self):
+    def watch_wandb(self) -> None:
+        """
+        Watch any relevant models with wandb
+        """
         wandb.watch(self.q1)

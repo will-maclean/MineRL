@@ -16,7 +16,7 @@ from minerl3161.agents import BaseAgent
 class RainbowDQNAgent(BaseAgent):
     """
     Rainbow Deep Q Learning algorithm that inherits from BaseAgent. 
-    This include a PyTorch neural network which acts as the function approximator.
+    This includes a PyTorch neural network which acts as the function approximator.
     This algorithm implements the following improvements from the DQNAgent/DQNTrainer:
         - Prioritised Experience Replay
         - Noisy Model Architecture
@@ -39,7 +39,7 @@ class RainbowDQNAgent(BaseAgent):
             obs_space (Dict[str, np.ndarray]): environment observation space
             n_actions (int): number of actions in the action space
             device (str): PyTorch device to store agent on (generally either "cpu" for CPU training or "cuda:0" for GPU training)
-            hyperparams (DQNHyperparameters): RainbowDQNHyperparameters instance stores specific hyperparameters for RainbowDQN training
+            hyperparams (RainbowDQNHyperparameters): RainbowDQNHyperparameters instance stores specific hyperparameters for RainbowDQN training
             load_path (str): the path that a previously trained agent is stored which can be imported when training begins
         """
         super(RainbowDQNAgent, self).__init__()
