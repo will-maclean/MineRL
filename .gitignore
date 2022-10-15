@@ -138,6 +138,6 @@ wandb/*
 weights
 video
 **/lightning_logs
-*.pkl
+# *.pkl
 *.ckpt
 *.pth

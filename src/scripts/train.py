@@ -72,7 +72,7 @@ def main():
         **dataclasses.asdict(hp), 
         extracted_acts = True,
         functional_acts = False, 
-        extracted_acts_filename="custom-navigate-actions2.pkl",
+        extracted_acts_filename="custom-basic-nav.pkl",
         )
     print(f"Creating a(n) {args.env} environment to train the agent in")
 

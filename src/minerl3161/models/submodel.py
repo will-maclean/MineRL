@@ -27,6 +27,9 @@ class CNN(nn.Module):
             nn.Conv2d(32, 32, kernel_size=5),
             nn.ReLU(),
             nn.BatchNorm2d(32),
+            nn.Conv2d(32, 32, kernel_size=3),
+            nn.ReLU(),
+            nn.BatchNorm2d(32),
         )
 
     def forward(self, x):
@@ -78,7 +81,8 @@ class MineRLFeatureExtraction(nn.Module):
             if feature == "pov":
                 # add the Resnet
                 sample_input = th.rand((1, *(observation_space[feature].shape)))
-                self.layers[feature] = build_ResNet(sample_input=sample_input, n_output=mlp_hidden_size)
+                # self.layers[feature] = build_ResNet(sample_input=sample_input, n_output=mlp_hidden_size)
+                self.layers[feature] = CNN(observation_space[feature].shape)
 
             elif feature == "compass":
                 # we don't want to do any processing on the compass observation

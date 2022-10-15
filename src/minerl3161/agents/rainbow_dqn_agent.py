@@ -45,7 +45,7 @@ class RainbowDQNAgent(BaseAgent):
 
     def act(self, state: Dict[str, np.ndarray], train=False, step=None) -> Union[np.ndarray, dict]:
         """Select an action from the input state."""
-        if train:
+        if train and self.hp.use_eps:
             eps = epsilon_decay(
                 step,
                 self.hp.eps_max,

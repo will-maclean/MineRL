@@ -16,5 +16,7 @@ class RainbowDQNHyperparameters(DQNHyperparameters):
     v_max: float = 200.0
     atom_size: int = 51
     # N-step Learning
-    n_step: int = 3
-    noisy_init: float = 0.5
+    n_step: int = 5
+    noisy_init: float = 0.1
+    # EPS
+    use_eps: bool = False

@@ -7,8 +7,8 @@ NULL_ACTION = {
     'camera': [0, 0],
     'craft': 'none',
     'equip': 'none',
-    'forward': 1,
-    'jump': 1,
+    'forward': 0,
+    'jump': 0,
     'left': 0,
     'nearbyCraft': 'none',
     'nearbySmelt': 'none',
@@ -18,7 +18,7 @@ NULL_ACTION = {
     'sprint': 0
 }
 
-x_angles = [-15, -5, 0, 5, 15]
+x_angles = [-30, 30]
 
 actions = []
 
@@ -28,11 +28,14 @@ for angle in x_angles:
     actions.append(new_action)
 
 new_action = dc(NULL_ACTION)
-new_action["attack"] = 1
 new_action["forward"] = 1
-new_action["jump"] = 0
-
+new_action["jump"] = 1
 actions.append(new_action)
 
-with open("custom-navigate-actions4.pkl", "wb") as f:
+new_action = dc(NULL_ACTION)
+new_action["forward"] = 1
+new_action["attack"] = 1
+actions.append(new_action)
+
+with open("custom-basic-nav.pkl", "wb") as f:
     dump(actions, f)
