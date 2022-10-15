@@ -65,18 +65,27 @@ class RainbowDQNTrainer(BaseTrainer):
         self.atom_size = hyperparameters.atom_size
     
     def add_transition(self, state, action, next_state, reward, done):
-        transition = (state, action, next_state, reward, done)
-        
-        # N-step transition
-        if self.use_n_step:
-            one_step_transition = self.memory_n.add(*transition)
-        # 1-step transition
-        else:
-            one_step_transition = transition
+        for i in range(done.shape[0]):
+            
+            s = {}
+            s_ = {}
 
-        # add a single step transition
-        if one_step_transition:
-            self.gathered_transitions.add(*one_step_transition)
+            for key in state:
+                s[key] = state[key][i]
+                s_[key] = next_state[key][i]
+
+            transition = (s, action[i], s_, reward[i], done[i])
+            
+            # N-step transition
+            if self.use_n_step:
+                one_step_transition = self.memory_n.add(*transition)
+            # 1-step transition
+            else:
+                one_step_transition = transition
+
+            # add a single step transition
+            if one_step_transition:
+                self.gathered_transitions.add(*one_step_transition)
 
     def _train_step(self, step: int) -> None:
         log_dict = {}

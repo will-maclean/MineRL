@@ -7,7 +7,7 @@ import gym
 import minerl
 from collections import namedtuple
 
-from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 
 from minerl3161.agents import DQNAgent, TinyDQNAgent, TinyRainbowDQNAgent, RainbowDQNAgent
 from minerl3161.trainers import DQNTrainer, RainbowDQNTrainer
@@ -80,8 +80,10 @@ def main():
         return env
     
     env = SubprocVecEnv([_make_env for _ in range(args.n_envs)])
+    # env = DummyVecEnv([_make_env for _ in range(args.n_envs)])
 
     eval_env = _make_env()
+    # eval_env = None
 
     print(f"Creating a(n) {args.env} environment to train the agent in")
 

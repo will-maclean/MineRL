@@ -170,10 +170,15 @@ class BaseTrainer:
                 self.env_interaction['needs_reset'] = False
             else:
                 state = self.env_interaction["last_state"]
+            
+            # for key in state:
+            #     print(f"state[{key}].shape: {state[key].shape}")
                 
             action, act_log_dict = self.agent.act(state=state, train=True, step=self.t)
 
-            action = action.detach().cpu().numpy().item()
+            print(f"action.shape: {action.shape}")
+
+            action = action.detach().cpu().numpy()
 
             log_dict.update(act_log_dict)
 
@@ -187,17 +192,17 @@ class BaseTrainer:
             self.env_interaction["episode_return"] += reward
             self.env_interaction["last_state"] = next_state
 
-            if done:
-                log_dict["episode_return"] = self.env_interaction["episode_return"]
-                log_dict["episode_length"] = self.env_interaction["episode_length"]
+            # if done:
+            #     log_dict["episode_return"] = self.env_interaction["episode_return"]
+            #     log_dict["episode_length"] = self.env_interaction["episode_length"]
 
-                if self.termination_conditions is not None:
-                    self._process_termination_conditions(self.env_interaction)
+            #     if self.termination_conditions is not None:
+            #         self._process_termination_conditions(self.env_interaction)
 
-                self.env_interaction["episode_return"] = 0
-                self.env_interaction["needs_reset"] = True
-                self.env_interaction["last_state"] = None
-                self.env_interaction["episode_length"] = 0
+            #     self.env_interaction["episode_return"] = 0
+            #     self.env_interaction["needs_reset"] = True
+            #     self.env_interaction["last_state"] = None
+            #     self.env_interaction["episode_length"] = 0
         
         end_time = perf_counter()
 
@@ -210,7 +215,10 @@ class BaseTrainer:
         raise NotImplementedError()
     
     def add_transition(self, state, action, next_state, reward, done):
-        self.gathered_transitions.add(state, action, next_state, reward, done)
+        for i in range(done.shape[0]):
+            s = {state[key][i] for key in state.keys()}
+            s_ = {next_state[key][i] for key in next_state.keys()}
+            self.gathered_transitions.add(s, action[i], s_, reward[i], done[i])
 
     def _housekeeping(self, step: int) -> None:
         log_dict = {}

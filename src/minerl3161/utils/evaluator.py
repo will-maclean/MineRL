@@ -40,9 +40,9 @@ class Evaluator:
                 else:
                     state = self.env_interaction["last_state"]
                 
-                action, _ = agent.act(state=state, train=False)
+                action, _ = agent.act(state=state, train=False, unsqueeze=True)
 
-                action = action.detach().cpu().numpy() if type(action) == th.Tensor else action
+                action = action.detach().cpu().numpy().item() if type(action) == th.Tensor else action
 
                 next_state, reward, done, _ = self.env.step(action=action) 
 

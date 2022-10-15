@@ -43,22 +43,26 @@ class RainbowDQNAgent(BaseAgent):
         self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
 
-    def act(self, state: Dict[str, np.ndarray], train=False, step=None) -> Union[np.ndarray, dict]:
+    def act(self, state: Dict[str, np.ndarray], train=False, step=None, unsqueeze=False) -> Union[np.ndarray, dict]:
         """Select an action from the input state."""
-        if train:
-            eps = epsilon_decay(
-                step,
-                self.hp.eps_max,
-                self.hp.eps_min,
-                self.hp.eps_decay,
-            )
+        # if train:
+        #     eps = epsilon_decay(
+        #         step,
+        #         self.hp.eps_max,
+        #         self.hp.eps_min,
+        #         self.hp.eps_decay,
+        #     )
 
-            if random.random() < eps:
-                action = th.randint(high=self.n_actions, size=(1,), device=self.device)
-                return action, {"epsilon": eps}
+        #     if random.random() < eps:
+        #         if random_action is not None:
+        #             return random_action
+        #         action = th.randint(high=self.n_actions, size=(1,), device=self.device)
+        #         return action, {"epsilon": eps}
 
-        state = np_dict_to_pt(state, device=self.device, unsqueeze=True)
-        selected_action = self.q1(state).argmax()  
+        state = np_dict_to_pt(state, device=self.device, unsqueeze=unsqueeze)
+        net_out = self.q1(state)
+        print(f"net_out.shape: {net_out.shape}")
+        selected_action = net_out.argmax(1)
         
         return selected_action, {}
     
