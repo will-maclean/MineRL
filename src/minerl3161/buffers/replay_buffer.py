@@ -148,7 +148,7 @@ class ReplayBuffer:
                 buffer.samples += new_buffer.samples
                 buffer.max_samples += new_buffer.max_samples
 
-    def __getitem__(self, idx: int) -> Tuple(dict, np.ndarray, dict, np.ndarray, np.ndarray):
+    def __getitem__(self, idx: int) -> Tuple[dict, np.ndarray, dict, np.ndarray, np.ndarray]:
         """
         Retrieves a data point from the replay buffer at the supplied index
 
@@ -156,7 +156,7 @@ class ReplayBuffer:
             idx (int): the index of the item being retrieved from the buffer
         
         Returns:
-            Tuple(dict, np.ndarray, dict, np.ndarray, np.ndarray): a tuple containing the experience from a given timestep
+            (dict, np.ndarray, dict, np.ndarray, np.ndarray): a tuple containing the experience from a given timestep
         """
         state = {}
         next_state = {}
