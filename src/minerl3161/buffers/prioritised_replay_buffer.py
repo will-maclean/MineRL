@@ -8,6 +8,12 @@ from .replay_buffer import ReplayBuffer
 
 
 class PrioritisedReplayBuffer(ReplayBuffer):
+    """
+    Implements the Prioritised Experience Replay algorihtm, and inherits from the ReplayBuffer class. The ReplayBuffer class randomly samples
+    from it's buffers when producing a batch. This is improved upon in this class, where the experience points used to train the model are 
+    selected based on the magnitude of the loss associated with that experience point, or rather, how much value that experience points contributes
+    to the model's learning.
+    """
 
     def __init__(
         self, 
@@ -15,6 +21,14 @@ class PrioritisedReplayBuffer(ReplayBuffer):
         obs_space: Dict[str, np.ndarray], 
         alpha: float
     ) -> None:
+        """
+        Initialises a PrioritisedReplayBuffer
+
+        Args:
+            n (int): size of ReplayBuffer
+            obs_space (Dict[str, np.ndarray]): obs_space to be stored
+            alpha (float): a value ranging between 0 and 1 where 0 means no prioritisation is used, and 1 means full prioritisation is used
+        """
         super(PrioritisedReplayBuffer, self).__init__(n, obs_space)
 
         self.max_priority, self.tree_ptr = 1.0, 0
@@ -36,6 +50,16 @@ class PrioritisedReplayBuffer(ReplayBuffer):
         reward: np.ndarray,
         done: np.ndarray,
     ) -> None:
+        """
+        Adds a single timestep of experience (transition) to the experience buffer
+
+        Args:
+            state (np.ndarray): the environment state at the given time step
+            action (np.ndarray): the action taken in the envrionment at the given time step
+            next_state (np.ndarray): the environment state the agent ends up in after taking the action
+            reward (np.ndarray): the reward obtained from performing the action
+            done (np.ndarray): a flag that represents whether or not the taken action ended the current episode
+        """
         super().add(state, action, next_state, reward, done)
     
         self.sum_tree[self.tree_ptr] = self.max_priority ** self.alpha
@@ -43,6 +67,12 @@ class PrioritisedReplayBuffer(ReplayBuffer):
         self.tree_ptr = (self.tree_ptr + 1) % self.max_samples
     
     def __len__(self):
+        """
+        Returns the length of the ReplayBuffer, or how many experience points are inside it
+
+        Returns:
+            int: the length of the ReplayBuffer, or how many experience points are inside it
+        """
         return self.max_samples if self.full else self.tree_ptr
 
     def sample(
@@ -50,7 +80,18 @@ class PrioritisedReplayBuffer(ReplayBuffer):
         batch_size: int,
         beta: float
     ) -> Dict[str, np.ndarray]:
+        """
+        Sample method used to retrieve a batch of experience data points. Is dependent on bata which is used to preserve the uniform distribution
+        obtained when randomly sampling in a normal Replay Buffer. This process is known as Importance Sampling.
+
+        Args:
+            batch_size (int): the size of the batch - how many experience points the batch should contain
+            beta (float): a value between 0 and 1, that anneals from a starting value to a final value (typically 1), controls how the
+                          prioritisation is being applied
         
+        Returns:
+            Dict[str, np.ndarray]: a dictionary which contains the data points
+        """
         indices = self._sample_proportional(batch_size)
 
         states = {}
@@ -66,8 +107,15 @@ class PrioritisedReplayBuffer(ReplayBuffer):
 
         return ReplayBuffer.create_batch_sample(states, actions, next_states, rewards, dones), weights, indices
 
-    def update_priorities(self, indices: List[int], priorities: np.ndarray):
-        """Update priorities of sampled transitions."""
+    def update_priorities(self, indices: List[int], priorities: np.ndarray) -> None:
+        """
+        Used to update the priorities (it's value for learning) associated with a given experience point. Is performed on a set
+        of experience points, donated by the list of indicies
+
+        Args:
+            indices (List[int]): the list of indices whose priorities should be updated
+            priorities (np.ndarray): the list of priorities to be updated
+        """
         assert len(indices) == len(priorities)
 
         for idx, priority in zip(indices, priorities):

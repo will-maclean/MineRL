@@ -1,5 +1,5 @@
 import pickle
-from typing import Dict, Union, Self
+from typing import Dict, Union
 import random
 
 import numpy as np
@@ -121,7 +121,7 @@ class DQNAgent(BaseAgent):
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
-    def load(path: str) -> Self:
+    def load(path: str):
         """
         Loads an agent from a path
 

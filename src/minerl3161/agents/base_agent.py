@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Union, Self
+from typing import Union
 
 import numpy as np
 
@@ -46,7 +46,7 @@ class BaseAgent(ABC):
         pass
 
     @staticmethod
-    def load(path: str) -> Self:
+    def load(path: str) -> None:
         """
         Loads an agent from a path
 

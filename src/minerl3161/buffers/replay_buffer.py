@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple, Union
 from pathlib import Path
 import pickle
 from collections import namedtuple
@@ -9,10 +9,13 @@ Transition = namedtuple("Transition", ["s", "a", "s_", "r", "d"])
 
 
 class ReplayBuffer:
-    """Stores experience for agent training. Currently assumes that actions are scalars"""
+    """
+    Stores experience for agent training. This class assumes that actions are scalar form.
+    """
 
     def __init__(self, n: int, obs_space: Dict[str, np.ndarray]) -> None:
-        """Initialises a ReplayBuffer
+        """
+        Initialises a ReplayBuffer
 
         Args:
             n (int): size of ReplayBuffer
@@ -37,6 +40,9 @@ class ReplayBuffer:
         self.full = False
 
     def _create_state_buffer(self, n, obs_space):
+        """
+        TODO
+        """
         buf = {}
 
         for feature in self.feature_names:
@@ -52,16 +58,17 @@ class ReplayBuffer:
         reward: np.ndarray,
         done: np.ndarray,
     ) -> None:
-        """adds a single timestep of experience to the experience buffer
+        """
+        Adds a single timestep of experience (transition) to the experience buffer
 
         Args:
-            state (np.ndarray): environment state
-            action (np.ndarray): environment action
-            next_state (np.ndarray): environment next state
-            reward (np.ndarray): environment reward
-            done (np.ndarray): environment done flag
+            state (np.ndarray): the environment state at the given time step
+            action (np.ndarray): the action taken in the envrionment at the given time step
+            next_state (np.ndarray): the environment state the agent ends up in after taking the action
+            reward (np.ndarray): the reward obtained from performing the action
+            done (np.ndarray): a flag that represents whether or not the taken action ended the current episode
         """
-
+        #TODO: is this needed?
         # this has potential to fail hard, but that's good - we want
         # the code to fail if the observation shape starts changing
         try:
@@ -85,11 +92,18 @@ class ReplayBuffer:
 
         return self.full
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """
+        Returns the length of the ReplayBuffer, or how many experience points are inside it
+
+        Returns:
+            int: the length of the ReplayBuffer, or how many experience points are inside it
+        """
         return self.max_samples if self.full else self.counter
 
-    def save(self, save_path):
-        """Saves the current replay buffer
+    def save(self, save_path: str) -> None:
+        """
+        Saves the current replay buffer
 
         Args:
             save_path (str): path to save to
@@ -99,8 +113,9 @@ class ReplayBuffer:
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
-    def load(path: str):
-        """Loads a ReplayBuffer from file
+    def load(path: str) -> None:
+        """
+        Loads a ReplayBuffer from file
 
         Args:
             path (str): path to load from
@@ -112,8 +127,9 @@ class ReplayBuffer:
             return pickle.load(infile)
 
     @staticmethod
-    def load_from_paths(load_paths: List[str]):
-        """Loads a replaybuffer from a list of paths
+    def load_from_paths(load_paths: List[str]) -> None:
+        """
+        Loads a replay buffer from a list of paths
 
         Args:
             load_paths (List[str]): list of paths to load from
@@ -132,7 +148,16 @@ class ReplayBuffer:
                 buffer.samples += new_buffer.samples
                 buffer.max_samples += new_buffer.max_samples
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> Tuple(dict, np.ndarray, dict, np.ndarray, np.ndarray):
+        """
+        Retrieves a data point from the replay buffer at the supplied index
+
+        Args:
+            idx (int): the index of the item being retrieved from the buffer
+        
+        Returns:
+            Tuple(dict, np.ndarray, dict, np.ndarray, np.ndarray): a tuple containing the experience from a given timestep
+        """
         state = {}
         next_state = {}
 
@@ -148,9 +173,27 @@ class ReplayBuffer:
             self.dones[idx],
         )
 
-
     @staticmethod
-    def create_batch_sample(states, actions, next_states, rewards, dones):
+    def create_batch_sample(
+        states: np.ndarray, 
+        actions: np.ndarray, 
+        next_states: np.ndarray, 
+        rewards: np.ndarray, 
+        dones: np.ndarray
+    ) -> Dict[str, Union[dict, np.ndarray]]:
+        """
+        Creates a batch of experience points from the supplied data, to be used for training the model
+
+        Args:
+            states (np.ndarray): a non-sequential sequence of states from the ReplayBuffer
+            actions (np.ndarray): a non-sequential sequence of actions from the ReplayBuffer
+            next_states (np.ndarray): a non-sequential sequence of next_states from the ReplayBuffer
+            rewards (np.ndarray): a non-sequential sequence of rewards from the ReplayBuffer
+            dones (np.ndarray): a non-sequential sequence of dones from the ReplayBuffer
+        
+        Returns:
+            Dict[str, Union[dict, np.ndarray]]: a dictionary where each value is the batch of data passed into the method
+        """
         # return the sample in a dictionary
         batch_sample = {}
         batch_sample["reward"] = rewards
@@ -169,7 +212,15 @@ class ReplayBuffer:
 
 
     def sample(self, batch_size: int) -> Dict[str, np.ndarray]:
+        """
+        Sample method used to retrieve a batch of experience data points
 
+        Args:
+            batch_size (int): the size of the batch - how many experience points the batch should contain
+        
+        Returns:
+            Dict[str, np.ndarray]: a dictionary which contains the data points
+        """
         # create list of IDs to sample from our experience
         idxs = np.random.randint(
             low=0,
