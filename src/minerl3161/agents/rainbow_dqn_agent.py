@@ -14,6 +14,16 @@ from minerl3161.agents import BaseAgent
 
 
 class RainbowDQNAgent(BaseAgent):
+    """
+    Rainbow Deep Q Learning algorithm that inherits from BaseAgent. 
+    This include a PyTorch neural network which acts as the function approximator.
+    This algorithm implements the following improvements from the DQNAgent/DQNTrainer:
+        - Prioritised Experience Replay
+        - Noisy Model Architecture
+        - N-Step Learning
+        - Distributional RL
+    """
+
     def __init__(
         self,
         obs_space: Dict[str, np.ndarray],
@@ -21,7 +31,17 @@ class RainbowDQNAgent(BaseAgent):
         device: str,
         hyperparams: RainbowDQNHyperparameters,
         load_path: str = None,
-    ):
+    ) -> None:
+        """
+        RainbowDQNAgent initialiser
+
+        Args:
+            obs_space (Dict[str, np.ndarray]): environment observation space
+            n_actions (int): number of actions in the action space
+            device (str): PyTorch device to store agent on (generally either "cpu" for CPU training or "cuda:0" for GPU training)
+            hyperparams (DQNHyperparameters): RainbowDQNHyperparameters instance stores specific hyperparameters for RainbowDQN training
+            load_path (str): the path that a previously trained agent is stored which can be imported when training begins
+        """
         super(RainbowDQNAgent, self).__init__()
 
         self.device = device
@@ -32,7 +52,6 @@ class RainbowDQNAgent(BaseAgent):
             hyperparams.v_min, hyperparams.v_max, hyperparams.atom_size
         ).to(self.device)
 
-        # networks: dqn, dqn_target
         self.q1 = RainbowDQN(
             state_shape=obs_space,
             n_actions=n_actions, 
@@ -42,9 +61,25 @@ class RainbowDQNAgent(BaseAgent):
         ).to(self.device)
         self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
+    
+    def watch_wandb(self) -> None:
+        """
+        Watch any relevant models with wandb
+        """
+        wandb.watch(self.q1)
 
-    def act(self, state: Dict[str, np.ndarray], train=False, step=None) -> Union[np.ndarray, dict]:
-        """Select an action from the input state."""
+    def act(self, state: Dict[str, np.ndarray], train: bool = False, step: int = None) -> Union[np.ndarray, dict]:
+        """
+        Chooses action from action space based on state
+
+        Args:
+            state (np.ndarray): environment state
+            train (bool): determines if client code requires train or eval functionality (eval shoud not use eps)
+            step (int): the current time step in training, used to determine current eps value
+
+        Returns:
+            np.ndarray, dict: chosen action, log dictionary
+        """
         if train and self.hp.use_eps:
             eps = epsilon_decay(
                 step,
@@ -62,14 +97,12 @@ class RainbowDQNAgent(BaseAgent):
         
         return selected_action, {}
     
-    def save(self, path: str):
-        """saves the current agent
+    def save(self, path: str) -> None:
+        """
+        Saves the current agent
 
         Args:
             path (str): path to save agent
         """
         with open(path, "wb") as outfile:
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
-
-    def watch_wandb(self):
-        wandb.watch(self.q1)

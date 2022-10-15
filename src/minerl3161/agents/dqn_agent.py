@@ -28,7 +28,7 @@ class DQNAgent(BaseAgent):
         load_path: str = None,
     ) -> None:
         """
-        Base agent initialiser
+        DQNAgent initialiser
 
         Args:
             obs_space (Dict[str, np.ndarray]): environment observation space
