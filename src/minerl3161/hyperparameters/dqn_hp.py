@@ -9,7 +9,7 @@ from minerl3161.utils import linear_sampling_strategy
 class DQNHyperparameters(BaseHyperparameters):
     gamma: float = 0.99  # discount factor for Bellman Equation
     lr: float = 2.5e-4  # learning rate for model weights
-    eps_decay: float = 300_000  # decay factor for epsilon greedy strategy
+    eps_decay: float = 250_000  # decay factor for epsilon greedy strategy
     eps_min: float = 0.02  # min value for epsilon greedy strategy
     eps_max: float = 1.0  # max value for epsilon greedy strategy
     model_hidden_layer_size: int = 128  # layer size for hidden layers in neural net

@@ -1,12 +1,12 @@
 import argparse
 import dataclasses
-from webbrowser import get
 import torch
 import wandb
 import gym
 import minerl
 from collections import namedtuple
 
+from minerl3161.utils.env_reset_toggler import EnvResetToggler
 from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer
 from minerl3161.agents import DQNAgent, TinyDQNAgent, TinyRainbowDQNAgent, RainbowDQNAgent
 from minerl3161.trainers import DQNTrainer, RainbowDQNTrainer
@@ -34,7 +34,7 @@ def main():
     parser.add_argument('--env', type=str, default="MineRLNavigateDense-v0")
 
     # Why can't argparse read bools from the command line? Who knows. Workaround:
-    parser.add_argument('--wandb', action='store_true', default=True,
+    parser.add_argument('--wandb', action='store_true', default=False,
                         help='sets if we use wandb logging')
     parser.add_argument('--no-wandb', action='store_false', dest="wandb",
                         help='sets if we use wandb logging')
@@ -66,14 +66,19 @@ def main():
     print(f"Using the {args.policy} policy")
 
     # Configure environment
-    env = gym.make(args.env)
-    env = POLICIES[args.policy].wrapper(
-        env, 
-        **dataclasses.asdict(hp), 
-        extracted_acts = True,
-        functional_acts = False, 
-        extracted_acts_filename="custom-basic-nav.pkl",
-        )
+    def _make_env():
+        env = gym.make(args.env)
+        env = POLICIES[args.policy].wrapper(
+            env, 
+            **dataclasses.asdict(hp), 
+            extracted_acts = True,
+            functional_acts = False, 
+            extracted_acts_filename="custom-basic-nav.pkl",
+            )
+        return env
+    
+    env = EnvResetToggler([_make_env, _make_env])
+
     print(f"Creating a(n) {args.env} environment to train the agent in")
 
     # handle human experience
