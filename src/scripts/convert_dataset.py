@@ -5,9 +5,10 @@ from tqdm import tqdm
 import gym
 import minerl
 import numpy as np
+import minerl3161
 
 from minerl3161.utils.wrappers import MineRLWrapper
-from minerl3161.buffer import ReplayBuffer, PrioritisedReplayBuffer
+from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
 
 def convert_dataset(env_name, out_path, hyperparams, save_every=5):
@@ -20,7 +21,8 @@ def convert_dataset(env_name, out_path, hyperparams, save_every=5):
     data = minerl.data.make(env_name)
     trajectory_names = data.get_trajectory_names()
 
-    action_set = MineRLWrapper.create_action_set(functional_acts=False, extracted_acts=True)
+    action_set = MineRLWrapper.create_action_set(functional_acts=False, extracted_acts=True, extracted_acts_filename=minerl3161.actions_path + "/extracted-actions.pickle",
+    functional_acts_filename=minerl3161.actions_path + "/functional-actions.pickle")
     
     counter = 0
 

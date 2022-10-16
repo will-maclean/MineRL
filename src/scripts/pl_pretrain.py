@@ -1,15 +1,18 @@
 import argparse
 import dataclasses
+import os
 import gym
+import minerl
 
 import torch as th
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from torch.utils.data import DataLoader
-from minerl3161.hyperparameters import DQNHyperparameters
-from minerl3161.buffer import ReplayBuffer
-from minerl3161.utils.wrappers import MineRLWrapper
 
+import minerl3161
+from minerl3161.hyperparameters import DQNHyperparameters
+from minerl3161.buffers import ReplayBuffer
+from minerl3161.utils.wrappers import MineRLWrapper
 from minerl3161.pl_pretraining.pl_model import DQNPretrainer
 from minerl3161.pl_pretraining.pl_dataset import MineRLDataset
 
@@ -18,7 +21,7 @@ def opt():
     parser = argparse.ArgumentParser()
     
     # Required
-    parser.add_argument("--data_path", type=str, default="data/human-xp-navigate-dense.pkl")
+    parser.add_argument("--data_path", type=str, default="human-xp-navigate-dense-PER.pkl")
 
     # Optional
     parser.add_argument("--env_name", type=str, default="MineRLNavigateDense-v0")
@@ -43,7 +46,7 @@ def main():
     env = MineRLWrapper(env, **dataclasses.asdict(hp))
 
     # data
-    data = MineRLDataset(ReplayBuffer.load(args.data_path))
+    data = MineRLDataset(ReplayBuffer.load(os.path.join(minerl3161.data_path, args.data_path)))
     n_train = int(len(data) * args.train_val_split)
     n_val = len(data) - n_train
     train_set, val_set = th.utils.data.random_split(data, [n_train, n_val])

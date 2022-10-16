@@ -8,7 +8,7 @@ from numpy import std
 import csv
 from random import random, randint
 
-from minerl3161.agent import DQNAgent
+from minerl3161.agents import DQNAgent
 from minerl3161.utils.wrappers import minerlWrapper, MineRLWrapper
 from minerl3161.hyperparameters import RainbowDQNHyperparameters
 
