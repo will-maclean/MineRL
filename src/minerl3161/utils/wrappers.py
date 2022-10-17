@@ -11,9 +11,17 @@ import cv2
 import minerl3161
 
 
-def decode_action(obj: dict, camera_shrink_factor=100) -> list:
-    """Decodes an action to fit into a dataframe.
+def decode_action(obj: dict, camera_shrink_factor: int = 100) -> dict:
+    """
+    Decodes an action to fit into a dataframe.
     Helper function for MineRLWrapper.map_action()
+
+    Args:
+        obj (dict): action to be decoded
+        camera_shrink_factor (int): the factor to reduce the camera deltas by
+    
+    Returns:
+        dict: the decoded action 
     """
     proc = {
         'attack': 0,
