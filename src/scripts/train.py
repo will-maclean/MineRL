@@ -78,6 +78,7 @@ def main():
         extracted_acts = True,
         functional_acts = False, 
         extracted_acts_filename="test.pkl",
+        repeat_action=5,
         )
     print(f"Creating a(n) {args.env} environment to train the agent in")
 
@@ -131,6 +132,7 @@ def main():
         device=device,  
         use_wandb=args.wandb, 
         render=args.render, 
+        callbacks=callbacks,
         termination_conditions=termination_conditions)
 
     trainer.train()
