@@ -22,7 +22,7 @@ class DQNTrainer(BaseTrainer):
     def __init__(
         self, 
         env: gym.Env, 
-        agent: BaseAgent, #TODO: should this be a DQNAgent?
+        agent: BaseAgent,
         hyperparameters: DQNHyperparameters, 
         human_dataset: Union[ReplayBuffer, None] = None, 
         use_wandb: bool = False, 
@@ -120,9 +120,9 @@ class DQNTrainer(BaseTrainer):
         next_q_values = next_q_values.gather(1, next_actions)
 
         # calculate TD target for Bellman Equation
-        td_target = self.hp.reward_scale * th.sign(batch[
+        td_target = self.hp.reward_scale * batch[
             "reward"
-        ]) + self.hp.gamma * next_q_values * (1 - batch["done"])
+        ] + self.hp.gamma * next_q_values * (1 - batch["done"])
 
         # Calculate loss for Bellman Equation
         # Note that we use smooth_l1_loss instead of MSE as it is more stable for larger loss signals. RL problems

@@ -206,10 +206,10 @@ def obs_compass(state=None, observation_space=None, compass_name="compass", *arg
             del observation_space.spaces["compassAngle"]
         
     if state is not None:
-        try:
-            state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
-        except KeyError:
-            pass
+        # try:
+        #     state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
+        # except KeyError:
+        #     pass
         
         if "compass" in state.keys():
             if type(state[compass_name]) == np.ndarray:
@@ -264,7 +264,7 @@ class MineRLWrapper(gym.Wrapper):
             extracted_acts=extracted_acts, 
             functional_acts_filename=functional_acts_filename, 
             extracted_acts_filename=extracted_acts_filename
-            )
+        )
         _, self.action_space = MineRLWrapper.convert_action(action_space=self.action_space, action_set=self.action_set)
 
         # update observation space

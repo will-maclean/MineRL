@@ -101,7 +101,7 @@ class DQNAgent(BaseAgent):
             if random.random() < eps:
                 action = th.randint(high=self.n_action, size=(1,), device=self.device)
             else:
-                action = self.q1(state).argmax()
+                action = self.q1(state).argmax(1)
 
             return action, {"epsilon": eps}
         else:
