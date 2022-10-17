@@ -20,7 +20,12 @@ def convert_dataset(env_name, out_path, hyperparams, save_every=5):
     data = minerl.data.make(env_name)
     trajectory_names = data.get_trajectory_names()
 
-    action_set = MineRLWrapper.create_action_set(functional_acts=False, extracted_acts=True)
+    action_set = MineRLWrapper.create_action_set(
+        functional_acts=False, 
+        extracted_acts=True,
+        extracted_acts_filename="test.pkl",
+        functional_acts_filename=""
+    )
     
     counter = 0
 

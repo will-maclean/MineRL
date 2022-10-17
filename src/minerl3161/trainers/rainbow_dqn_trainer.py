@@ -7,6 +7,7 @@ from torch.optim import Adam
 from torch.nn.utils.clip_grad import clip_grad_norm_
 
 from minerl3161.agents import BaseAgent
+from minerl3161.callbacks.base_callback import BaseCallback
 from minerl3161.hyperparameters import RainbowDQNHyperparameters
 from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer, NStepReplayBuffer
 from minerl3161.utils.termination import TerminationCondition
@@ -28,6 +29,7 @@ class RainbowDQNTrainer(BaseTrainer):
         env: gym.Env, 
         agent: BaseAgent, 
         hyperparameters: RainbowDQNHyperparameters, 
+        callbacks: List[BaseCallback] = [],
         human_dataset: Union[PrioritisedReplayBuffer, None] = None, 
         use_wandb: bool = False, 
         device: str = "cpu", 
@@ -59,7 +61,8 @@ class RainbowDQNTrainer(BaseTrainer):
             replay_buffer_kwargs={"alpha": hyperparameters.alpha}, 
             render=render,
             termination_conditions=termination_conditions,
-            capture_eval_video=capture_eval_video
+            capture_eval_video=capture_eval_video,
+            callbacks=callbacks,
         )
 
         # The optimiser keeps track of the model weights that we want to train

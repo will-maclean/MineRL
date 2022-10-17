@@ -2,6 +2,7 @@ from typing import Tuple
 
 import torch as th
 from torch import nn
+import numpy as np
 
 from .resnet import build_ResNet
 
@@ -75,6 +76,51 @@ class CNN(nn.Module):
         x = x.flatten(1)
 
         return x
+
+
+class unCNN(nn.Module):
+    """
+    Contains the implementation for the Convolutional Nerual Network being used to extract the pov features
+    from the state space.
+    """
+
+    def __init__(self, out_channels) -> None:
+        """
+        Initialiser for CNN
+
+        Args:
+            input_shape (Dict[str, Tuple[int]]): state shape to be used
+        """
+        super().__init__()
+
+        self.cnn = nn.Sequential(
+            nn.ConvTranspose2d(32, 32, kernel_size=5),
+            nn.ReLU(),
+            nn.BatchNorm2d(32),
+            nn.ConvTranspose2d(32, 32, kernel_size=5),
+            nn.ReLU(),
+            nn.BatchNorm2d(32),
+            nn.ConvTranspose2d(32, 16, kernel_size=5),
+            nn.ReLU(),
+            nn.BatchNorm2d(16),
+            nn.ConvTranspose2d(16, out_channels, kernel_size=3),
+        )
+
+    def forward(self, x: th.Tensor) -> th.Tensor:
+        """
+        Defines the forward pass of the model
+
+        Args:
+            x (th.Tensor): state to pass forward
+
+        Returns:
+            th.Tensor: model output
+        """
+        x = x.reshape(x.shape[0], 32, 2, 2)
+        x = self.cnn(x)
+
+        return x
+
 
 
 class MLP(nn.Module):

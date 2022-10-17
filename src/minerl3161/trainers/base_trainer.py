@@ -8,6 +8,7 @@ from tqdm import tqdm
 import wandb
 
 from minerl3161.agents import BaseAgent
+from minerl3161.callbacks.base_callback import BaseCallback
 from minerl3161.hyperparameters import BaseHyperparameters
 from minerl3161.buffers import ReplayBuffer
 from minerl3161.utils.termination import TerminationCondition
@@ -25,6 +26,7 @@ class BaseTrainer:
         env: gym.Env, 
         agent: BaseAgent, 
         hyperparameters: BaseHyperparameters, 
+        callbacks: List[BaseCallback] = [],
         human_dataset: Union[ReplayBuffer, None] = None, 
         use_wandb: bool = False,
         device: str = "cpu", 
@@ -56,6 +58,7 @@ class BaseTrainer:
         self.use_wandb = use_wandb
         self.device = device
         self.render = render
+        self.callbacks = callbacks
 
         if termination_conditions is not None:
             if type(termination_conditions) != list:
@@ -270,6 +273,9 @@ class BaseTrainer:
         log_dict.update(
             self.checkpointer.step(step)
         )
+
+        for c in self.callbacks:
+            log_dict.update(c.on_end_loop(step))
         
         return log_dict
     

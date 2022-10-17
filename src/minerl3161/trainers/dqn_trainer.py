@@ -6,6 +6,7 @@ import torch as th
 from torch.optim import Adam
 
 from minerl3161.agents import BaseAgent
+from minerl3161.callbacks.base_callback import BaseCallback
 from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.buffers import ReplayBuffer
 from minerl3161.utils.termination import TerminationCondition
@@ -24,6 +25,7 @@ class DQNTrainer(BaseTrainer):
         env: gym.Env, 
         agent: BaseAgent, #TODO: should this be a DQNAgent?
         hyperparameters: DQNHyperparameters, 
+        callbacks: List[BaseCallback] = [],
         human_dataset: Union[ReplayBuffer, None] = None, 
         use_wandb: bool = False, 
         device: str = "cpu", 
@@ -53,7 +55,8 @@ class DQNTrainer(BaseTrainer):
             use_wandb=use_wandb, device=device, 
             render=render, 
             termination_conditions=termination_conditions, 
-            capture_eval_video=capture_eval_video
+            capture_eval_video=capture_eval_video,
+            callbacks=callbacks,
         )
 
         # The optimiser keeps track of the model weights that we want to train

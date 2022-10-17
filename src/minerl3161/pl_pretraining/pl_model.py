@@ -1,9 +1,51 @@
 from copy import deepcopy
+from pandas import lreshape
 import torch as th
 import pytorch_lightning as pl
 import torch.nn.functional as F
 
-from minerl3161.models.DQNNetworks import DQNNet
+from minerl3161.models.submodel import CNN, unCNN
+
+
+
+class MineRLCNNPretrainer(pl.LightningModule):
+    def __init__(self, lr=3e-4) -> None:
+        super().__init__()
+
+        self.encoder = CNN((4, 16, 16))
+        self.decoder = unCNN(4)
+
+        self.lr = lr
+    
+    def training_step(self, batch, batch_idx):
+        s, a, s_, r, d = batch
+        s = s['pov']
+
+        l = self.encoder(s)
+        reconstruction = self.decoder(l)
+
+        loss = F.mse_loss(reconstruction, s)
+
+        self.log("train_loss", loss.item(), on_step=False, on_epoch=True)
+
+        return loss
+    
+    def validation_step(self, batch, batch_idx):
+        s, a, s_, r, d = batch
+        s = s['pov']
+
+        l = self.encoder(s)
+        reconstruction = self.decoder(l)
+
+        loss = F.mse_loss(reconstruction, s)
+
+        self.log("val_loss", loss.item(), on_step=False, on_epoch=True)
+
+        return loss
+
+    def configure_optimizers(self):
+        return th.optim.Adam(self.parameters(), lr=self.lr)
+
 
 
 class DQNPretrainer(pl.LightningModule):

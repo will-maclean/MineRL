@@ -15,6 +15,7 @@ from minerl3161.utils.wrappers import minerlWrapper, cartPoleWrapper
 from minerl3161.utils.termination import get_termination_condition
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
 from minerl3161.utils.wrappers import minerlWrapper
+from minerl3161.callbacks.base_callback import UnfreezeModelAfter
 
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'wrapper', 'params'])
@@ -33,9 +34,8 @@ def main():
     parser.add_argument('--policy', type=str, default='vanilla-dqn')
     parser.add_argument('--env', type=str, default="MineRLNavigateDense-v0")
 
-    # TODO: Needed?
     # Why can't argparse read bools from the command line? Who knows. Workaround:
-    parser.add_argument('--wandb', action='store_true', default=False,
+    parser.add_argument('--wandb', action='store_true', default=True,
                         help='sets if we use wandb logging')
     parser.add_argument('--no-wandb', action='store_false', dest="wandb",
                         help='sets if we use wandb logging')
@@ -51,6 +51,10 @@ def main():
     
     parser.add_argument('--load_path', type=str, default=None,
                         help='path to model checkpoint to load (optional)')
+    
+    parser.add_argument('--cnn_load_path', type=str, default=None)
+    
+    parser.add_argument('--unfreeze_cnn_after', type=int, default=-1)
     
     parser.add_argument('--render', action='store_true', default=False,
                         help='sets if we use gpu hardware')
@@ -74,7 +78,6 @@ def main():
         extracted_acts = True,
         functional_acts = False, 
         extracted_acts_filename="test.pkl",
-        repeat_action = 5
         )
     print(f"Creating a(n) {args.env} environment to train the agent in")
 
@@ -97,6 +100,14 @@ def main():
             hyperparams=hp,
             load_path=args.load_path
         )
+    
+    if args.cnn_load_path is not None:
+        loaded_state_dict = torch.load(args.cnn_load_path)
+        agent.q1.feature_extractor.layers['pov'].load_state_dict(loaded_state_dict)
+    
+    callbacks = []
+    if args.unfreeze_cnn_after > 0:
+        callbacks.append(UnfreezeModelAfter(agent.q1.feature_extractor.layers['pov'], unfreeze_after=args.unfreeze_cnn_after))
 
     if args.wandb:
         wandb.init(
