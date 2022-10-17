@@ -20,6 +20,7 @@ class UnfreezeModelAfter(BaseCallback):
     def on_end_loop(self, t):
         if t >= self.unfreeze_after and not self.triggered:
             self.unfreeze_model.requires_grad_(True)
+            self.triggered = True
 
             return {"unfroze_at": t}
         
