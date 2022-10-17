@@ -5,12 +5,12 @@ from typing import Union
 @dataclass
 class BaseHyperparameters:
     train_steps: int = 2_000_000  # number of train_loop steps
-    burn_in: int = 100_000  # how many steps to loop for before starting training
+    burn_in: int = 10_000  # how many steps to loop for before starting training
     train_every: int = 1  # how many steps per train call
     evaluate_every: int = 50_000  # how many steps per evaluation call
     evaluate_episodes: int = 1  # how many episodes we complete each evaluation call
-    batch_size: int = 2000  # batch size for training
-    buffer_size_gathered: int = 200_000  # buffer size for gathered data
+    batch_size: int = 128  # batch size for training
+    buffer_size_gathered: int = 250_000  # buffer size for gathered data
     buffer_size_dataset: int = (
         75_000  # buffer size for the provided data i.e. how much provided data to use
     )

@@ -48,10 +48,8 @@ class RainbowDQNTrainer(BaseTrainer):
         if self.use_n_step:
             self.n_step = hyperparameters.n_step
             self.memory_n = NStepReplayBuffer(
-                size=hyperparameters.buffer_size_gathered, 
-                batch_size=hyperparameters.batch_size, 
-                gamma=hyperparameters.gamma,
-                n_step=hyperparameters.n_step, 
+                n=hyperparameters.buffer_size_gathered, 
+                hyperparameters=hyperparameters 
             )
         
         self.beta = hyperparameters.beta_min

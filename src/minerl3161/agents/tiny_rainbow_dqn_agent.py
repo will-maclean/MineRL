@@ -51,7 +51,7 @@ class TinyRainbowDQNAgent(BaseAgent):
             hyperparams.v_min, hyperparams.v_max, hyperparams.atom_size
         ).to(self.device)
 
-        # networks: dqn, dqn_target
+        # Initialise policy network and create a deepcopy for the target network
         self.q1 = TinyRainbowDQN(
             state_shape=obs_space,
             n_actions=n_actions, 
@@ -59,10 +59,11 @@ class TinyRainbowDQNAgent(BaseAgent):
             support=self.support, 
             std_init=hyperparams.noisy_init
         ).to(self.device)
+
         self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
 
-    def act(self, state: Dict[str, np.ndarray], train:bool = False, step: int = None) -> Union[np.ndarray, dict]:
+    def act(self, state: Dict[str, np.ndarray], train: bool = False, step: int = None) -> Union[np.ndarray, dict]:
         """
         Chooses action from action space based on state
 
@@ -87,6 +88,20 @@ class TinyRainbowDQNAgent(BaseAgent):
         """
         with open(path, "wb") as outfile:
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
+
+    @staticmethod
+    def load(path: str) -> 'TinyRainbowDQNAgent':
+        """
+        Loads an agent from a path
+
+        Args:
+            path (str): path from which to load agent
+
+        Returns:
+            TinyRainbowDQNAgent: loaded instance of a TinyRainbowDQNAgent
+        """
+        with open(path, "rb") as infile:
+            return pickle.load(infile)    
 
     def watch_wandb(self) -> None:
         """

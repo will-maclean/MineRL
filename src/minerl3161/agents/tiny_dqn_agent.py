@@ -46,11 +46,12 @@ class TinyDQNAgent(BaseAgent):
         self.obs_space = obs_space
         self.n_action = n_actions
 
+        # Initialise policy network and create a deepcopy for the target network
         self.q1 = TinyDQN(S=obs_space["state"].shape[0], A=n_actions).to(device)
         self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
 
-    def act(self, state: np.ndarray, train: bool = False, step:int = None) -> Union[np.ndarray, dict]:
+    def act(self, state: np.ndarray, train: bool = False, step: int = None) -> Union[np.ndarray, dict]:
         """
         Chooses action from action space based on state
 
@@ -95,7 +96,7 @@ class TinyDQNAgent(BaseAgent):
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
-    def load(path: str) -> None:
+    def load(path: str) -> 'TinyDQNAgent':
         """
         Loads agent
 

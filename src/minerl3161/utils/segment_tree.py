@@ -9,12 +9,7 @@ class SegmentTree:
 
     Taken from OpenAI baselines github repository:
     https://github.com/openai/baselines/blob/master/baselines/common/segment_tree.py
-
-    Attributes:
-        capacity (int)
-        tree (list)
-        operation (function)
-
+    
     """
 
     def __init__(self, capacity: int, operation: Callable, init_value: float):

@@ -3,26 +3,35 @@ from typing import Dict, Tuple
 
 import numpy as np
 
+from minerl3161.hyperparameters.rainbow_dqn_hp import RainbowDQNHyperparameters
+
 from .replay_buffer import ReplayBuffer
 
 
 class NStepReplayBuffer:
+    """
+    Implements the N Step Learning algorithm into a ReplayBuffer. A special buffer is required for this algorithm as n-step transitions
+    are stored into the buffer. Subsequentially, this class does not inherit from the ReplayBuffer class.
+    """
 
     def __init__(
         self,
-        size: int, 
-        batch_size: int, 
-        gamma: float,
-        n_step: int, 
+        n: int, 
+        hyperparameters: RainbowDQNHyperparameters
     ) -> None:
+        """
+        Initialises a NStepReplayBuffer
 
-        self.size = size
-        self.batch_size = batch_size
+        Args:
+            n (int): size of ReplayBuffer
+            hyperparameters (RainbowDQNHyperparameters): the hyperparameters that are used internally in this class 
+        """
+        self.size = n
+        self.batch_size = hyperparameters.batch_size
 
-        # for N-step Learning
-        self.n_step_buffer = deque(maxlen=n_step)
-        self.n_step = n_step
-        self.gamma = gamma
+        self.n_step_buffer = deque(maxlen=hyperparameters.n_step)
+        self.n_step = hyperparameters.n_step
+        self.gamma = hyperparameters.gamma
     
     def add(
         self,
@@ -32,6 +41,18 @@ class NStepReplayBuffer:
         reward: np.ndarray,
         done: np.ndarray,
     ) -> None:
+        """
+        TODO: What is actually going on here?
+
+        TODO: Licence
+
+        Args:
+            state (np.ndarray): the environment state at the given time step
+            action (np.ndarray): the action taken in the envrionment at the given time step
+            next_state (np.ndarray): the environment state the agent ends up in after taking the action
+            reward (np.ndarray): the reward obtained from performing the action
+            done (np.ndarray): a flag that represents whether or not the taken action ended the current episode
+        """
         transition = (state, action, next_state, reward, done)
         self.n_step_buffer.append(transition)
 
@@ -45,15 +66,50 @@ class NStepReplayBuffer:
 
         return self[0]
     
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int):
+        """
+        Retrieves a data point from the buffer at the supplied index
+
+        Args:
+            idx (int): the index of the item being retrieved from the buffer
+        
+        Returns:
+            (dict, np.ndarray, dict, np.ndarray, np.ndarray): a tuple containing the experience from a given timestep
+        """
         return self.n_step_buffer[idx]
     
     def __len__(self):
+        """
+        Returns the length of the NStepReplayBuffer, or how many experience points are inside it
+
+        Returns:
+            int: the length of the NStepReplayBuffer, or how many experience points are inside it
+        """
         return len(self.n_step_buffer)
+
+    def sample(self) -> Dict[str, np.ndarray]:
+        """
+        Sample method used to retrieve a batch of experience data points, from internally generated indices
+        
+        Returns:
+            Dict[str, np.ndarray]: a dictionary which contains the data points from the generated indices
+        """
+        indices = np.random.choice(self.size, size=self.batch_size, replace=False)
+
+        return NStepReplayBuffer.sample_batch_from_idxs(self, indices), indices
 
     @staticmethod
     def sample_batch_from_idxs(buffer: ReplayBuffer, indices: np.ndarray) -> Dict[str, np.ndarray]:
-        # for N-step Learning
+        """
+        Creates a batch of experience points from a supplied ReplayBuffer and indices
+
+        Args:
+            buffer (ReplayBuffer): the replay buffer whose experience points are being used
+            indices (np.ndarray): the set of integers that corresponds to the experience points to be sampled
+        
+        Returns:
+            Dict[str, Union[dict, np.ndarray]]: a dictionary where each value is the batch of data passed into the method
+        """
         states = {}
         next_states = {}
         for k in buffer.feature_names:
@@ -65,14 +121,16 @@ class NStepReplayBuffer:
         dones = buffer.dones[indices]
 
         return ReplayBuffer.create_batch_sample(states, actions, next_states, rewards, dones)
-    
-    def sample(self) -> Dict[str, np.ndarray]:
-        indices = np.random.choice(self.size, size=self.batch_size, replace=False)
 
-        return NStepReplayBuffer.sample_batch_from_idxs(self, indices), indices
-    
     def _get_n_step_info(self) -> Tuple[np.int64, np.ndarray, bool]:
-        """Return n step reward, next_state, and done."""
+        """
+        Calculates the n step values for the next_state, reward, and done values
+
+        TODO: Licence
+
+        Returns:
+            Tuple[Dict[str, np.ndarray], float, bool]: the calculated next_state, reward and done values after n steps
+        """
         # info of the last transition
         next_state, reward, done = self.n_step_buffer[-1][-3:]
 

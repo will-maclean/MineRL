@@ -52,6 +52,7 @@ class RainbowDQNAgent(BaseAgent):
             hyperparams.v_min, hyperparams.v_max, hyperparams.atom_size
         ).to(self.device)
 
+        # Initialise policy network and create a deepcopy for the target network
         self.q1 = RainbowDQN(
             state_shape=obs_space,
             n_actions=n_actions, 
@@ -59,6 +60,7 @@ class RainbowDQNAgent(BaseAgent):
             support=self.support, 
             std_init=hyperparams.noisy_init
         ).to(self.device)
+
         self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
     
@@ -106,3 +108,17 @@ class RainbowDQNAgent(BaseAgent):
         """
         with open(path, "wb") as outfile:
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
+    
+    @staticmethod
+    def load(path: str) -> 'RainbowDQNAgent':
+        """
+        Loads an agent from a path
+
+        Args:
+            path (str): path from which to load agent
+
+        Returns:
+            RainbowDQNAgent: loaded instance of a RainbowDQNAgent
+        """
+        with open(path, "rb") as infile:
+            return pickle.load(infile)

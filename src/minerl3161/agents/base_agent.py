@@ -46,7 +46,7 @@ class BaseAgent(ABC):
         pass
 
     @staticmethod
-    def load(path: str) -> None:
+    def load(path: str) -> 'BaseAgent':
         """
         Loads an agent from a path
 

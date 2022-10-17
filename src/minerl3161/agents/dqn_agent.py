@@ -44,6 +44,7 @@ class DQNAgent(BaseAgent):
         self.obs_space = obs_space
         self.n_action = n_actions
 
+        # Initialise policy network
         self.q1 = DQNNet(
             state_shape=obs_space,
             n_actions=n_actions,
@@ -51,6 +52,7 @@ class DQNAgent(BaseAgent):
             layer_size=hyperparams.model_hidden_layer_size,
         ).to(device)
 
+        # Initialise target network
         self.q2 = DQNNet(
             state_shape=obs_space,
             n_actions=n_actions,
@@ -60,6 +62,7 @@ class DQNAgent(BaseAgent):
         self.q2.load_state_dict(self.q1.state_dict())
         self.q2.requires_grad_(False)
 
+        # If a load path has been specified, load the weights into the initialised models
         if load_path is not None:
             pl_model = DQNPretrainer.load_from_checkpoint(load_path, obs_space=obs_space, n_actions=n_actions, hyperparams=hyperparams)
 
@@ -121,7 +124,7 @@ class DQNAgent(BaseAgent):
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
-    def load(path: str):
+    def load(path: str) -> 'DQNAgent':
         """
         Loads an agent from a path
 

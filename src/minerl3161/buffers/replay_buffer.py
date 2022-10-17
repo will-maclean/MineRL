@@ -68,7 +68,7 @@ class ReplayBuffer:
             reward (np.ndarray): the reward obtained from performing the action
             done (np.ndarray): a flag that represents whether or not the taken action ended the current episode
         """
-        #TODO: is this needed?
+        #TODO: is this comment needed?
         # this has potential to fail hard, but that's good - we want
         # the code to fail if the observation shape starts changing
         try:
@@ -113,7 +113,7 @@ class ReplayBuffer:
             pickle.dump(self, outfile, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
-    def load(path: str) -> None:
+    def load(path: str) -> 'ReplayBuffer':
         """
         Loads a ReplayBuffer from file
 
@@ -121,7 +121,7 @@ class ReplayBuffer:
             path (str): path to load from
 
         Returns:
-            ReplayBuffer: loaded buffer
+            ReplayBuffer: returns a loaded ReplayBuffer
         """
         with open(path, "rb") as infile:
             return pickle.load(infile)
