@@ -35,7 +35,6 @@ class BaseAgent(ABC):
         Args:
             path (str): path in which to save the agent.
         """
-        #TODO: should put the model on CPU before save
         raise NotImplementedError()
     
     @abstractmethod

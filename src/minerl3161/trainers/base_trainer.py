@@ -273,9 +273,13 @@ class BaseTrainer:
         
         return log_dict
     
-    def _process_termination_conditions(self, env_interation) -> None:
+    def _process_termination_conditions(self, env_interation: Dict[str, Any]) -> None:
         """
-        TODO
+        Goes through all of the termination conditions with the env_interaction data, to see if training should
+        be terminated
+        
+        Args:
+            env_interation (Dict[str, Any]): the dictionary of episode interaction data
         """
         terminate_training = False
         for t in self.termination_conditions:

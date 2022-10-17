@@ -103,14 +103,12 @@ class NoisyLinear(nn.Module):
     def scale_noise(size: int) -> th.Tensor:
         """
         Set scale to make noise (factorized gaussian noise).
-
-        TODO: what's going on here?
         
         Args:
-            size (int): 
+            size (int): the size of the vector to create
 
         Returns:
-            th.Tensor: 
+            th.Tensor: a vector of standard deviations of shape size
         """
         x = th.randn(size)
 

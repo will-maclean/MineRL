@@ -112,7 +112,6 @@ class DQNAgent(BaseAgent):
 
                 return action, {}
 
-    # TODO: Determine if pickle supports saving and loading of model weights
     def save(self, path: str) -> None:
         """
         Saves the current agent

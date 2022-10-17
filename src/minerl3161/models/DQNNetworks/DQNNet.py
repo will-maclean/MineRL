@@ -8,7 +8,6 @@ from minerl3161.utils import sample_pt_state
 from minerl3161.models.submodel import MineRLFeatureExtraction
 
 
-# TODO: write tests
 class DQNNet(nn.Module):
     """
     Stores the PyTorch neural network to be used as a DQN network.

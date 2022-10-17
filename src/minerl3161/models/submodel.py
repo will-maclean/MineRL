@@ -8,7 +8,7 @@ from .resnet import build_ResNet
 
 class NothingNet(nn.Module):
     """
-    TODO: what is this?
+    A module which can be used a placeholder of a Network is required, but we want nothing to occur in the forward pass.
     """
 
     def __init__(self) -> None:
@@ -79,7 +79,7 @@ class CNN(nn.Module):
 
 class MLP(nn.Module):
     """
-    TODO: what is this?
+    This class implements a configurable Multi Layer Perceptron, which is used as a building block for other networks.
     """
 
     def __init__(

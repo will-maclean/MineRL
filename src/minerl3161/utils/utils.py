@@ -5,7 +5,6 @@ import torch as th
 from torch import nn
 
 
-# TODO: write tests
 def linear_decay(
     step: int, start_val: float, final_val: float, final_steps: int
 ) -> float:
@@ -23,8 +22,6 @@ def linear_decay(
     fraction = min(float(step) / final_steps, 1.0)
     return start_val + fraction * (final_val - start_val)
 
-
-# TODO: write tests
 def epsilon_decay(step: int, start_val: float, final_val: float, decay: float) -> float:
     """exponential decay function
 
@@ -41,8 +38,6 @@ def epsilon_decay(step: int, start_val: float, final_val: float, decay: float) -
         final_val + (start_val - final_val) * np.exp(-1 * step / decay), final_val
     )
 
-
-# TODO: write tests
 def copy_weights(copy_from: nn.Module, copy_to: nn.Module, polyak=None):
     """
     Copy weights from one network to another. Optionally copies with Polyak averaging.

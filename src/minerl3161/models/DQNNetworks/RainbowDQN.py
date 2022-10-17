@@ -31,7 +31,7 @@ class RainbowDQN(nn.Module):
             state_shape (Dict[str, Tuple[int]]): state shape to be used. Will only work with 1D states for now
             n_actions (int): number of actions available for the agent
             dqn_hyperparams (RainbowDQNHyperparameters):  the hyperparameters being used internally in this class
-            support (th.Tensor): TODO: what is this again??
+            support (th.Tensor): the minimum and maximum range of the reward scale in the C51 algorithm
         """
         super().__init__()
         

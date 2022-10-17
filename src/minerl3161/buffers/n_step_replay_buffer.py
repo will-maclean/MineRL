@@ -42,16 +42,16 @@ class NStepReplayBuffer:
         done: np.ndarray,
     ) -> None:
         """
-        TODO: What is actually going on here?
-
-        TODO: Licence
+        This method adds the transition to the buffer, and unrolls the n-step data
+        
+        TODO: licence
 
         Args:
-            state (np.ndarray): the environment state at the given time step
-            action (np.ndarray): the action taken in the envrionment at the given time step
-            next_state (np.ndarray): the environment state the agent ends up in after taking the action
-            reward (np.ndarray): the reward obtained from performing the action
-            done (np.ndarray): a flag that represents whether or not the taken action ended the current episode
+            state (Dict[str, np.ndarray]): the environment state at the given time step
+            action (Union[np.ndarray, float]): the action taken in the envrionment at the given time step
+            next_state (Dict[str, np.ndarray]): the environment state the agent ends up in after taking the action
+            reward (Union[np.ndarray, float]): the reward obtained from performing the action
+            done (Union[np.ndarray, bool]): a flag that represents whether or not the taken action ended the current episode
         """
         transition = (state, action, next_state, reward, done)
         self.n_step_buffer.append(transition)
