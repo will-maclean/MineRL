@@ -30,7 +30,7 @@ POLICIES = {
 
 def main():
     parser = argparse.ArgumentParser('Parse configuration file')
-    parser.add_argument('--policy', type=str, default='vanilla-dqn')
+    parser.add_argument('--policy', type=str, default='rainbow-dqn')
     parser.add_argument('--env', type=str, default="MineRLNavigateDense-v0")
 
     # TODO: Needed?
@@ -56,6 +56,10 @@ def main():
                         help='sets if we use gpu hardware')
 
     args = parser.parse_args()
+
+    # Ensuring human data is not being used with the RainbowDQN Policy as this is not supported
+    if 'rainbow' in args.policy and args.human_exp_path is not None:
+        raise Exception("Using human data with a rainbow policy is not currently supported")
 
     # Loading onto appropriate device
     using_gpu = torch.cuda.is_available() and args.gpu
