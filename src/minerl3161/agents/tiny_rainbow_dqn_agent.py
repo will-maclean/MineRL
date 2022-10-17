@@ -7,7 +7,7 @@ import numpy as np
 import wandb
 
 from minerl3161.hyperparameters import RainbowDQNHyperparameters
-from minerl3161.models import TinyRainbowDQN
+from minerl3161.models.DQNNetworks import TinyRainbowDQN
 from minerl3161.utils import np_dict_to_pt
 from minerl3161.agents import BaseAgent
 
@@ -57,7 +57,6 @@ class TinyRainbowDQNAgent(BaseAgent):
             n_actions=n_actions, 
             dqn_hyperparams=hyperparams,
             support=self.support, 
-            std_init=hyperparams.noisy_init
         ).to(self.device)
 
         self.q2 = deepcopy(self.q1)

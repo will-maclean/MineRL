@@ -1,8 +1,20 @@
 import gym
 import minerl
-from minerl3161.hyperparameters import DQNHyperparameters
 
-from minerl3161.utils.wrappers import minerlWrapper
+from minerl3161.hyperparameters import DQNHyperparameters
+from minerl3161.utils.wrappers import minerlWrapper, MineRLWrapper
+
+
+
+def test_env_action_wrapper(minerl_env):
+    wrapped_env = minerlWrapper(minerl_env)
+    action_count = wrapped_env.action_space.n
+    
+    for action_idx in range(action_count):
+        _, _, done, _ = wrapped_env.step(action_idx)
+
+        if done:
+            wrapped_env.reset()
 
 
 def test_env_wrapper_default(minerl_env):

@@ -8,7 +8,7 @@ import torch as th
 import wandb
 from minerl3161.hyperparameters.dqn_hp import DQNHyperparameters
 
-from minerl3161.models.models import TinyDQN
+from minerl3161.models.DQNNetworks import TinyDQN
 from minerl3161.utils.utils import epsilon_decay, np_dict_to_pt
 from minerl3161.agents import BaseAgent
 

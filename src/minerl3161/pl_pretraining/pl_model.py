@@ -3,7 +3,7 @@ import torch as th
 import pytorch_lightning as pl
 import torch.nn.functional as F
 
-from minerl3161.models.models import DQNNet
+from minerl3161.models.DQNNetworks import DQNNet
 
 
 class DQNPretrainer(pl.LightningModule):

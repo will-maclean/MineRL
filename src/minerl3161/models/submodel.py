@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch as th
 from torch import nn
 
@@ -5,15 +7,42 @@ from .resnet import build_ResNet
 
 
 class NothingNet(nn.Module):
+    """
+    TODO: what is this?
+    """
+
     def __init__(self) -> None:
+        """
+        Initialiser for NothingNet
+        """
         super().__init__()
 
-    def forward(self, x):
+    def forward(self, x: th.Tensor) -> th.Tensor:
+        """
+        Defines the forward pass of the model
+
+        Args:
+            x (th.Tensor): state to pass forward
+
+        Returns:
+            th.Tensor: model output
+        """
         return x
 
 
 class CNN(nn.Module):
-    def __init__(self, input_shape) -> None:
+    """
+    Contains the implementation for the Convolutional Nerual Network being used to extract the pov features
+    from the state space.
+    """
+
+    def __init__(self, input_shape: Tuple[int]) -> None:
+        """
+        Initialiser for CNN
+
+        Args:
+            input_shape (Dict[str, Tuple[int]]): state shape to be used
+        """
         super().__init__()
 
         # TODO: modify for minerl pov
@@ -32,7 +61,16 @@ class CNN(nn.Module):
             nn.BatchNorm2d(32),
         )
 
-    def forward(self, x):
+    def forward(self, x: th.Tensor) -> th.Tensor:
+        """
+        Defines the forward pass of the model
+
+        Args:
+            x (th.Tensor): state to pass forward
+
+        Returns:
+            th.Tensor: model output
+        """
         x = self.cnn(x)
         x = x.flatten(1)
 
@@ -40,7 +78,26 @@ class CNN(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(self, input_size, output_size, layers_size=(), softmax=True) -> None:
+    """
+    TODO: what is this?
+    """
+
+    def __init__(
+        self, 
+        input_size: int, 
+        output_size: int, 
+        layers_size: Tuple[int] = (), 
+        softmax: bool = True
+    ) -> None:
+        """
+        Initialiser for MLP
+
+        Args:
+            input_size (int): the input size of the MLP
+            output_size (int): the output size of the MLP
+            layers_size (Tuple[int]): the layers size of the MLP
+            softmax (bool): determines the activation function that should be used (either softmax or ReLU)
+        """
         super().__init__()
 
         if len(layers_size) == 0:
@@ -65,21 +122,45 @@ class MLP(nn.Module):
 
             self.layers = nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x: th.Tensor) -> th.Tensor:
+        """
+        Defines the forward pass of the model
+
+        Args:
+            x (th.Tensor): state to pass forward
+
+        Returns:
+            th.Tensor: model output
+        """
         return self.layers(x)
 
 
 class MineRLFeatureExtraction(nn.Module):
+    """
+    TODO: description and init docstring, arg types
+    """
+
     def __init__(
-        self, observation_space, feature_names=None, mlp_hidden_size=64
+        self, 
+        observation_space, 
+        feature_names: bool = None, 
+        mlp_hidden_size: int = 64
     ) -> None:
+        """
+        Initialiser for MineRLFeatureExtraction
+
+        Args:
+            observation_space (): 
+            feature_names (bool):  the hyperparameters being used internally in this class
+            mlp_hidden_size (int): the size of the network's hidden layer/s
+        """
         super().__init__()
 
         self.layers = {}
 
         for feature in feature_names:
             if feature == "pov":
-                # add the Resnet
+                # add the Resnet/CNN
                 sample_input = th.rand((1, *(observation_space[feature].shape)))
                 # self.layers[feature] = build_ResNet(sample_input=sample_input, n_output=mlp_hidden_size)
                 self.layers[feature] = CNN(observation_space[feature].shape)
@@ -104,7 +185,16 @@ class MineRLFeatureExtraction(nn.Module):
 
         self.layers = nn.ModuleDict(self.layers)
 
-    def forward(self, x):
+    def forward(self, x: th.Tensor) -> th.Tensor:
+        """
+        Defines the forward pass of the model
+
+        Args:
+            x (th.Tensor): state to pass forward
+
+        Returns:
+            th.Tensor: model output
+        """
         outputs = []
 
         for feature_name in self.layers:

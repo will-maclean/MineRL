@@ -5,7 +5,7 @@ import numpy as np
 import torch as th
 
 from minerl3161.utils.utils import linear_decay, epsilon_decay, copy_weights, linear_sampling_strategy, sample_pt_state, np_dict_to_pt, pt_dict_to_np
-from minerl3161.models.models import DQNNet
+from minerl3161.models.DQNNetworks import DQNNet
 
 
 def nn_params_equal(model1, model2):

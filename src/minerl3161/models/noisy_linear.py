@@ -5,7 +5,10 @@ import torch.nn.functional as F
 
 
 class NoisyLinear(nn.Module):
-    """Noisy linear module for NoisyNet.
+    """
+    Noisy linear module for NoisyNet.
+
+    TODO: licence
         
     Attributes:
         in_features (int): input size of linear module
@@ -14,8 +17,7 @@ class NoisyLinear(nn.Module):
         weight_mu (nn.Parameter): mean value
         weight_sigma (nn.Parameter): std value weight parameter
         bias_mu (nn.Parameter): mean value bias parameter
-        bias_sigma (nn.Parameter): std value bias parameter
-        
+        bias_sigma (nn.Parameter): std value bias parameter 
     """
 
     def __init__(
@@ -23,8 +25,15 @@ class NoisyLinear(nn.Module):
         in_features: int, 
         out_features: int, 
         std_init: float,
-    ):
-        """Initialization."""
+    ) -> None:
+        """
+        Initialiser for NoisyLinear
+
+        Args:
+            in_features (int): input size of linear module
+            out_features (int): output size of linear module
+            std_init (float): initial std value
+        """
         super(NoisyLinear, self).__init__()
         
         self.in_features = in_features
@@ -46,8 +55,10 @@ class NoisyLinear(nn.Module):
         self.reset_parameters()
         self.reset_noise()
 
-    def reset_parameters(self):
-        """Reset trainable network parameters (factorized gaussian noise)."""
+    def reset_parameters(self) -> None:
+        """
+        Resets trainable network parameters (factorized gaussian noise)
+        """
         mu_range = 1 / math.sqrt(self.in_features)
         self.weight_mu.data.uniform_(-mu_range, mu_range)
         self.weight_sigma.data.fill_(
@@ -58,8 +69,10 @@ class NoisyLinear(nn.Module):
             self.std_init / math.sqrt(self.out_features)
         )
 
-    def reset_noise(self):
-        """Make new noise."""
+    def reset_noise(self) -> None:
+        """
+        Makes new noise.
+        """
         epsilon_in = self.scale_noise(self.in_features)
         epsilon_out = self.scale_noise(self.out_features)
 
@@ -68,10 +81,17 @@ class NoisyLinear(nn.Module):
         self.bias_epsilon.copy_(epsilon_out)
 
     def forward(self, x: th.Tensor) -> th.Tensor:
-        """Forward method implementation.
+        """
+        Forward method implementation.
         
         We don't use separate statements on train / eval mode.
         It doesn't show remarkable difference of performance.
+
+        Args:
+            x (th.Tensor): state to pass forward
+
+        Returns:
+            th.Tensor: model output
         """
         return F.linear(
             x,
@@ -81,7 +101,17 @@ class NoisyLinear(nn.Module):
     
     @staticmethod
     def scale_noise(size: int) -> th.Tensor:
-        """Set scale to make noise (factorized gaussian noise)."""
+        """
+        Set scale to make noise (factorized gaussian noise).
+
+        TODO: what's going on here?
+        
+        Args:
+            size (int): 
+
+        Returns:
+            th.Tensor: 
+        """
         x = th.randn(size)
 
         return x.sign().mul(x.abs().sqrt())

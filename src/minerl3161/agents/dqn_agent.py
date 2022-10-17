@@ -7,7 +7,7 @@ import wandb
 import torch as th
 
 from minerl3161.hyperparameters import DQNHyperparameters
-from minerl3161.models import DQNNet
+from minerl3161.models.DQNNetworks import DQNNet
 from minerl3161.pl_pretraining.pl_model import DQNPretrainer
 from minerl3161.utils import epsilon_decay, np_dict_to_pt
 from minerl3161.agents import BaseAgent
