@@ -16,7 +16,9 @@ from minerl3161.utils.evaluator import Evaluator
 
 
 class BaseTrainer:
-    """Abstract class for Trainers. At the least, all implementations must have _train_step()."""
+    """
+    Abstract class for Trainers. At the least, all implementations must have _train_step().
+    """
 
     def __init__(
         self, 
@@ -24,20 +26,29 @@ class BaseTrainer:
         agent: BaseAgent, 
         hyperparameters: BaseHyperparameters, 
         human_dataset: Union[ReplayBuffer, None] = None, 
-        use_wandb: bool =False,
-        device="cpu", 
-        render=False, 
-        replay_buffer_class=ReplayBuffer, 
-        replay_buffer_kwargs: Dict={}, 
+        use_wandb: bool = False,
+        device: str = "cpu", 
+        render: bool = False, 
+        replay_buffer_class: ReplayBuffer = ReplayBuffer, 
+        replay_buffer_kwargs: Dict = {}, 
         termination_conditions: Union[List[TerminationCondition], None] = None,
         capture_eval_video: bool = True
     ) -> None:
-        """Initialiser for BaseTrainer.
+        """
+        Initialiser for BaseTrainer
 
         Args:
             env (gym.Env): environmnet to train in
             agent (BaseAgent): agent to train
             hyperparameters (BaseHyperparameters): hyperparameters to train with
+            human_dataset (Union[ReplayBuffer, None]): a ReplayBuffer containing expert human transitions
+            use_wandb (bool): dictates whether wandb should be used or not
+            device (str): dictates what device the tensors should be loaded onto for training the model 
+            render (bool): dictates whether the envrionment should be rendered during training or not
+            replay_buffer_class (ReplayBuffer): the ReplayBuffer being used to store the transitions during training
+            replay_buffer_kwargs (Dict): the kwargs that will be passed into the ReplayBuffer initialiser
+            termination_conditions (Union[List[TerminationCondition], None]): the conditions that dictate when training should conclude
+            capture_eval_video (bool): dictates whether a video should be captured when performing the eval callback
         """
         self.env: gym.Env = env
         self.agent: BaseAgent = agent
@@ -78,7 +89,16 @@ class BaseTrainer:
 
         self.training = False
     
-    def sample(self, strategy: callable)-> Dict[str, np.ndarray]:
+    def sample(self, strategy: callable) -> Dict[str, np.ndarray]:
+        """
+        Used to retrieve a batch of samples from the ReplayBuffer for training the model weights
+
+        Args:
+            strategy (callable): a function which is used to determine the gathered/human data split in the batch
+        
+        Returns:
+            Dict[str, np.ndarray]: a dictionary containing the sample data
+        """
         if self.human_transitions is None:
             return self.gathered_transitions.sample(self.hp.batch_size)
         
@@ -120,10 +140,10 @@ class BaseTrainer:
                 ) for key in human_batch['next_state']}
         )
 
-
     def train(self) -> None:
-        """main training function. This basic training loop should be enough for most conventional RL algorithms"""
-
+        """
+        Main training function. This basic training loop should be enough for most conventional RL algorithms.
+        """
         self.training = True  # flag that lets termination conditions stop training
 
         for t in tqdm(range(self.hp.train_steps)):
@@ -152,11 +172,25 @@ class BaseTrainer:
         
         self.close()
 
+    @abstractmethod
+    def _train_step(self, step: int) -> Dict[str, np.ndarray]:
+        """
+        Abstract method which all subclasses MUST implement. Determines how the model is trained.
+
+        Args:
+            step (int): the current time step in the training
+        """
+        raise NotImplementedError()
+
     def _gather(self, steps: int) -> Dict[str, Any]:
-        """gathers steps of experience from the environment
+        """
+        Gathers steps of experience from the environment
 
         Args:
             steps (int): how many steps of experience to gather
+        
+        Returns:
+            Dict[str, Any]: a dictionary containing data for logging
         """
         log_dict = {}
 
@@ -202,15 +236,34 @@ class BaseTrainer:
         log_dict["gather_fps"] = steps / (end_time - start_time)
 
         return log_dict
-
-    @abstractmethod
-    def _train_step(self, step: int) -> None:
-        raise NotImplementedError()
     
-    def add_transition(self, state, action, next_state, reward, done):
+    def add_transition(
+        # TODO: arg types
+        self, 
+        state, 
+        action, 
+        next_state, 
+        reward, 
+        done
+    ) -> None:
+        """
+        Used to add a transition to the ReplayBuffer
+
+        Args:
+            TODO
+        """
         self.gathered_transitions.add(state, action, next_state, reward, done)
 
-    def _housekeeping(self, step: int) -> None:
+    def _housekeeping(self, step: int) -> Dict[str, Any]:
+        """
+        Used to update the log dictionary
+
+        Args:
+            step (int): the current time step in training
+
+        Returns:
+            Dict[str, Any]: the dictionary used for logging
+        """
         log_dict = {}
 
         # start with checkpointing
@@ -220,7 +273,10 @@ class BaseTrainer:
         
         return log_dict
     
-    def _process_termination_conditions(self, env_interation):
+    def _process_termination_conditions(self, env_interation) -> None:
+        """
+        TODO
+        """
         terminate_training = False
         for t in self.termination_conditions:
             terminate_training = terminate_training or t(**env_interation)
@@ -229,8 +285,17 @@ class BaseTrainer:
             self.training = False
 
     def _log(self, log_dict: dict) -> None:
+        """
+        Used to log the contents of the log dictionary to wandb
+
+        Args:
+            log_dict (dict): the dictionary that contains the logged data
+        """
         if self.use_wandb:
             wandb.log(log_dict)
     
-    def close(self):
+    def close(self) -> None:
+        """
+        TODO: what's this for?
+        """
         pass

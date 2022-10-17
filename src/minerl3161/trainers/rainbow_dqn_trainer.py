@@ -14,7 +14,15 @@ from minerl3161.utils import np_batch_to_tensor_batch, copy_weights, linear_deca
 
 from .base_trainer import BaseTrainer
 
+# TODO: remove human data handling and include catch in train to prevent it, this is something that could be
+#       implemented at a later date
+
+
 class RainbowDQNTrainer(BaseTrainer):
+    """
+    The Trainer for the RainbowDQNAgent. Inherits from the BaseTrainer class, implementing the _train_step() method.
+    """
+
     def __init__(
         self, 
         env: gym.Env, 
@@ -27,6 +35,20 @@ class RainbowDQNTrainer(BaseTrainer):
         termination_conditions: Union[List[TerminationCondition], None] = None,
         capture_eval_video: bool = True
     ) -> None:
+        """
+        Initialiser for RainbowDQNTrainer
+
+        Args:
+            env (gym.Env): environmnet to train in
+            agent (BaseAgent): agent to train
+            hyperparameters (RainbowDQNHyperparameters): hyperparameters to train with
+            human_dataset (Union[PrioritisedReplayBuffer, None]): a PrioritisedReplayBuffer containing expert human transitions
+            use_wandb (bool): dictates whether wandb should be used or not
+            device (str): dictates what device the tensors should be loaded onto for training the model 
+            render (bool): dictates whether the envrionment should be rendered during training or not
+            termination_conditions (Union[List[TerminationCondition], None]): the conditions that dictate when training should conclude
+            capture_eval_video (bool): dictates whether a video should be captured when performing the eval callback
+        """
         super().__init__(env=env, 
             agent=agent,
             human_dataset=human_dataset, 
@@ -60,7 +82,22 @@ class RainbowDQNTrainer(BaseTrainer):
         self.v_max = hyperparameters.v_max
         self.atom_size = hyperparameters.atom_size
     
-    def add_transition(self, state, action, next_state, reward, done):
+    def add_transition(
+        self, 
+        state, 
+        action, 
+        next_state, 
+        reward, 
+        done
+    ) -> None:
+        """
+        Used to add a transition to the PrioritisedReplayBuffer
+
+        # TODO: licence
+
+        Args:
+            TODO
+        """
         transition = (state, action, next_state, reward, done)
         
         # N-step transition
@@ -75,6 +112,14 @@ class RainbowDQNTrainer(BaseTrainer):
             self.gathered_transitions.add(*one_step_transition)
 
     def _train_step(self, step: int) -> None:
+        """
+        Implements the network training that is to be completed at each train step
+
+        TODO: licence
+
+        Args:
+            step (int): the current time step in the training
+        """
         log_dict = {}
         # Get a batch of experience from the gathered transitions
         batch, sample_log_dict = self.sample(self.hp.sampling_strategy, step)
@@ -145,7 +190,18 @@ class RainbowDQNTrainer(BaseTrainer):
         else:
             return self._calc_loss_combined(batch)
 
-    def _calc_loss_gathered_only(self, batch, gamma):
+    def _calc_loss_gathered_only(self, batch: dict, gamma: float = None) -> th.Tensor:
+        """
+        Used to calculate the loss of the supplied batch (the margin of error between the q-values that model currently predicts, and
+        the newly calculated ones)
+
+        Args:
+            batch (dict): the batch of data extracted from the ReplayBuffer, being used to train the data
+            gamma (float): hyperparameter used to ensure the infinite Bellman Equation converges onto a number (known as the discount factor)
+        
+        Returns:
+            th.Tensor: the average loss of each of the samples in the batch
+        """
         state = batch["state"]
         action = batch["action"]
         reward = batch["reward"]
@@ -190,7 +246,7 @@ class RainbowDQNTrainer(BaseTrainer):
 
         return elementwise_loss
 
-    def _calc_loss_combined(self, batch):
+    def _calc_loss_combined(self, batch: dict) -> th.Tensor:
         gathered_batch_size = batch["gathered_batch_size"]
         human_batch_size = batch["human_batch_size"]
 
@@ -251,8 +307,10 @@ class RainbowDQNTrainer(BaseTrainer):
 
         return loss.mean()
     
-    def sample(self, strategy: callable, step)-> Dict[str, np.ndarray]:
-        
+    def sample(self, strategy: callable, step: int) -> Dict[str, np.ndarray]:
+        """
+        TODO
+        """
         # if we have not human transitions, then yeah obviously we can simplify this provess a bit
         if self.human_transitions is None:
             beta = linear_decay(step=step, start_val=self.hp.beta_min, final_val=self.hp.beta_max, final_steps=self.hp.beta_final_step)

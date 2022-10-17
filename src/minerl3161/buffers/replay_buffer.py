@@ -61,6 +61,8 @@ class ReplayBuffer:
         """
         Adds a single timestep of experience (transition) to the experience buffer
 
+        TODO: are these arg types right?
+
         Args:
             state (np.ndarray): the environment state at the given time step
             action (np.ndarray): the action taken in the envrionment at the given time step

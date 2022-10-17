@@ -13,19 +13,38 @@ from minerl3161.utils.utils import np_batch_to_tensor_batch, copy_weights
 
 from .base_trainer import BaseTrainer
 
+
 class DQNTrainer(BaseTrainer):
+    """
+    The Trainer for the DQNAgent. Inherits from the BaseTrainer class, implementing the _train_step() method.
+    """
+
     def __init__(
         self, 
         env: gym.Env, 
-        agent: BaseAgent, 
+        agent: BaseAgent, #TODO: should this be a DQNAgent?
         hyperparameters: DQNHyperparameters, 
         human_dataset: Union[ReplayBuffer, None] = None, 
         use_wandb: bool = False, 
         device: str = "cpu", 
-        render=False, 
+        render: bool = False, 
         termination_conditions: Union[List[TerminationCondition], None] = None,
         capture_eval_video: bool = True
     ) -> None:
+        """
+        Initialiser for DQNTrainer
+
+        Args:
+            env (gym.Env): environmnet to train in
+            agent (BaseAgent): agent to train
+            hyperparameters (DQNHyperparameters): hyperparameters to train with
+            human_dataset (Union[ReplayBuffer, None]): a ReplayBuffer containing expert human transitions
+            use_wandb (bool): dictates whether wandb should be used or not
+            device (str): dictates what device the tensors should be loaded onto for training the model 
+            render (bool): dictates whether the envrionment should be rendered during training or not
+            termination_conditions (Union[List[TerminationCondition], None]): the conditions that dictate when training should conclude
+            capture_eval_video (bool): dictates whether a video should be captured when performing the eval callback
+        """
         super().__init__(
             env=env, 
             agent=agent, 
@@ -41,6 +60,12 @@ class DQNTrainer(BaseTrainer):
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
 
     def _train_step(self, step: int) -> None:
+        """
+        Implements the network training that is to be completed at each train step
+
+        Args:
+            step (int): the current time step in the training
+        """
         log_dict = {}
         start_time = perf_counter()
 
@@ -75,12 +100,21 @@ class DQNTrainer(BaseTrainer):
         return {"loss": loss.detach().cpu().item()}
 
     def _calc_loss(self, batch: dict) -> th.Tensor:
+        """
+        Used to calculate the loss of the supplied batch (the margin of error between the q-values that model currently predicts, and
+        the newly calculated ones)
+
+        Args:
+            batch (dict): the batch of data extracted from the ReplayBuffer, being used to train the data
+        
+        Returns:
+            th.Tensor: the average loss of each of the samples in the batch
+        """
         # estimate q values for current states/actions using q1 network
         q_values = self.agent.q1(batch["state"])
         q_values = q_values.gather(1, batch["action"])
 
         # estimate q values for next states/actions using q2 network
-
         next_q_values = self.agent.q2(batch["next_state"])
         next_actions = next_q_values.argmax(dim=1).unsqueeze(1)
         next_q_values = next_q_values.gather(1, next_actions)
