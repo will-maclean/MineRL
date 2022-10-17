@@ -13,6 +13,8 @@ class UnfreezeModelAfter(BaseCallback):
         super().__init__()
 
         self.unfreeze_model = unfreeze_model
+        self.unfreeze_model.requires_grad_(False)
+        
         self.unfreeze_after = unfreeze_after
 
         self.triggered = False
