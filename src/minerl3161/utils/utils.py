@@ -102,7 +102,7 @@ def pt_dict_to_np(pt_dict: Dict[str, th.Tensor]) -> Dict[str, np.ndarray]:
 
 def sample_pt_state(observation_space, features, device="cpu", batch=None):
     """
-    TODO: help pls
+    # TODO: Docstring for this method, input and return type in method definition
     """
     state = {}
     for feature in features:
@@ -121,7 +121,7 @@ def sample_pt_state(observation_space, features, device="cpu", batch=None):
 
 def sample_np_state(observation_space, features, batch=None):
     """
-    TODO: help pls
+    # TODO: Docstring for this method, input and return type in method definition
     """
     state = {}
     for feature in features:
