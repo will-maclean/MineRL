@@ -5,10 +5,18 @@ import torch.nn.functional as F
 
 from minerl3161.models.DQNNetworks import DQNNet
 
-# TODO: Ur done
+# TODO: Documentation for this file
 
 class DQNPretrainer(pl.LightningModule):
-    def __init__(self, obs_space, n_actions, hyperparams, gamma=0.99, target_update_freq=1, lr=3e-4) -> None:
+    def __init__(
+        self, 
+        obs_space, 
+        n_actions, 
+        hyperparams, 
+        gamma=0.99, 
+        target_update_freq=1, 
+        lr=3e-4
+    ) -> None:
         super().__init__()
 
         self.lr = lr

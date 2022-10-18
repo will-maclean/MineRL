@@ -39,9 +39,16 @@ class ReplayBuffer:
         self.counter = 0
         self.full = False
 
-    def _create_state_buffer(self, n, obs_space):
+    def _create_state_buffer(self, n: int, obs_space: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
         """
-        TODO
+        Initialises the dictionary of zero arrays for the ReplayBuffer
+
+        Args:
+            n (int): the number of samples
+            obs_space (Dict[str, np.ndarray]): the observation space being stored
+        
+        Returns:
+            Dict[str, np.ndarray]: a dictionary of zeros 
         """
         buf = {}
 

@@ -1,9 +1,8 @@
-from typing import Tuple
+from typing import Dict, Tuple
 
 import torch as th
 from torch import nn
-
-from .resnet import build_ResNet
+import numpy as np
 
 
 class NothingNet(nn.Module):
@@ -136,12 +135,12 @@ class MLP(nn.Module):
 
 class MineRLFeatureExtraction(nn.Module):
     """
-    TODO: description and init docstring, arg types
+    Neural Network to process MineRL states. Built with classes defined above
     """
 
     def __init__(
         self, 
-        observation_space, 
+        observation_space: Dict[str, np.ndarray], 
         feature_names: bool = None, 
         mlp_hidden_size: int = 64
     ) -> None:
@@ -149,7 +148,7 @@ class MineRLFeatureExtraction(nn.Module):
         Initialiser for MineRLFeatureExtraction
 
         Args:
-            observation_space (): 
+            observation_space (Dict[str, np.ndarray]): the observation space the neural network expects
             feature_names (bool):  the hyperparameters being used internally in this class
             mlp_hidden_size (int): the size of the network's hidden layer/s
         """

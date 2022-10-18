@@ -66,7 +66,7 @@ def np_dict_to_pt(
     Args:
         np_dict (Dict[str, np.ndarray]): dictionary of np arrays
         device (str, optional): which PyTorch device to store the tensors on, defaults to "cpu"
-        unsqueeze (bool): TODO what should I say here?
+        unsqueeze (bool): whether to unsqueeze the created torch tensors
 
     Returns:
         Dict[str, th.Tensor]: dictionary of converted data

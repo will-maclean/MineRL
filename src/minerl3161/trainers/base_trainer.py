@@ -303,6 +303,6 @@ class BaseTrainer:
     
     def close(self) -> None:
         """
-        TODO: what's this for?
+        Gets called at the end of training
         """
         pass

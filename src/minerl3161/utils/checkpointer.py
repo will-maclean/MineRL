@@ -23,7 +23,7 @@ class Checkpointer:
             agent (BaseAgent): The agent to checkpoint
             checkpoint_every (int): checkpoint every n timesteps. Defaults to None.
             use_wandb (bool): whether or not to checkpoint with wandb. Defaults to True.
-            use_atexit (bool): TODO what is this boi
+            use_atexit (bool): whether to make a checkpoint at exit
 
         Raises:
             ValueError: Throws error if checkpoint_every is set, but use_wandb == False.
