@@ -1,5 +1,5 @@
 import random
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import numpy as np
 
@@ -44,21 +44,21 @@ class PrioritisedReplayBuffer(ReplayBuffer):
 
     def add(
         self,
-        state: np.ndarray,
-        action: np.ndarray,
-        next_state: np.ndarray,
-        reward: np.ndarray,
-        done: np.ndarray,
+        state: Dict[str, np.ndarray],
+        action: Union[np.ndarray, float],
+        next_state: Dict[str, np.ndarray],
+        reward: Union[np.ndarray, float],
+        done: Union[np.ndarray, bool],
     ) -> None:
         """
-        Adds a single timestep of experience (transition) to the experience buffer
+        Adds a single timestep of experience (transition) to the experience buffer, updates the sumgement trees
 
         Args:
-            state (np.ndarray): the environment state at the given time step
-            action (np.ndarray): the action taken in the envrionment at the given time step
-            next_state (np.ndarray): the environment state the agent ends up in after taking the action
-            reward (np.ndarray): the reward obtained from performing the action
-            done (np.ndarray): a flag that represents whether or not the taken action ended the current episode
+            state (Dict[str, np.ndarray]): the environment state at the given time step
+            action (Union[np.ndarray, float]): the action taken in the envrionment at the given time step
+            next_state (Dict[str, np.ndarray]): the environment state the agent ends up in after taking the action
+            reward (Union[np.ndarray, float]): the reward obtained from performing the action
+            done (Union[np.ndarray, bool]): a flag that represents whether or not the taken action ended the current episode
         """
         super().add(state, action, next_state, reward, done)
     
@@ -66,7 +66,7 @@ class PrioritisedReplayBuffer(ReplayBuffer):
         self.min_tree[self.tree_ptr] = self.max_priority ** self.alpha
         self.tree_ptr = (self.tree_ptr + 1) % self.max_samples
     
-    def __len__(self):
+    def __len__(self) -> int:
         """
         Returns the length of the ReplayBuffer, or how many experience points are inside it
 
@@ -151,7 +151,7 @@ class PrioritisedReplayBuffer(ReplayBuffer):
             
         return indices
     
-    def _calculate_weight(self, idx: int, beta: float):
+    def _calculate_weight(self, idx: int, beta: float) -> float:
         """
         Used to calculate the weight of the experience point at the supplied index. This determines how often the model should see
         this specific transition with respect to the magnitude of the loss obtained from this sample.

@@ -1,11 +1,10 @@
-"""Segment tree for Prioritized Replay Buffer."""
-
 import operator
 from typing import Callable
 
 
 class SegmentTree:
-    """ Create SegmentTree.
+    """
+    Create SegmentTree.
 
     Taken from OpenAI baselines github repository:
     https://github.com/openai/baselines/blob/master/baselines/common/segment_tree.py
@@ -13,7 +12,8 @@ class SegmentTree:
     """
 
     def __init__(self, capacity: int, operation: Callable, init_value: float):
-        """Initialization.
+        """
+        Initialization
 
         Args:
             capacity (int)

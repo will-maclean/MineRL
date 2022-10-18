@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 
 import numpy as np
 
@@ -14,11 +14,7 @@ class NStepReplayBuffer:
     are stored into the buffer. Subsequentially, this class does not inherit from the ReplayBuffer class.
     """
 
-    def __init__(
-        self,
-        n: int, 
-        hyperparameters: RainbowDQNHyperparameters
-    ) -> None:
+    def __init__(self, n: int, hyperparameters: RainbowDQNHyperparameters) -> None:
         """
         Initialises a NStepReplayBuffer
 
@@ -35,11 +31,11 @@ class NStepReplayBuffer:
     
     def add(
         self,
-        state: np.ndarray,
-        action: np.ndarray,
-        next_state: np.ndarray,
-        reward: np.ndarray,
-        done: np.ndarray,
+        state: Dict[str, np.ndarray],
+        action: Union[np.ndarray, float],
+        next_state: Dict[str, np.ndarray],
+        reward: Union[np.ndarray, float],
+        done: Union[np.ndarray, bool],
     ) -> None:
         """
         This method adds the transition to the buffer, and unrolls the n-step data
@@ -66,7 +62,7 @@ class NStepReplayBuffer:
 
         return self[0]
     
-    def __getitem__(self, idx: int):
+    def __getitem__(self, idx: int) -> Tuple[dict, np.ndarray, dict, np.ndarray, np.ndarray]:
         """
         Retrieves a data point from the buffer at the supplied index
 
@@ -78,7 +74,7 @@ class NStepReplayBuffer:
         """
         return self.n_step_buffer[idx]
     
-    def __len__(self):
+    def __len__(self) -> int:
         """
         Returns the length of the NStepReplayBuffer, or how many experience points are inside it
 

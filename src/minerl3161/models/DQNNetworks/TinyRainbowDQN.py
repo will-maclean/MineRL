@@ -93,7 +93,7 @@ class TinyRainbowDQN(nn.Module):
         
         return dist
     
-    def reset_noise(self):
+    def reset_noise(self) -> None:
         """
         Used to reset the noisy layers
 

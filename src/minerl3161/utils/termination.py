@@ -2,6 +2,7 @@ from abc import abstractmethod
 
 import numpy as np
 
+# TODO: help with doccing this file pls
 
 class TerminationCondition:
     @abstractmethod

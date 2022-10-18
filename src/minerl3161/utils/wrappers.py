@@ -10,6 +10,7 @@ import cv2
 
 import minerl3161
 
+# TODO: help me god
 
 def decode_action(obj: dict, camera_shrink_factor: int = 100) -> dict:
     """

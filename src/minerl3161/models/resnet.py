@@ -1,6 +1,7 @@
 import torch as th
 import torch.nn as nn
 
+# TODO: Dear god, why?
 
 # Convolution, batch norm, ReLu with typical parameters defaulted
 class Conv(nn.Module):

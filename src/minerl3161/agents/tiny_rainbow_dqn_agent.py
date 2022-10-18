@@ -42,7 +42,6 @@ class TinyRainbowDQNAgent(BaseAgent):
             hyperparams (RainbowDQNHyperparameters): RainbowDQNHyperparameters instance stores specific hyperparameters for DQN training
             load_path (str): the path that a previously trained agent is stored which can be imported when training begins
         """
-
         super(TinyRainbowDQNAgent, self).__init__()
 
         self.device = device
