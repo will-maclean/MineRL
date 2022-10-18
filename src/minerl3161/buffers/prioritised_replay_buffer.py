@@ -108,7 +108,7 @@ class PrioritisedReplayBuffer(ReplayBuffer):
         Used to update the priorities (it's value for learning) associated with a given experience point. Is performed on a set
         of experience points, donated by the list of indicies
 
-        TODO: Licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             indices (List[int]): the list of indices whose priorities should be updated
@@ -130,7 +130,7 @@ class PrioritisedReplayBuffer(ReplayBuffer):
         Used to sample the indicies based on the proportions as stored in the segment tree. The retrieved indicies correspond
         to the priorities that are to be updated.
 
-        TODO: Licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             batch_size (int): the number of indicies to be retrieved from the segment tree
@@ -156,7 +156,7 @@ class PrioritisedReplayBuffer(ReplayBuffer):
         Used to calculate the weight of the experience point at the supplied index. This determines how often the model should see
         this specific transition with respect to the magnitude of the loss obtained from this sample.
 
-        TODO: Licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             idx (int): the index of the transition whose weight is being calculated

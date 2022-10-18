@@ -44,7 +44,7 @@ class NStepReplayBuffer:
         """
         This method adds the transition to the buffer, and unrolls the n-step data
         
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             state (Dict[str, np.ndarray]): the environment state at the given time step
@@ -126,7 +126,7 @@ class NStepReplayBuffer:
         """
         Calculates the n step values for the next_state, reward, and done values
 
-        TODO: Licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Returns:
             Tuple[Dict[str, np.ndarray], float, bool]: the calculated next_state, reward and done values after n steps

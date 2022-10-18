@@ -81,19 +81,23 @@ class RainbowDQNTrainer(BaseTrainer):
     
     def add_transition(
         self, 
-        state, 
-        action, 
-        next_state, 
-        reward, 
-        done
+        state: Dict[str, np.ndarray],
+        action: Union[np.ndarray, float],
+        next_state: Dict[str, np.ndarray],
+        reward: Union[np.ndarray, float],
+        done: Union[np.ndarray, bool],
     ) -> None:
         """
         Used to add a transition to the PrioritisedReplayBuffer
 
-        # TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
-            TODO
+            state (Dict[str, np.ndarray]): the environment state at the given time step
+            action (Union[np.ndarray, float]): the action taken in the envrionment at the given time step
+            next_state (Dict[str, np.ndarray]): the environment state the agent ends up in after taking the action
+            reward (Union[np.ndarray, float]): the reward obtained from performing the action
+            done (Union[np.ndarray, bool]): a flag that represents whether or not the taken action ended the current episode
         """
         transition = (state, action, next_state, reward, done)
         
@@ -112,7 +116,7 @@ class RainbowDQNTrainer(BaseTrainer):
         """
         Implements the network training that is to be completed at each train step
 
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             step (int): the current time step in the training

@@ -44,8 +44,7 @@ class CNN(nn.Module):
             input_shape (Dict[str, Tuple[int]]): state shape to be used
         """
         super().__init__()
-
-        # TODO: modify for minerl pov
+        
         self.cnn = nn.Sequential(
             nn.Conv2d(input_shape[0], 16, kernel_size=5),
             nn.ReLU(),

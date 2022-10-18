@@ -8,7 +8,7 @@ class NoisyLinear(nn.Module):
     """
     Noisy linear module for NoisyNet.
 
-    TODO: licence
+    Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
         
     Attributes:
         in_features (int): input size of linear module

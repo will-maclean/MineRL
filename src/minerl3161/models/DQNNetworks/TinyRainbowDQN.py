@@ -46,7 +46,7 @@ class TinyRainbowDQN(nn.Module):
         """
         Defines the forward pass of the model
 
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             x (Union[Dict[str, np.ndarray], np.ndarray]): state to pass forward, can either be passed in as a dictionary containing the state, or the
@@ -67,7 +67,7 @@ class TinyRainbowDQN(nn.Module):
         """
         Determines the distributions for the atoms as per the C51 alogirthm (Distributional RL)
 
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             x (th.Tensor): state used to calculate distributions
@@ -97,7 +97,7 @@ class TinyRainbowDQN(nn.Module):
         """
         Used to reset the noisy layers
 
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
         """
         self.advantage_hidden_layer.reset_noise()
         self.advantage_layer.reset_noise()

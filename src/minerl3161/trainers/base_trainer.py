@@ -238,19 +238,22 @@ class BaseTrainer:
         return log_dict
     
     def add_transition(
-        # TODO: arg types
         self, 
-        state, 
-        action, 
-        next_state, 
-        reward, 
-        done
+        state: Dict[str, np.ndarray],
+        action: Union[np.ndarray, float],
+        next_state: Dict[str, np.ndarray],
+        reward: Union[np.ndarray, float],
+        done: Union[np.ndarray, bool],
     ) -> None:
         """
         Used to add a transition to the ReplayBuffer
 
         Args:
-            TODO
+            state (Dict[str, np.ndarray]): the environment state at the given time step
+            action (Union[np.ndarray, float]): the action taken in the envrionment at the given time step
+            next_state (Dict[str, np.ndarray]): the environment state the agent ends up in after taking the action
+            reward (Union[np.ndarray, float]): the reward obtained from performing the action
+            done (Union[np.ndarray, bool]): a flag that represents whether or not the taken action ended the current episode
         """
         self.gathered_transitions.add(state, action, next_state, reward, done)
 
