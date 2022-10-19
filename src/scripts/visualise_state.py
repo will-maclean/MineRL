@@ -3,7 +3,7 @@ import gym
 import minerl
 import dataclasses
 
-from minerl3161.utils.wrappers import minerlWrapper
+from minerl3161.wrappers import minerlWrapper
 from minerl3161.hyperparameters import DQNHyperparameters
 
 def main():
