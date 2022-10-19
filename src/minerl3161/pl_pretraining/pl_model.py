@@ -4,6 +4,7 @@ import torch as th
 import pytorch_lightning as pl
 import torch.nn.functional as F
 
+from minerl3161.models.DQNNetworks import DQNNet
 from minerl3161.models.submodel import CNN, unCNN
 
 
