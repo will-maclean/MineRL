@@ -1,5 +1,6 @@
-from typing import Dict, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
+import gym
 import numpy as np
 import torch as th
 from torch import nn
@@ -100,9 +101,17 @@ def pt_dict_to_np(pt_dict: Dict[str, th.Tensor]) -> Dict[str, np.ndarray]:
     return out
 
 
-def sample_pt_state(observation_space, features, device="cpu", batch=None):
-    """
-    # TODO: Docstring for this method, input and return type in method definition
+def sample_pt_state(observation_space: Dict[str, gym.Space], features: List[str], device: str = "cpu", batch: bool = None) -> Dict[str, th.tensor]:
+    """samples a pytorch state from a given observation space
+
+    Args:
+        observation_space (Dict[str, gym.Space]): observation space to sample from
+        features (List[str]): features to use from observation space
+        device (str, optional): device to put tensors on. Defaults to "cpu".
+        batch (bool, optional): whether to add a batch dimension. Defaults to None.
+
+    Returns:
+        Dict[str, th.tensor: sampled state
     """
     state = {}
     for feature in features:
@@ -119,9 +128,16 @@ def sample_pt_state(observation_space, features, device="cpu", batch=None):
     return state
 
 
-def sample_np_state(observation_space, features, batch=None):
-    """
-    # TODO: Docstring for this method, input and return type in method definition
+def sample_np_state(observation_space: Dict[str, gym.Space], features: List[str], batch=None) -> Dict[str, np.ndarray]:
+    """samples a numpy state from an observation space
+
+    Args:
+        observation_space (Dict[str, gym.Space]): observation space to sample from
+        features (List[str]): lsit of features to use from observation space
+        batch (_type_, optional): whether to batch the sampled states. Defaults to None.
+
+    Returns:
+        Dict[str, np.ndarray]: _description_
     """
     state = {}
     for feature in features:
