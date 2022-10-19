@@ -23,7 +23,5 @@ class UnfreezeModelAfter(BaseCallback):
         if t >= self.unfreeze_after and not self.triggered:
             self.unfreeze_model.requires_grad_(True)
             self.triggered = True
-
-            return {"unfroze_at": t}
         
-        return {}
+        return {"unfreezer_triggered": self.triggered}
