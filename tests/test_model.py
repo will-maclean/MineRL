@@ -7,7 +7,7 @@ import minerl
 from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.models.DQNNetworks import DQNNet
 from minerl3161.utils.utils import np_dict_to_pt, sample_pt_state
-from minerl3161.utils.wrappers import minerlWrapper
+from minerl3161.wrappers import minerlWrapper
 
 
 def compare_models(model1, model2):

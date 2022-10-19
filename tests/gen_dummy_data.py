@@ -2,7 +2,7 @@ from pathlib import Path
 import gym
 
 from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer
-from minerl3161.utils.wrappers import cartPoleWrapper
+from minerl3161.wrappers import cartPoleWrapper
 
 def gen_data(n=100):
     env = cartPoleWrapper(gym.make("CartPole-v0"))

@@ -6,7 +6,7 @@ import gym
 import minerl
 import numpy as np
 
-from minerl3161.utils.wrappers import MineRLWrapper
+from minerl3161.wrappers import MineRLWrapper
 from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer
 from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
 

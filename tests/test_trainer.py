@@ -10,7 +10,7 @@ from minerl3161.buffers import PrioritisedReplayBuffer, ReplayBuffer
 from minerl3161.trainers import DQNTrainer, RainbowDQNTrainer
 from minerl3161.hyperparameters import CartpoleDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartPoleRainbowDQNHyperparameters
 from minerl3161.utils.termination import get_termination_condition
-from minerl3161.utils.wrappers import cartPoleWrapper, minerlWrapper
+from minerl3161.wrappers import cartPoleWrapper, minerlWrapper
 
 
 def test_DQNtrainer(minerl_env):

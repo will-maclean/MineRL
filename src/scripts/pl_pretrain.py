@@ -8,7 +8,7 @@ from pytorch_lightning.loggers import WandbLogger
 from torch.utils.data import DataLoader
 from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.buffers import ReplayBuffer
-from minerl3161.utils.wrappers import MineRLWrapper
+from minerl3161.wrappers import MineRLWrapper
 
 from minerl3161.pl_pretraining.pl_model import DQNPretrainer
 from minerl3161.pl_pretraining.pl_dataset import MineRLDataset

@@ -533,6 +533,7 @@ class MineRLWrapper(gym.Wrapper):
         return action
 
 
+<<<<<<< HEAD:src/minerl3161/utils/wrappers.py
 class CartpoleWrapper(gym.ObservationWrapper):
     """Provides a simple wrapper for CartPole-like environments to be used with our code.
     """
@@ -560,6 +561,9 @@ def cartPoleWrapper(env: gym.Env, *args, **kwargs) -> CartpoleWrapper:
 
     Returns:
         CartpoleWrapper: wrapped env
+=======
+def minerlWrapper(env, *args, **kwargs):
+>>>>>>> 7e73f64bf6f1381fe39076b2e53fc89833056687:src/minerl3161/wrappers/minerl_wrapper.py
     """
     return CartpoleWrapper(env, *args, **kwargs)
 

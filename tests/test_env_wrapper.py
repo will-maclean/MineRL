@@ -2,7 +2,7 @@ import gym
 import minerl
 
 from minerl3161.hyperparameters import DQNHyperparameters
-from minerl3161.utils.wrappers import minerlWrapper, MineRLWrapper
+from minerl3161.wrappers import minerlWrapper, MineRLWrapper
 
 
 
