@@ -5,14 +5,14 @@ from minerl3161.utils.utils import linear_sampling_strategy
 
 
 @dataclass
-class CartpoleDQNHyperparameters:
-    train_steps: int = 50_000  # number of train_loop steps
-    burn_in: int = 500  # how many steps to loop for before starting training
+class ClassicControlDQNHyperparameters:
+    train_steps: int = 200_000  # number of train_loop steps
+    burn_in: int = 5000  # how many steps to loop for before starting training
     train_every: int = 1  # how many steps per train call
-    evaluate_every: int = 1_000  # how many steps per evaluation call
-    evaluate_episodes: int = 5  # how many episodes we complete each evaluation call
-    batch_size: int = 16  # batch size for training
-    buffer_size_gathered: int = 50_000  # buffer size for gathered data
+    evaluate_every: int = 25_000  # how many steps per evaluation call
+    evaluate_episodes: int = 1  # how many episodes we complete each evaluation call
+    batch_size: int = 1000  # batch size for training
+    buffer_size_gathered: int = 200_000  # buffer size for gathered data
     buffer_size_dataset: int = (
         50_000  # buffer size for the provided data i.e. how much provided data to use
     )

@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 import torch.nn.functional as F
 
 import gym
-from minerl3161.hyperparameters.dqn_hp import DQNHyperparameters
+from minerl3161.hyperparameters.minerl_dqn_hp import MineRLDQNHyperparameters
 
 from minerl3161.models.DQNNetworks import DQNNet
 
@@ -16,7 +16,7 @@ class DQNPretrainer(pl.LightningModule):
         self, 
         obs_space: Dict[str, gym.Space], 
         n_actions: int, 
-        hyperparams: DQNHyperparameters, 
+        hyperparams: MineRLDQNHyperparameters, 
         gamma: float = 0.99, 
         target_update_freq: int = 1, 
         lr: float = 3e-4

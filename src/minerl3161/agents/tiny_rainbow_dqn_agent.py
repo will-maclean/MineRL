@@ -6,7 +6,7 @@ import torch as th
 import numpy as np
 import wandb
 
-from minerl3161.hyperparameters import RainbowDQNHyperparameters
+from minerl3161.hyperparameters import MineRLRainbowDQNHyperparameters
 from minerl3161.models.DQNNetworks import TinyRainbowDQN
 from minerl3161.utils import np_dict_to_pt
 from minerl3161.agents import BaseAgent
@@ -29,7 +29,7 @@ class TinyRainbowDQNAgent(BaseAgent):
         obs_space: Dict[str, np.ndarray],
         n_actions: int,
         device: str,
-        hyperparams: RainbowDQNHyperparameters,
+        hyperparams: MineRLRainbowDQNHyperparameters,
         load_path: str = None,
     ) -> None:
         """

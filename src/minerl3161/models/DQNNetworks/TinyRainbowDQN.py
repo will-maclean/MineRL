@@ -5,7 +5,7 @@ from torch import nn
 import torch.nn.functional as F
 import numpy as np
 
-from minerl3161.hyperparameters import RainbowDQNHyperparameters
+from minerl3161.hyperparameters import MineRLRainbowDQNHyperparameters
 from minerl3161.models.noisy_linear import NoisyLinear
 
 
@@ -19,7 +19,7 @@ class TinyRainbowDQN(nn.Module):
         self, 
         state_shape: Dict[str, Tuple[int]],
         n_actions: int, 
-        dqn_hyperparams: RainbowDQNHyperparameters,
+        dqn_hyperparams: MineRLRainbowDQNHyperparameters,
         support: th.Tensor,
     ) -> None:
         super().__init__()

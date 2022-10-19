@@ -3,7 +3,7 @@ import pytorch_lightning as pl
 import torch as th
 from torch.utils.data.dataloader import DataLoader
 
-from minerl3161.hyperparameters import DQNHyperparameters
+from minerl3161.hyperparameters import MineRLDQNHyperparameters
 from minerl3161.pl_pretraining import pl_dataset, pl_model
 from minerl3161.buffers import ReplayBuffer
 from minerl3161.utils import sample_pt_state
@@ -58,7 +58,7 @@ def test_pl_model():
 
     n_actions = 2
 
-    hyperparams = DQNHyperparameters()
+    hyperparams = MineRLDQNHyperparameters()
     hyperparams.feature_names = list(obs_space.keys())
 
     model = pl_model.DQNPretrainer(

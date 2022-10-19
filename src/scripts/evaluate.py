@@ -10,7 +10,7 @@ from random import random, randint
 
 from minerl3161.agents import DQNAgent
 from minerl3161.wrappers import minerlWrapper, MineRLWrapper
-from minerl3161.hyperparameters import RainbowDQNHyperparameters
+from minerl3161.hyperparameters import MineRLRainbowDQNHyperparameters
 
 
 def main():
@@ -23,22 +23,22 @@ def main():
     parser.add_argument('--no-gpu', action='store_false', dest="gpu",
                         help='sets if we use gpu hardware')
 
-    parser.add_argument('--eval_episodes', type=int, default=2,
+    parser.add_argument('--eval-episodes', type=int, default=2,
                         help='number of episodes to evaluate the agent')   
 
-    parser.add_argument('--weights_path', type=str,
+    parser.add_argument('--weights-path', type=str,
                     help='path to trained model weights - must be specified')
 
-    parser.add_argument('--ep_rew_pass', type=str, default=0,
+    parser.add_argument('--ep-rew-pass', type=str, default=0,
                     help='the rew the agent must obtain in order for the episode to be considered a pass')
     
-    parser.add_argument('--repeat_act', type=str, default=5,
+    parser.add_argument('--repeat-act', type=str, default=5,
                     help='the number of times each action selected by the agent should be passed to the env')
 
-    parser.add_argument('--csv_file_path', type=str, default="data/eval_data.csv",
+    parser.add_argument('--csv-file-path', type=str, default="data/eval_data.csv",
                     help='where the csv file containing the eval data is output')
 
-    parser.add_argument('--mp4_file_path', type=str, default="data/eval_videos",
+    parser.add_argument('--mp4-file-path', type=str, default="data/eval_videos",
                     help="where the mp4 file of the agent's eval is output")                       
 
     args = parser.parse_args()
@@ -57,7 +57,7 @@ def main():
 
     env = minerlWrapper(
         env, 
-        **dataclasses.asdict(RainbowDQNHyperparameters()), 
+        **dataclasses.asdict(MineRLRainbowDQNHyperparameters()), 
         extracted_acts_filename="custom-navigate-actions.pkl", 
         functional_acts_filename = "functional-acts.pkl", 
         functional_acts = False, 

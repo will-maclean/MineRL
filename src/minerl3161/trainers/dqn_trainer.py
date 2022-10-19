@@ -6,7 +6,7 @@ import torch as th
 from torch.optim import Adam
 
 from minerl3161.agents import BaseAgent
-from minerl3161.hyperparameters import DQNHyperparameters
+from minerl3161.hyperparameters import BaseHyperparameters
 from minerl3161.buffers import ReplayBuffer
 from minerl3161.utils.termination import TerminationCondition
 from minerl3161.utils.utils import np_batch_to_tensor_batch, copy_weights
@@ -23,7 +23,7 @@ class DQNTrainer(BaseTrainer):
         self, 
         env: gym.Env, 
         agent: BaseAgent,
-        hyperparameters: DQNHyperparameters, 
+        hyperparameters: BaseHyperparameters, 
         human_dataset: Union[ReplayBuffer, None] = None, 
         use_wandb: bool = False, 
         device: str = "cpu", 

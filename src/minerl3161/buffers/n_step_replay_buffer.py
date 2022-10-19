@@ -3,7 +3,7 @@ from typing import Dict, Tuple, Union
 
 import numpy as np
 
-from minerl3161.hyperparameters.rainbow_dqn_hp import RainbowDQNHyperparameters
+from minerl3161.hyperparameters.minerl_rainbow_dqn_hp import MineRLRainbowDQNHyperparameters
 
 from .replay_buffer import ReplayBuffer
 
@@ -14,7 +14,7 @@ class NStepReplayBuffer:
     are stored into the buffer. Subsequentially, this class does not inherit from the ReplayBuffer class.
     """
 
-    def __init__(self, n: int, hyperparameters: RainbowDQNHyperparameters) -> None:
+    def __init__(self, n: int, hyperparameters: MineRLRainbowDQNHyperparameters) -> None:
         """
         Initialises a NStepReplayBuffer
 

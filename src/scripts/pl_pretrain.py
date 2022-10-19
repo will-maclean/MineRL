@@ -6,7 +6,7 @@ import torch as th
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from torch.utils.data import DataLoader
-from minerl3161.hyperparameters import DQNHyperparameters
+from minerl3161.hyperparameters import MineRLDQNHyperparameters
 from minerl3161.buffers import ReplayBuffer
 from minerl3161.wrappers import MineRLWrapper
 
@@ -39,7 +39,7 @@ def main():
     args = opt()
 
     env = gym.make(args.env_name)
-    hp = DQNHyperparameters()
+    hp = MineRLDQNHyperparameters()
     env = MineRLWrapper(env, **dataclasses.asdict(hp))
 
     # data

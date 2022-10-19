@@ -4,7 +4,7 @@ import torch as th
 from torch import nn
 import numpy as np
 
-from minerl3161.hyperparameters import DQNHyperparameters
+from minerl3161.hyperparameters import MineRLDQNHyperparameters
 from minerl3161.utils import sample_pt_state
 from minerl3161.models.submodel import MineRLFeatureExtraction
 
@@ -18,7 +18,7 @@ class DQNNet(nn.Module):
         self,
         state_shape: Dict[str, Tuple[int]],
         n_actions: int,
-        dqn_hyperparams: DQNHyperparameters = None,
+        dqn_hyperparams: MineRLDQNHyperparameters = None,
         layer_size: Union[int, None] = 64,
     ) -> None:
         """
@@ -86,7 +86,7 @@ class DQNNet(nn.Module):
         return v + (advantage - advantage.mean())
     
     @staticmethod
-    def _feature_names(state_shape: Dict[str, np.ndarray], dqn_hyperparams: DQNHyperparameters = None) -> List[str]:
+    def _feature_names(state_shape: Dict[str, np.ndarray], dqn_hyperparams: MineRLDQNHyperparameters = None) -> List[str]:
         """
         Extracts feature names from either the state or the hyperparameters
 

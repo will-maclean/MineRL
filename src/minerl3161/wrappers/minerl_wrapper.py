@@ -50,7 +50,8 @@ def decode_action(obj: dict, camera_shrink_factor: int = 100) -> dict:
 
 
 def obs_grayscale(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, gym.Space] = None, img_feature_name: str = 'pov', *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """Applies grayscale effect to an image feature in an observation
+    """
+    Applies grayscale effect to an image feature in an observation
 
     Args:
         state (Dict[str, np.ndarray], optional): state to apply effect to. Defaults to None.
@@ -78,7 +79,8 @@ def obs_grayscale(state: Dict[str, np.ndarray] = None, observation_space: Dict[s
 
 def obs_resize(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, np.ndarray] = None, 
                 img_feature_name: str = 'pov', resize_w: int = 64, resize_h: int = 64, *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """Resizes an image observation in a state
+    """
+    Resizes an image observation in a state
 
     Args:
         state (Dict[str, np.ndarray], optional): state to modify. Defaults to None.
@@ -105,7 +107,8 @@ def obs_resize(state: Dict[str, np.ndarray] = None, observation_space: Dict[str,
 
 
 def obs_pytorch_image(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, np.ndarray] = None, img_feature_name: str = 'pov', *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """Modifies an image in np format (W, H, C) to be in PyTorch format (C, W, H)
+    """
+    Modifies an image in np format (W, H, C) to be in PyTorch format (C, W, H)
 
     Args:
         state (Dict[str, np.ndarray], optional): state to modify. Defaults to None.
@@ -130,7 +133,8 @@ def obs_pytorch_image(state: Dict[str, np.ndarray] = None, observation_space: Di
 
 def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, np.ndarray] = None, img_feature_name: str = 'pov', 
                     state_buffer: Union[np.ndarray, None] = None, n_stack: int = 4, *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """Stacks last n_stack images into a single image observation
+    """
+    Stacks last n_stack images into a single image observation
 
     Args:
         state (Dict[str, np.ndarray], optional): state to modify. Defaults to None.
@@ -166,7 +170,8 @@ def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space: Dict
 
 def obs_inventory_filter(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, np.ndarray] = None, inventory_feature_names: Union[List[str], None] = None, 
                         inv_feature_max: int = 16, *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """Processes an inventory observation to be a single vector, and also appled clipping and scaling
+    """
+    Processes an inventory observation to be a single vector, and also appled clipping and scaling
 
     Args:
         state (Dict[str, np.ndarray], optional): state to modify. Defaults to None.
@@ -222,7 +227,8 @@ def obs_inventory_filter(state: Dict[str, np.ndarray] = None, observation_space:
 
 def obs_toggle_equipped_items(state: Optional[Dict[str, np.ndarray]] = None, observation_space: Dict[str, np.ndarray] = None, 
                                 include_equipped_items: Optional[List[str]] = False, *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """Controls whether the equipped_items feature should be included in the observation
+    """
+    Controls whether the equipped_items feature should be included in the observation
 
     Args:
         state (Optional[Dict[str, np.ndarray]], optional): state to modify. Defaults to None.
@@ -259,7 +265,8 @@ def obs_toggle_equipped_items(state: Optional[Dict[str, np.ndarray]] = None, obs
 
 def obs_compass(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, np.ndarray] = None, 
                 compass_name: str = "compass", *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """Processes compass observation by converting to np.ndarray and applying scaling
+    """
+    Processes compass observation by converting to np.ndarray and applying scaling
 
     Args:
         state (Dict[str, np.ndarray], optional): state to modify. Defaults to None.
@@ -307,7 +314,8 @@ def obs_compass(state: Dict[str, np.ndarray] = None, observation_space: Dict[str
 
 
 class MineRLWrapper(gym.Wrapper):
-    """Wraps a MineRL environment. Can handle all MineRL environments.
+    """
+    Wraps a MineRL environment. Can handle all MineRL environments.
     """
 
     def __init__(self, 
@@ -326,7 +334,8 @@ class MineRLWrapper(gym.Wrapper):
                 *args,
                 **kwargs,
         ) -> None:
-        """Constructor
+        """
+        Constructor
 
         Args:
             env (gym.Env): env to wrap
@@ -370,7 +379,8 @@ class MineRLWrapper(gym.Wrapper):
         _, self.observation_space, _ = MineRLWrapper.convert_state(observation_space=deepcopy(self.observation_space), **self.obs_kwargs)
     
     def reset(self) -> Dict[str, np.ndarray]:
-        """Reset environment
+        """
+        Reset environment
 
         Returns:
             Dict[str, np.ndarray]: processed state
@@ -381,7 +391,8 @@ class MineRLWrapper(gym.Wrapper):
         return state
     
     def step(self, action: int) -> Tuple[Dict[str, np.ndarray], float, bool, Dict[str, Any]]:
-        """Step environment
+        """
+        Step environment
 
         Args:
             action (int): action for environment
@@ -406,7 +417,8 @@ class MineRLWrapper(gym.Wrapper):
 
     @staticmethod
     def map_action(obs:Dict[str, np.ndarray], action_set: dict) -> int:
-        """ Maps an observation from the env/dataset to an action index in our action set
+        """
+        Maps an observation from the env/dataset to an action index in our action set
         Args:
             obs (dict): A single action from the env/dataset in dictionary form
             action_set (dict): The action set initialised by the MineRLWrapper
@@ -433,7 +445,8 @@ class MineRLWrapper(gym.Wrapper):
 
     @staticmethod
     def convert_state(state: Optional[Dict[str, np.ndarray]] = None, observation_space: Optional[Dict[str, np.ndarray]] = None, *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[gym.Space]]:
-        """Converts state/observation space
+        """
+        Converts state/observation space
 
         Args:
             state (Optional[Dict[str, np.ndarray]], optional): state to modify. Defaults to None.
@@ -459,7 +472,8 @@ class MineRLWrapper(gym.Wrapper):
         extracted_acts_filename: str, 
         functional_acts_filename: str
     ) -> Dict[str, Any]:
-        """Creates action space for suppled action pickles
+        """
+        Creates action space for suppled action pickles
 
         Args:
             functional_acts (bool): whether to use functional actions
@@ -487,7 +501,8 @@ class MineRLWrapper(gym.Wrapper):
     @staticmethod
     def convert_action(action: Optional[int] = None, action_space: Any = None, 
                         action_set: Optional[dict]=None, last_unprocessed_state: Optional[Dict[str, np.ndarray]] = None) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[gym.Space]]:
-        """converts an action/action space
+        """
+        Converts an action/action space
 
         Args:
             action (Optional[int], optional): action to modify. Defaults to None.
@@ -511,7 +526,8 @@ class MineRLWrapper(gym.Wrapper):
     
     @staticmethod
     def _get_navigate_block(action: Dict[str, str], last_unprocessed_obs: Dict[str, np.ndarray]) -> Dict[str, str]:
-        """utility function to determine which block should be placed, based on last state
+        """
+        Utility function to determine which block should be placed, based on last state
 
         Args:
             action (Dict[str, str]): action to modify
@@ -533,42 +549,9 @@ class MineRLWrapper(gym.Wrapper):
         return action
 
 
-<<<<<<< HEAD:src/minerl3161/utils/wrappers.py
-class CartpoleWrapper(gym.ObservationWrapper):
-    """Provides a simple wrapper for CartPole-like environments to be used with our code.
+def minerlWrapper(env: gym.Env, *args, **kwargs) -> MineRLWrapper:
     """
-    def __init__(self, env: gym.Env, *args, **kwargs):
-        super().__init__(env)
-        self.observation_space = {"state": self.observation_space}
-    
-    def observation(self, observation: np.ndarray) -> Dict[str, np.ndarray]:
-        """Modifies observation to be a dictionary
-
-        Args:
-            observation (np.ndarray): origional observation
-
-        Returns:
-            Dict[str, np.ndarray]: modified observation
-        """
-        return {"state": observation}
-
-
-def cartPoleWrapper(env: gym.Env, *args, **kwargs) -> CartpoleWrapper:
-    """Creates the cartpole wrapper
-
-    Args:
-        env (gym.Env): env to wrap
-
-    Returns:
-        CartpoleWrapper: wrapped env
-=======
-def minerlWrapper(env, *args, **kwargs):
->>>>>>> 7e73f64bf6f1381fe39076b2e53fc89833056687:src/minerl3161/wrappers/minerl_wrapper.py
-    """
-    return CartpoleWrapper(env, *args, **kwargs)
-
-def minerlWrapper(env: gym.env, *args, **kwargs) -> MineRLWrapper:
-    """Wraps a MineRL environment in our wrappers
+    Wraps a MineRL environment in our wrappers
 
     Args:
         env (gym.env): env to wrap

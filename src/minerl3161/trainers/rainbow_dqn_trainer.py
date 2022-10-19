@@ -7,7 +7,7 @@ from torch.optim import Adam
 from torch.nn.utils.clip_grad import clip_grad_norm_
 
 from minerl3161.agents import BaseAgent
-from minerl3161.hyperparameters import RainbowDQNHyperparameters
+from minerl3161.hyperparameters import BaseHyperparameters
 from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer, NStepReplayBuffer
 from minerl3161.utils.termination import TerminationCondition
 from minerl3161.utils import np_batch_to_tensor_batch, copy_weights, linear_decay
@@ -24,7 +24,7 @@ class RainbowDQNTrainer(BaseTrainer):
         self, 
         env: gym.Env, 
         agent: BaseAgent, 
-        hyperparameters: RainbowDQNHyperparameters, 
+        hyperparameters: BaseHyperparameters, 
         human_dataset: Union[PrioritisedReplayBuffer, None] = None, 
         use_wandb: bool = False, 
         device: str = "cpu", 

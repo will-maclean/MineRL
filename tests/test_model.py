@@ -4,7 +4,7 @@ import numpy as np
 import gym
 import minerl
 
-from minerl3161.hyperparameters import DQNHyperparameters
+from minerl3161.hyperparameters import MineRLDQNHyperparameters
 from minerl3161.models.DQNNetworks import DQNNet
 from minerl3161.utils.utils import np_dict_to_pt, sample_pt_state
 from minerl3161.wrappers import minerlWrapper

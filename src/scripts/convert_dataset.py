@@ -8,7 +8,7 @@ import numpy as np
 
 from minerl3161.wrappers import MineRLWrapper
 from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer
-from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
+from minerl3161.hyperparameters import MineRLDQNHyperparameters, MineRLRainbowDQNHyperparameters
 
 def convert_dataset(env_name, out_path, hyperparams, save_every=5):
 
@@ -56,6 +56,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    hyperparams = RainbowDQNHyperparameters()
+    hyperparams = MineRLRainbowDQNHyperparameters()
 
     convert_dataset(env_name=args.env_name, out_path=args.out_path, hyperparams=hyperparams, save_every=args.save_every)

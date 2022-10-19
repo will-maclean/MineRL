@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
-from minerl3161.hyperparameters import CartpoleDQNHyperparameters
+from minerl3161.hyperparameters import ClassicControlDQNHyperparameters
 
 
 @dataclass
-class CartPoleRainbowDQNHyperparameters(CartpoleDQNHyperparameters):
+class ClassicControlRainbowDQNHyperparameters(ClassicControlDQNHyperparameters):
     # PER parameters
     prior_eps: float = 1e-6
     alpha: float = 0.2
@@ -12,10 +12,10 @@ class CartPoleRainbowDQNHyperparameters(CartpoleDQNHyperparameters):
     beta_min: float = 0.6
     beta_final_step: int = 50_000
     # Categorical DQN parameters
-    v_min: float = 0.0
-    v_max: float = 300.0
+    v_min: float = -200.0
+    v_max: float = 0
     atom_size: int = 51
     # N-step Learning
-    n_step: int = 3
-    noisy_init: float = 0.1
+    n_step: int = 10
+    noisy_init: float = 0.5
     model_hidden_layer_size: int = 128  # layer size for hidden layers in neural net

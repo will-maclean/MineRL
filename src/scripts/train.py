@@ -1,6 +1,5 @@
 import argparse
 import dataclasses
-from webbrowser import get
 import torch
 import wandb
 import gym
@@ -10,27 +9,29 @@ from collections import namedtuple
 from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer
 from minerl3161.agents import DQNAgent, TinyDQNAgent, TinyRainbowDQNAgent, RainbowDQNAgent
 from minerl3161.trainers import DQNTrainer, RainbowDQNTrainer
-from minerl3161.hyperparameters import CartPoleRainbowDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
-from minerl3161.wrappers import minerlWrapper, cartPoleWrapper
+from minerl3161.hyperparameters import ClassicControlRainbowDQNHyperparameters, MineRLDQNHyperparameters, MineRLRainbowDQNHyperparameters, ClassicControlDQNHyperparameters
+from minerl3161.wrappers import minerlWrapper, classicControlWrapper
 from minerl3161.utils.termination import get_termination_condition
-from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
 
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'wrapper', 'params'])
 
-
 POLICIES = {
-    "vanilla-dqn": Policy(DQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
-    "rainbow-dqn": Policy(RainbowDQNAgent, RainbowDQNTrainer, minerlWrapper, RainbowDQNHyperparameters),
-    "tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
-    "cartpole-dqn": Policy(TinyDQNAgent, DQNTrainer, cartPoleWrapper, CartpoleDQNHyperparameters),
-    "rainbow-cartpole-dqn": Policy(TinyRainbowDQNAgent, RainbowDQNTrainer, cartPoleWrapper, CartPoleRainbowDQNHyperparameters),
+    # MineRL Policies
+    "minerl-dqn": Policy(DQNAgent, DQNTrainer, minerlWrapper, MineRLDQNHyperparameters),
+    "minerl-rainbow-dqn": Policy(RainbowDQNAgent, RainbowDQNTrainer, minerlWrapper, MineRLRainbowDQNHyperparameters),
+    "minerl-tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, minerlWrapper, MineRLDQNHyperparameters),
+
+    # Classic Control Policies (CartPole, MountainCar etc.)
+    "cc-dqn": Policy(TinyDQNAgent, DQNTrainer, classicControlWrapper, ClassicControlDQNHyperparameters),
+    "cc-rainbow-dqn": Policy(TinyRainbowDQNAgent, RainbowDQNTrainer, classicControlWrapper, ClassicControlRainbowDQNHyperparameters),
 }
+
 
 def main():
     parser = argparse.ArgumentParser('Parse configuration file')
-    parser.add_argument('--policy', type=str, default='vanilla-dqn')
-    parser.add_argument('--env', type=str, default="MineRLNavigateDense-v0")
+    parser.add_argument('--policy', type=str, default='cc-rainbow-dqn')
+    parser.add_argument('--env', type=str, default="MountainCar-v0")
 
     parser.add_argument('--wandb', action='store_true', default=True,
                         help='sets if we use wandb logging')
@@ -43,13 +44,13 @@ def main():
     parser.add_argument('--no-gpu', action='store_false', dest="gpu",
                         help='sets if we use gpu hardware')
 
-    parser.add_argument('--human_exp_path', type=str, default=None,
+    parser.add_argument('--human-exp-path', type=str, default=None,
                         help='pass in path to human experience pickle')
     
-    parser.add_argument('--load_path', type=str, default=None,
+    parser.add_argument('--load-path', type=str, default=None,
                         help='path to model checkpoint to load (optional)')
     
-    parser.add_argument('--render', action='store_true', default=False,
+    parser.add_argument('--render', action='store_true', default=True,
                         help='sets if we use gpu hardware')
 
     args = parser.parse_args()

@@ -1,2 +1,2 @@
 from .minerl_wrapper import MineRLWrapper, minerlWrapper
-from .cartpole_wrapper import CartpoleWrapper, cartPoleWrapper
+from .classic_control_wrapper import ClassicControlWrapper, classicControlWrapper
