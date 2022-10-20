@@ -42,7 +42,7 @@ An example of running the training script is as follows:
 python src/scripts/train.py --policy minerl-dqn --env MineRLNavigateDense-v0 --wandb --gpu
 ```
 
-**Hint: Check the argument defaults in the train script to save you time when running.**
+**Hint: Check the argument defaults in the train script to save yourself time when running.**
 
 ### Evaluate Script
 
@@ -61,10 +61,10 @@ python src/scripts/train.py --policy minerl-dqn --env MineRLNavigateDense-v0 --w
 An example of running the training script is as follows:
 
 ```sh
-python src/scripts/evaluate.py --env CartPole-v0 --gpu --weights_path path/to/weights --ep_rew_pass 200
+python src/scripts/evaluate.py --env CartPole-v0 --gpu --weights-path path/to/weights --ep-rew-pass 200
 ```
 
-**Hint: Check the argument defaults in the evaluate script to save you time when running.**
+**Hint: Check the argument defaults in the evaluate script to save yourself time when running.**
 
 ## Creating Custom Policies
 
