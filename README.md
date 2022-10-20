@@ -33,7 +33,6 @@ The train script supports argument parsing when running from the CLI. The follow
 --no-gpu			# Use this if you would like the model training to occur on your CPU
 --human-exp-path		# The path to human data that will be used in training (optional)
 --load-path			# The path to a saved agent that can be loaded to continue training (optional)
---human_exp_path		# The path to human data that will be used in training (optional)
 --render  			# Specifies if the environment should be rendered to the screen during training
 ```
 
