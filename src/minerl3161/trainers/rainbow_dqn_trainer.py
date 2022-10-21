@@ -112,7 +112,7 @@ class RainbowDQNTrainer(BaseTrainer):
         if one_step_transition:
             self.gathered_transitions.add(*one_step_transition)
 
-    def _train_step(self, step: int) -> None:
+    def _train_step(self, step: int) -> Dict[str, np.ndarray]:
         """
         Implements the network training that is to be completed at each train step
 
@@ -120,6 +120,9 @@ class RainbowDQNTrainer(BaseTrainer):
 
         Args:
             step (int): the current time step in the training
+        
+        Returns:
+            Dict[str, np.ndarray]: a dictionary containing data from the train step to be used for logging
         """
         log_dict = {}
         # Get a batch of experience from the gathered transitions
