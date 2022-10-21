@@ -79,6 +79,8 @@ class DQNTrainer(BaseTrainer):
 
         # calculate loss signal
         loss = self._calc_loss(batch)
+        
+        log_dict["loss"] = loss.detach().cpu().item()
 
         # update model parameters
         self.optim.zero_grad()
@@ -100,7 +102,7 @@ class DQNTrainer(BaseTrainer):
         end_time = perf_counter()
         log_dict["train_fps"] = 1 / (end_time - start_time)
 
-        return {"loss": loss.detach().cpu().item()}
+        return log_dict
 
     def _calc_loss(self, batch: dict) -> th.Tensor:
         """
