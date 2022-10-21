@@ -1,9 +1,10 @@
-from typing import Union, List
+from typing import Union, List, Dict
 from time import perf_counter
 
 import gym
 import torch as th
 from torch.optim import Adam
+import numpy as np
 
 from minerl3161.agents import BaseAgent
 from minerl3161.hyperparameters import BaseHyperparameters

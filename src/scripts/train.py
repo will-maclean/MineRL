@@ -31,7 +31,7 @@ POLICIES = {
 def main():
     parser = argparse.ArgumentParser('Parse configuration file')
     parser.add_argument('--policy', type=str, default='cc-rainbow-dqn')
-    parser.add_argument('--env', type=str, default="MountainCar-v0")
+    parser.add_argument('--env', type=str, default="CartPole-v1")
 
     parser.add_argument('--wandb', action='store_true', default=True,
                         help='sets if we use wandb logging')
@@ -50,7 +50,7 @@ def main():
     parser.add_argument('--load-path', type=str, default=None,
                         help='path to model checkpoint to load (optional)')
     
-    parser.add_argument('--render', action='store_true', default=True,
+    parser.add_argument('--render', action='store_true', default=False,
                         help='sets if we use gpu hardware')
 
     args = parser.parse_args()
@@ -122,7 +122,9 @@ def main():
         device=device,  
         use_wandb=args.wandb, 
         render=args.render, 
-        termination_conditions=termination_conditions)
+        termination_conditions=termination_conditions,
+        capture_eval_video=False
+    )
 
     trainer.train()
 
