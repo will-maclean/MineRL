@@ -59,12 +59,15 @@ class DQNTrainer(BaseTrainer):
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
 
-    def _train_step(self, step: int) -> None:
+    def _train_step(self, step: int) -> Dict[str, np.ndarray]:
         """
         Implements the network training that is to be completed at each train step
 
         Args:
             step (int): the current time step in the training
+        
+        Returns:
+            Dict[str, np.ndarray]: a dictionary containing data from the train step to be used for logging
         """
         log_dict = {}
         start_time = perf_counter()
