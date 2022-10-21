@@ -175,10 +175,13 @@ class BaseTrainer:
     @abstractmethod
     def _train_step(self, step: int) -> Dict[str, np.ndarray]:
         """
-        Abstract method which all subclasses MUST implement. Determines how the model is trained.
+        Abstract method which all subclasses MUST implement. Determines how the model is trained at each train step.
 
         Args:
             step (int): the current time step in the training
+        
+        Returns:
+            Dict[str, np.ndarray]: a dictionary containing data from the train step to be used for logging
         """
         raise NotImplementedError()
 
