@@ -1,14 +1,14 @@
-from typing import Dict, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import torch as th
 from torch import nn
+import numpy as np
 
-from minerl3161.hyperparameters import DQNHyperparameters
+from minerl3161.hyperparameters import MineRLDQNHyperparameters
 from minerl3161.utils import sample_pt_state
 from minerl3161.models.submodel import MineRLFeatureExtraction
 
 
-# TODO: write tests
 class DQNNet(nn.Module):
     """
     Stores the PyTorch neural network to be used as a DQN network.
@@ -18,7 +18,7 @@ class DQNNet(nn.Module):
         self,
         state_shape: Dict[str, Tuple[int]],
         n_actions: int,
-        dqn_hyperparams: DQNHyperparameters = None,
+        dqn_hyperparams: MineRLDQNHyperparameters = None,
         layer_size: Union[int, None] = 64,
     ) -> None:
         """
@@ -86,9 +86,16 @@ class DQNNet(nn.Module):
         return v + (advantage - advantage.mean())
     
     @staticmethod
-    def _feature_names(state_shape, dqn_hyperparams=None):
+    def _feature_names(state_shape: Dict[str, np.ndarray], dqn_hyperparams: MineRLDQNHyperparameters = None) -> List[str]:
         """
-        TODO
+        Extracts feature names from either the state or the hyperparameters
+
+        Args:
+            state_shape (Dict[str, np.ndarray]): the state shape used by the feature extractor
+            dqn_hyperparams (DQNHyperparameters): the hyperparameter object
+        
+        Returns:
+            List[str]: features for the extractor to use
         """
         if dqn_hyperparams is not None:
             feature_names = dqn_hyperparams.feature_names

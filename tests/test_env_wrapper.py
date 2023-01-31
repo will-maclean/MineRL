@@ -1,8 +1,8 @@
 import gym
 import minerl
 
-from minerl3161.hyperparameters import DQNHyperparameters
-from minerl3161.utils.wrappers import minerlWrapper, MineRLWrapper
+from minerl3161.hyperparameters import MineRLDQNHyperparameters
+from minerl3161.wrappers import minerlWrapper, MineRLWrapper
 
 
 
@@ -51,7 +51,7 @@ def test_env_wrapper_all(minerl_env):
 
     w = 16
     h = 16
-    inventory_feature_names = DQNHyperparameters().inventory_feature_names
+    inventory_feature_names = MineRLDQNHyperparameters().inventory_feature_names
     stack = 4
     env = minerlWrapper(minerl_env, n_stack=stack, inventory_feature_names=inventory_feature_names, resize_w=w, resize_h=h)
 

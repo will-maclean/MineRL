@@ -5,9 +5,9 @@ import gym
 import minerl
 import numpy as np
 from minerl3161.agents import DQNAgent
-from minerl3161.hyperparameters import DQNHyperparameters
+from minerl3161.hyperparameters import MineRLDQNHyperparameters
 from minerl3161.utils.utils import pt_dict_to_np, sample_pt_state
-from minerl3161.utils.wrappers import minerlWrapper
+from minerl3161.wrappers import minerlWrapper
 
 
 def compare_models(model1, model2):
@@ -24,7 +24,7 @@ def test_dqnagent_dummy():
         "f3": np.zeros(6),
     }
     n_actions = 32
-    hyperparams = DQNHyperparameters()
+    hyperparams = MineRLDQNHyperparameters()
     hyperparams.feature_names = list(state_space_shape.keys())
     device = "cpu"
     save_path = "test.pt"
@@ -67,7 +67,7 @@ def test_dqnagent_dummy():
 
 
 def test_dqnagent_full(minerl_env):
-    hyperparams = DQNHyperparameters()
+    hyperparams = MineRLDQNHyperparameters()
     hyperparams.feature_names = ["pov", "inventory"]
 
     wrapped_minerl_env = minerlWrapper(minerl_env, **dataclasses.asdict(hyperparams))

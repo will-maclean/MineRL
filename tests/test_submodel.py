@@ -5,7 +5,7 @@ import minerl
 
 from minerl3161.models.submodel import CNN, MLP, MineRLFeatureExtraction
 from minerl3161.utils.utils import sample_pt_state
-from minerl3161.utils.wrappers import minerlWrapper
+from minerl3161.wrappers import minerlWrapper
 
 
 

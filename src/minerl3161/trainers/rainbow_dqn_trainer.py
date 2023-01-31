@@ -1,4 +1,4 @@
-from typing import Union, List, Dict
+from typing import Tuple, Union, List, Dict
 
 import gym
 import torch as th
@@ -7,16 +7,12 @@ from torch.optim import Adam
 from torch.nn.utils.clip_grad import clip_grad_norm_
 
 from minerl3161.agents import BaseAgent
-from minerl3161.callbacks.base_callback import BaseCallback
-from minerl3161.hyperparameters import RainbowDQNHyperparameters
+from minerl3161.hyperparameters import BaseHyperparameters
 from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer, NStepReplayBuffer
 from minerl3161.utils.termination import TerminationCondition
 from minerl3161.utils import np_batch_to_tensor_batch, copy_weights, linear_decay
 
 from .base_trainer import BaseTrainer
-
-# TODO: remove human data handling and include catch in train to prevent it, this is something that could be
-#       implemented at a later date
 
 
 class RainbowDQNTrainer(BaseTrainer):
@@ -28,8 +24,7 @@ class RainbowDQNTrainer(BaseTrainer):
         self, 
         env: gym.Env, 
         agent: BaseAgent, 
-        hyperparameters: RainbowDQNHyperparameters, 
-        callbacks: List[BaseCallback] = [],
+        hyperparameters: BaseHyperparameters, 
         human_dataset: Union[PrioritisedReplayBuffer, None] = None, 
         use_wandb: bool = False, 
         device: str = "cpu", 
@@ -61,8 +56,7 @@ class RainbowDQNTrainer(BaseTrainer):
             replay_buffer_kwargs={"alpha": hyperparameters.alpha}, 
             render=render,
             termination_conditions=termination_conditions,
-            capture_eval_video=capture_eval_video,
-            callbacks=callbacks,
+            capture_eval_video=capture_eval_video
         )
 
         # The optimiser keeps track of the model weights that we want to train
@@ -87,19 +81,23 @@ class RainbowDQNTrainer(BaseTrainer):
     
     def add_transition(
         self, 
-        state, 
-        action, 
-        next_state, 
-        reward, 
-        done
+        state: Dict[str, np.ndarray],
+        action: Union[np.ndarray, float],
+        next_state: Dict[str, np.ndarray],
+        reward: Union[np.ndarray, float],
+        done: Union[np.ndarray, bool],
     ) -> None:
         """
         Used to add a transition to the PrioritisedReplayBuffer
 
-        # TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
-            TODO
+            state (Dict[str, np.ndarray]): the environment state at the given time step
+            action (Union[np.ndarray, float]): the action taken in the envrionment at the given time step
+            next_state (Dict[str, np.ndarray]): the environment state the agent ends up in after taking the action
+            reward (Union[np.ndarray, float]): the reward obtained from performing the action
+            done (Union[np.ndarray, bool]): a flag that represents whether or not the taken action ended the current episode
         """
         transition = (state, action, next_state, reward, done)
         
@@ -114,18 +112,21 @@ class RainbowDQNTrainer(BaseTrainer):
         if one_step_transition:
             self.gathered_transitions.add(*one_step_transition)
 
-    def _train_step(self, step: int) -> None:
+    def _train_step(self, step: int) -> Dict[str, np.ndarray]:
         """
         Implements the network training that is to be completed at each train step
 
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             step (int): the current time step in the training
+        
+        Returns:
+            Dict[str, np.ndarray]: a dictionary containing data from the train step to be used for logging
         """
         log_dict = {}
         # Get a batch of experience from the gathered transitions
-        batch, sample_log_dict = self.sample(self.hp.sampling_strategy, step)
+        batch, sample_log_dict = self.sample(step)
 
         log_dict.update(sample_log_dict)
 
@@ -186,14 +187,6 @@ class RainbowDQNTrainer(BaseTrainer):
         return log_dict
 
     def _calc_loss(self, batch: dict, gamma: float = None) -> th.Tensor:
-        gamma = self.hp.gamma if gamma is None else gamma
-        
-        if self.human_transitions is None:
-            return self._calc_loss_gathered_only(batch, gamma)
-        else:
-            return self._calc_loss_combined(batch)
-
-    def _calc_loss_gathered_only(self, batch: dict, gamma: float = None) -> th.Tensor:
         """
         Used to calculate the loss of the supplied batch (the margin of error between the q-values that model currently predicts, and
         the newly calculated ones)
@@ -205,6 +198,8 @@ class RainbowDQNTrainer(BaseTrainer):
         Returns:
             th.Tensor: the average loss of each of the samples in the batch
         """
+        gamma = self.hp.gamma if gamma is None else gamma
+
         state = batch["state"]
         action = batch["action"]
         reward = batch["reward"]
@@ -248,129 +243,20 @@ class RainbowDQNTrainer(BaseTrainer):
         elementwise_loss = -(proj_dist * log_p).sum(1)
 
         return elementwise_loss
-
-    def _calc_loss_combined(self, batch: dict) -> th.Tensor:
-        gathered_batch_size = batch["gathered_batch_size"]
-        human_batch_size = batch["human_batch_size"]
-
-        human_weights = th.FloatTensor(
-            batch["human_weights"].reshape(-1, 1)
-        ).to(self.device)
-        gathered_weights = th.FloatTensor(
-            batch["gathered_weights"].reshape(-1, 1)
-        ).to(self.device)
-        
-        human_indices = batch["human_indices"]
-        gathered_indices = batch["gathered_indices"]
-        
-        # estimate q values for current states/actions using q1 network
-        q_values = self.agent.q1(batch["state"])
-        q_values = q_values.gather(1, batch["action"])
-
-        # estimate q values for next states/actions using q2 network
-
-        next_q_values = self.agent.q2(batch["next_state"])
-        next_actions = next_q_values.argmax(dim=1).unsqueeze(1)
-        next_q_values = next_q_values.gather(1, next_actions)
-
-        # calculate TD target for Bellman Equation
-        td_target = self.hp.reward_scale * th.sign(batch[
-            "reward"
-        ]) + self.hp.gamma * next_q_values * (1 - batch["done"])
-
-        # Calculate loss for Bellman Equation
-        # Note that we use smooth_l1_loss instead of MSE as it is more stable for larger loss signals. RL problems
-        # typically suffer from high variance, so anything we can do to introduce more stability is usually a
-        # good thing.
-        loss = th.nn.functional.smooth_l1_loss(q_values, td_target, reduction="none")
-
-        # update the weights
-        loss_for_prior = loss.detach().cpu().numpy()
-        new_priorities = loss_for_prior + self.hp.prior_eps
-
-        # need to split the new priorities
-        n_human = human_weights.shape[0]
-        new_priorities_human = new_priorities[:n_human]  # human experience must be first in the batch for this to work!!
-        new_priorities_gathered = new_priorities[n_human:]
-
-        if human_batch_size > 0 :
-            self.human_transitions.update_priorities(human_indices, new_priorities_human)
-        
-        if gathered_batch_size > 0 :
-            self.gathered_transitions.update_priorities(gathered_indices, new_priorities_gathered)
-        
-        if human_batch_size == 0:
-            weights = gathered_weights
-        elif gathered_batch_size == 0:
-            weights = human_weights
-        else:
-            weights = th.concat([human_weights, gathered_weights], dim=0)
-
-        loss = loss * weights
-
-        return loss.mean()
     
-    def sample(self, strategy: callable, step: int) -> Dict[str, np.ndarray]:
+    def sample(self, step: int) -> Tuple[Dict[str, np.ndarray], dict]:
         """
-        TODO
-        """
-        # if we have not human transitions, then yeah obviously we can simplify this provess a bit
-        if self.human_transitions is None:
-            beta = linear_decay(step=step, start_val=self.hp.beta_min, final_val=self.hp.beta_max, final_steps=self.hp.beta_final_step)
-            return_batch, gathered_weights, gathered_indices =  self.gathered_transitions.sample(self.hp.batch_size, beta=beta)
-            return_batch["weights"] = gathered_weights
-            return_batch["indices"] = gathered_indices
+        Used to retrieve a batch of samples from the ReplayBuffer for training the model weights
 
-            return return_batch, {"beta": beta}
+        Args:
+            step (int): the current time step in training
         
-        human_dataset_batch_size, gathered_xp_batch_size \
-            = strategy(batch_size=self.hp.batch_size, 
-                        step=step, 
-                        start_val=self.hp.sample_max, 
-                        final_val=self.hp.sample_min, 
-                        final_steps=self.hp.sample_final_step)
-        
-        if len(self.gathered_transitions) < gathered_xp_batch_size:
-            gathered_xp_batch_size = len(self.gathered_transitions)
-            human_dataset_batch_size = self.hp.batch_size - self.gathered_xp_batch_size
-        
-        self.human_dataset_batch_size = human_dataset_batch_size
-        self.gathered_xp_batch_size = gathered_xp_batch_size
-        
+        Returns:
+            Tuple[Dict[str, np.ndarray], dict]: a dictionary containing the sample data, along with the logging dictionary
+        """
         beta = linear_decay(step=step, start_val=self.hp.beta_min, final_val=self.hp.beta_max, final_steps=self.hp.beta_final_step)
+        return_batch, gathered_weights, gathered_indices =  self.gathered_transitions.sample(self.hp.batch_size, beta=beta)
+        return_batch["weights"] = gathered_weights
+        return_batch["indices"] = gathered_indices
 
-        gathered_weights = np.empty((1,))
-        gathered_indices = np.empty((1,))
-        human_weights = np.empty((1,))
-        human_indices = np.empty((1,))
-
-        if self.human_dataset_batch_size == 0:
-            return_batch, gathered_weights, gathered_indices = self.gathered_transitions.sample(self.gathered_xp_batch_size, beta)
-        
-        elif self.gathered_xp_batch_size == 0:
-            return_batch, human_weights, human_indices = self.human_transitions.sample(self.human_dataset_batch_size, beta)
-        
-        else:
-            human_batch, human_weights, human_indices = self.human_transitions.sample(self.human_dataset_batch_size, beta)
-            gathered_batch, gathered_weights, gathered_indices = self.gathered_transitions.sample(self.gathered_xp_batch_size, beta)
-
-            return_batch =  ReplayBuffer.create_batch_sample(
-                np.concatenate((human_batch['reward'], gathered_batch['reward'])),
-                np.concatenate((human_batch['done'], gathered_batch['done'])),
-                np.concatenate((human_batch['action'], gathered_batch['action'])),
-                {key: np.concatenate(
-                    (human_batch['state'][key], gathered_batch['state'][key])
-                    ) for key in human_batch['state']},
-                {key: np.concatenate(
-                    (human_batch['next_state'][key], gathered_batch['state'][key])
-                    ) for key in human_batch['next_state']}
-            )
-        
-        return_batch["gathered_weights"] = gathered_weights
-        return_batch["gathered_indices"] = gathered_indices
-        return_batch["human_weights"] = human_weights
-        return_batch["human_indices"] = human_indices
-        return_batch["gathered_batch_size"] = self.gathered_xp_batch_size
-        return_batch["human_batch_size"] = self.human_dataset_batch_size
-
-        return return_batch, {"beta": beta, "human_dataset_batch_size": self.human_dataset_batch_size, "gathered_xp_batch_size": self.gathered_xp_batch_size}
+        return return_batch, {"beta": beta}

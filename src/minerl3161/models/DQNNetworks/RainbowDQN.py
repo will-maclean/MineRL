@@ -4,7 +4,7 @@ import torch as th
 from torch import nn
 import torch.nn.functional as F
 
-from minerl3161.hyperparameters import RainbowDQNHyperparameters
+from minerl3161.hyperparameters import MineRLRainbowDQNHyperparameters
 from minerl3161.utils import sample_pt_state
 from minerl3161.models.submodel import MineRLFeatureExtraction
 from minerl3161.models.noisy_linear import NoisyLinear
@@ -21,7 +21,7 @@ class RainbowDQN(nn.Module):
         self, 
         state_shape: Dict[str, Tuple[int]],
         n_actions: int, 
-        dqn_hyperparams: RainbowDQNHyperparameters,
+        dqn_hyperparams: MineRLRainbowDQNHyperparameters,
         support: th.Tensor,
     ) -> None:
         """
@@ -31,7 +31,7 @@ class RainbowDQN(nn.Module):
             state_shape (Dict[str, Tuple[int]]): state shape to be used. Will only work with 1D states for now
             n_actions (int): number of actions available for the agent
             dqn_hyperparams (RainbowDQNHyperparameters):  the hyperparameters being used internally in this class
-            support (th.Tensor): TODO: what is this again??
+            support (th.Tensor): the minimum and maximum range of the reward scale in the C51 algorithm
         """
         super().__init__()
         
@@ -73,7 +73,7 @@ class RainbowDQN(nn.Module):
         """
         Defines the forward pass of the model
 
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             x (th.Tensor): state to pass forward
@@ -90,7 +90,7 @@ class RainbowDQN(nn.Module):
         """
         Determines the distributions for the atoms as per the C51 alogirthm (Distributional RL)
 
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             x (th.Tensor): state used to calculate distributions
@@ -117,7 +117,7 @@ class RainbowDQN(nn.Module):
         """
         Used to reset the noisy layers
 
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
         """
         self.advantage_hidden_layer.reset_noise()
         self.advantage_layer.reset_noise()

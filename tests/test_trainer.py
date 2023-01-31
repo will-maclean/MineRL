@@ -8,9 +8,9 @@ import minerl
 from minerl3161.agents import DQNAgent, RainbowDQNAgent, TinyDQNAgent
 from minerl3161.buffers import PrioritisedReplayBuffer, ReplayBuffer
 from minerl3161.trainers import DQNTrainer, RainbowDQNTrainer
-from minerl3161.hyperparameters import CartpoleDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartPoleRainbowDQNHyperparameters
+from minerl3161.hyperparameters import ClassicControlDQNHyperparameters, MineRLDQNHyperparameters, MineRLRainbowDQNHyperparameters, ClassicControlRainbowDQNHyperparameters
 from minerl3161.utils.termination import get_termination_condition
-from minerl3161.utils.wrappers import cartPoleWrapper, minerlWrapper
+from minerl3161.wrappers import classicControlWrapper, minerlWrapper
 
 
 def test_DQNtrainer(minerl_env):
@@ -22,7 +22,7 @@ def test_DQNtrainer(minerl_env):
     print(f"Loading onto {torch.cuda.get_device_name() if using_gpu else 'cpu'}")
 
     # Configure policy hyperparameters
-    hp = DQNHyperparameters()
+    hp = MineRLDQNHyperparameters()
     # base
     hp.train_steps = 10
     hp.burn_in = 2
@@ -67,7 +67,7 @@ def test_rainbow_trainer(minerl_env):
    print(f"Loading onto {torch.cuda.get_device_name() if using_gpu else 'cpu'}")
 
    # Configure policy hyperparameters
-   hp = RainbowDQNHyperparameters()
+   hp = MineRLRainbowDQNHyperparameters()
    # base
    hp.train_steps = 10
    hp.burn_in = 2
@@ -108,8 +108,8 @@ def test_cartpole():
 
    env_name = "CartPole-v0"
    env = gym.make(env_name)
-   env = cartPoleWrapper(env)
-   hp = CartpoleDQNHyperparameters()
+   env = classicControlWrapper(env)
+   hp = ClassicControlDQNHyperparameters()
    
    # make some baby hyperparameters
    hp.batch_size = 4
@@ -145,8 +145,8 @@ def test_cartpole_human_exp():
 
    env_name = "CartPole-v0"
    env = gym.make(env_name)
-   env = cartPoleWrapper(env)
-   hp = CartpoleDQNHyperparameters()
+   env = classicControlWrapper(env)
+   hp = ClassicControlDQNHyperparameters()
    
    # make some baby hyperparameters
    hp.batch_size = 4
@@ -188,8 +188,8 @@ def notest_cartpole_rainbow_human_exp():
 
    env_name = "CartPole-v0"
    env = gym.make(env_name)
-   env = cartPoleWrapper(env)
-   hp = CartPoleRainbowDQNHyperparameters()
+   env = classicControlWrapper(env)
+   hp = ClassicControlRainbowDQNHyperparameters()
    
    # make some baby hyperparameters
    hp.batch_size = 4

@@ -5,7 +5,7 @@ from torch import nn
 import torch.nn.functional as F
 import numpy as np
 
-from minerl3161.hyperparameters import RainbowDQNHyperparameters
+from minerl3161.hyperparameters import MineRLRainbowDQNHyperparameters
 from minerl3161.models.noisy_linear import NoisyLinear
 
 
@@ -19,7 +19,7 @@ class TinyRainbowDQN(nn.Module):
         self, 
         state_shape: Dict[str, Tuple[int]],
         n_actions: int, 
-        dqn_hyperparams: RainbowDQNHyperparameters,
+        dqn_hyperparams: MineRLRainbowDQNHyperparameters,
         support: th.Tensor,
     ) -> None:
         super().__init__()
@@ -46,7 +46,7 @@ class TinyRainbowDQN(nn.Module):
         """
         Defines the forward pass of the model
 
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             x (Union[Dict[str, np.ndarray], np.ndarray]): state to pass forward, can either be passed in as a dictionary containing the state, or the
@@ -67,7 +67,7 @@ class TinyRainbowDQN(nn.Module):
         """
         Determines the distributions for the atoms as per the C51 alogirthm (Distributional RL)
 
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
             x (th.Tensor): state used to calculate distributions
@@ -93,11 +93,11 @@ class TinyRainbowDQN(nn.Module):
         
         return dist
     
-    def reset_noise(self):
+    def reset_noise(self) -> None:
         """
         Used to reset the noisy layers
 
-        TODO: licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
         """
         self.advantage_hidden_layer.reset_noise()
         self.advantage_layer.reset_noise()

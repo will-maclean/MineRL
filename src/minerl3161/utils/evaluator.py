@@ -8,7 +8,19 @@ from minerl3161 import evaluator_video_path
 
 
 class Evaluator:
-    def __init__(self, env, capture_video) -> None:
+    """
+    Evaluator class used to integrate with the BaseTrainer class, and any of its children. Works as a callback which is
+    used during training as a way to monitor the agent't performance when it chooses exploited actions only.
+    """
+
+    def __init__(self, env: gym.Env, capture_video: bool) -> None:
+        """
+        Initialiser for Evaluator
+
+        Args:
+            env (gym.Env): the env that the agent will be evaluated in
+            capture_video (bool): specifies whether a video of the eval should be captured
+        """
         out_pth = evaluator_video_path + "/eval"
         Path(out_pth).mkdir(exist_ok=True, parents=True)
         self.env = gym.wrappers.Monitor(env, out_pth, force=True, video_callable=lambda x: True) if capture_video else env
@@ -21,6 +33,16 @@ class Evaluator:
         }
 
     def evaluate(self, agent: BaseAgent, episodes: int) -> dict:
+        """
+        Handles the evaluation of the agent
+
+        Args:
+            agent (BaseAgent): the agent being evaluated
+            episodes (int): the number of episodes to evaluate for
+        
+        Returns:
+            dict: a dictionary containing info from the evaluation
+        """
         self.env_interaction["needs_reset"] = True
         
         info = {
@@ -46,8 +68,6 @@ class Evaluator:
 
                 next_state, reward, done, _ = self.env.step(action=action) 
 
-                # self.env.render()
-
                 self.env_interaction["eval/episode_return"] += reward
                 self.env_interaction["last_state"] = next_state
                 self.env_interaction["eval/episode_length"] += 1
@@ -68,6 +88,3 @@ class Evaluator:
         self.env.reset()
 
         return info
-
-    def create_media(self, agent: BaseAgent) -> dict:
-        return {}

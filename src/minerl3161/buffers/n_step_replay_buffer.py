@@ -1,9 +1,9 @@
 from collections import deque
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 
 import numpy as np
 
-from minerl3161.hyperparameters.rainbow_dqn_hp import RainbowDQNHyperparameters
+from minerl3161.hyperparameters.minerl_rainbow_dqn_hp import MineRLRainbowDQNHyperparameters
 
 from .replay_buffer import ReplayBuffer
 
@@ -14,11 +14,7 @@ class NStepReplayBuffer:
     are stored into the buffer. Subsequentially, this class does not inherit from the ReplayBuffer class.
     """
 
-    def __init__(
-        self,
-        n: int, 
-        hyperparameters: RainbowDQNHyperparameters
-    ) -> None:
+    def __init__(self, n: int, hyperparameters: MineRLRainbowDQNHyperparameters) -> None:
         """
         Initialises a NStepReplayBuffer
 
@@ -35,23 +31,23 @@ class NStepReplayBuffer:
     
     def add(
         self,
-        state: np.ndarray,
-        action: np.ndarray,
-        next_state: np.ndarray,
-        reward: np.ndarray,
-        done: np.ndarray,
+        state: Dict[str, np.ndarray],
+        action: Union[np.ndarray, float],
+        next_state: Dict[str, np.ndarray],
+        reward: Union[np.ndarray, float],
+        done: Union[np.ndarray, bool],
     ) -> None:
         """
-        TODO: What is actually going on here?
-
-        TODO: Licence
+        This method adds the transition to the buffer, and unrolls the n-step data
+        
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Args:
-            state (np.ndarray): the environment state at the given time step
-            action (np.ndarray): the action taken in the envrionment at the given time step
-            next_state (np.ndarray): the environment state the agent ends up in after taking the action
-            reward (np.ndarray): the reward obtained from performing the action
-            done (np.ndarray): a flag that represents whether or not the taken action ended the current episode
+            state (Dict[str, np.ndarray]): the environment state at the given time step
+            action (Union[np.ndarray, float]): the action taken in the envrionment at the given time step
+            next_state (Dict[str, np.ndarray]): the environment state the agent ends up in after taking the action
+            reward (Union[np.ndarray, float]): the reward obtained from performing the action
+            done (Union[np.ndarray, bool]): a flag that represents whether or not the taken action ended the current episode
         """
         transition = (state, action, next_state, reward, done)
         self.n_step_buffer.append(transition)
@@ -66,7 +62,7 @@ class NStepReplayBuffer:
 
         return self[0]
     
-    def __getitem__(self, idx: int):
+    def __getitem__(self, idx: int) -> Tuple[dict, np.ndarray, dict, np.ndarray, np.ndarray]:
         """
         Retrieves a data point from the buffer at the supplied index
 
@@ -78,7 +74,7 @@ class NStepReplayBuffer:
         """
         return self.n_step_buffer[idx]
     
-    def __len__(self):
+    def __len__(self) -> int:
         """
         Returns the length of the NStepReplayBuffer, or how many experience points are inside it
 
@@ -126,7 +122,7 @@ class NStepReplayBuffer:
         """
         Calculates the n step values for the next_state, reward, and done values
 
-        TODO: Licence
+        Adapted from Curt-Park: https://github.com/Curt-Park/rainbow-is-all-you-need
 
         Returns:
             Tuple[Dict[str, np.ndarray], float, bool]: the calculated next_state, reward and done values after n steps
