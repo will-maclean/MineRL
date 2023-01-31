@@ -1,10 +1,11 @@
+"""Segment tree for Prioritized Replay Buffer."""
+
 import operator
 from typing import Callable
 
 
 class SegmentTree:
-    """
-    Create SegmentTree.
+    """ Create SegmentTree.
 
     Taken from OpenAI baselines github repository:
     https://github.com/openai/baselines/blob/master/baselines/common/segment_tree.py
@@ -12,8 +13,7 @@ class SegmentTree:
     """
 
     def __init__(self, capacity: int, operation: Callable, init_value: float):
-        """
-        Initialization
+        """Initialization.
 
         Args:
             capacity (int)
@@ -96,6 +96,7 @@ class SumSegmentTree(SegmentTree):
 
     def retrieve(self, upperbound: float) -> int:
         """Find the highest index `i` about upper bound in the tree"""
+        # TODO: Check assert case and fix bug
         assert 0 <= upperbound <= self.sum() + 1e-5, "upperbound: {}".format(upperbound)
 
         idx = 1

@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
-from minerl3161.hyperparameters import MineRLDQNHyperparameters
+from minerl3161.hyperparameters import DQNHyperparameters
 
 
 @dataclass
-class MineRLRainbowDQNHyperparameters(MineRLDQNHyperparameters):
+class RainbowDQNHyperparameters(DQNHyperparameters):
     # PER parameters
     prior_eps: float = 1e-6
     alpha: float = 0.2

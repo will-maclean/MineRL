@@ -1,13 +1,13 @@
-from typing import Union, List, Dict
+from typing import Union, List
 from time import perf_counter
 
 import gym
 import torch as th
 from torch.optim import Adam
-import numpy as np
 
 from minerl3161.agents import BaseAgent
-from minerl3161.hyperparameters import BaseHyperparameters
+from minerl3161.callbacks.base_callback import BaseCallback
+from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.buffers import ReplayBuffer
 from minerl3161.utils.termination import TerminationCondition
 from minerl3161.utils.utils import np_batch_to_tensor_batch, copy_weights
@@ -23,8 +23,9 @@ class DQNTrainer(BaseTrainer):
     def __init__(
         self, 
         env: gym.Env, 
-        agent: BaseAgent,
-        hyperparameters: BaseHyperparameters, 
+        agent: BaseAgent, #TODO: should this be a DQNAgent?
+        hyperparameters: DQNHyperparameters, 
+        callbacks: List[BaseCallback] = [],
         human_dataset: Union[ReplayBuffer, None] = None, 
         use_wandb: bool = False, 
         device: str = "cpu", 
@@ -54,21 +55,19 @@ class DQNTrainer(BaseTrainer):
             use_wandb=use_wandb, device=device, 
             render=render, 
             termination_conditions=termination_conditions, 
-            capture_eval_video=capture_eval_video
+            capture_eval_video=capture_eval_video,
+            callbacks=callbacks,
         )
 
         # The optimiser keeps track of the model weights that we want to train
         self.optim = Adam(self.agent.q1.parameters(), lr=self.hp.lr)
 
-    def _train_step(self, step: int) -> Dict[str, np.ndarray]:
+    def _train_step(self, step: int) -> None:
         """
         Implements the network training that is to be completed at each train step
 
         Args:
             step (int): the current time step in the training
-        
-        Returns:
-            Dict[str, np.ndarray]: a dictionary containing data from the train step to be used for logging
         """
         log_dict = {}
         start_time = perf_counter()
@@ -80,8 +79,6 @@ class DQNTrainer(BaseTrainer):
 
         # calculate loss signal
         loss = self._calc_loss(batch)
-        
-        log_dict["loss"] = loss.detach().cpu().item()
 
         # update model parameters
         self.optim.zero_grad()
@@ -103,7 +100,7 @@ class DQNTrainer(BaseTrainer):
         end_time = perf_counter()
         log_dict["train_fps"] = 1 / (end_time - start_time)
 
-        return log_dict
+        return {"loss": loss.detach().cpu().item()}
 
     def _calc_loss(self, batch: dict) -> th.Tensor:
         """
@@ -126,9 +123,9 @@ class DQNTrainer(BaseTrainer):
         next_q_values = next_q_values.gather(1, next_actions)
 
         # calculate TD target for Bellman Equation
-        td_target = self.hp.reward_scale * batch[
+        td_target = self.hp.reward_scale * th.sign(batch[
             "reward"
-        ] + self.hp.gamma * next_q_values * (1 - batch["done"])
+        ]) + self.hp.gamma * next_q_values * (1 - batch["done"])
 
         # Calculate loss for Bellman Equation
         # Note that we use smooth_l1_loss instead of MSE as it is more stable for larger loss signals. RL problems

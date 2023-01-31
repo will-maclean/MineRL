@@ -1,36 +1,56 @@
 from copy import deepcopy
-from typing import Any, Dict
+from pandas import lreshape
 import torch as th
 import pytorch_lightning as pl
 import torch.nn.functional as F
 
-import gym
-from minerl3161.hyperparameters.minerl_dqn_hp import MineRLDQNHyperparameters
-
 from minerl3161.models.DQNNetworks import DQNNet
+from minerl3161.models.submodel import CNN, unCNN
+
+
+
+class MineRLCNNPretrainer(pl.LightningModule):
+    def __init__(self, lr=3e-4) -> None:
+        super().__init__()
+
+        self.encoder = CNN((4, 16, 16))
+        self.decoder = unCNN(4)
+
+        self.lr = lr
+    
+    def training_step(self, batch, batch_idx):
+        s, a, s_, r, d = batch
+        s = s['pov']
+
+        l = self.encoder(s)
+        reconstruction = self.decoder(l)
+
+        loss = F.mse_loss(reconstruction, s)
+
+        self.log("train_loss", loss.item(), on_step=False, on_epoch=True)
+
+        return loss
+    
+    def validation_step(self, batch, batch_idx):
+        s, a, s_, r, d = batch
+        s = s['pov']
+
+        l = self.encoder(s)
+        reconstruction = self.decoder(l)
+
+        loss = F.mse_loss(reconstruction, s)
+
+        self.log("val_loss", loss.item(), on_step=False, on_epoch=True)
+
+        return loss
+
+    def configure_optimizers(self):
+        return th.optim.Adam(self.parameters(), lr=self.lr)
+
+
 
 class DQNPretrainer(pl.LightningModule):
-    """Provides DQN pretraining using PyTorch lightning
-    """
-    def __init__(
-        self, 
-        obs_space: Dict[str, gym.Space], 
-        n_actions: int, 
-        hyperparams: MineRLDQNHyperparameters, 
-        gamma: float = 0.99, 
-        target_update_freq: int = 1, 
-        lr: float = 3e-4
-    ) -> None:
-        """Constructor
-
-        Args:
-            obs_space (Dict[str, gym.Space]): observation space to be userd
-            n_actions (int): number of actions
-            hyperparams (DQNHyperparameters): hyperparam object
-            gamma (float, optional): gamma constant. Defaults to 0.99.
-            target_update_freq (int, optional): update target network every n epochs. Defaults to 1.
-            lr (float, optional): initial learning rate. Defaults to 3e-4.
-        """
+    def __init__(self, obs_space, n_actions, hyperparams, gamma=0.99, target_update_freq=1, lr=3e-4) -> None:
         super().__init__()
 
         self.lr = lr
@@ -46,62 +66,23 @@ class DQNPretrainer(pl.LightningModule):
         self.q2 = deepcopy(self.q1)
         self.q2.requires_grad_(False)
 
-    def forward(self, x: Dict[str, th.tensor]) -> th.tensor:
-        """forward for model
-
-        Args:
-            x (Dict[str, th.tensor]): input data
-
-        Returns:
-            th.tensor: output data
-        """
+    def forward(self, x):
         return self.q1(x)
 
-    def training_step(self, batch: Any, batch_idx: int) -> th.tensor:
-        """complete a single train step
-
-        Args:
-            batch (Any): batch of data
-            batch_idx (int): batch idx
-
-        Returns:
-            th.tensor: loss tensor
-        """
+    def training_step(self, batch, batch_idx):
         s, a, s_, r, d = batch
         loss = self._calc_loss(s, a, s_, r, d)
         self.log("train_loss", loss, on_epoch=True, on_step=False)
         return loss
 
-    def validation_step(self, batch, batch_idx) -> th.tensor:
-        """complete a single validation step
-
-        Args:
-            batch (Any): batch of data
-            batch_idx (int): batch idx
-
-        Returns:
-            th.tensor: loss tensor
-        """
-
+    def validation_step(self, batch, batch_idx):
         with th.no_grad():
             s, a, s_, r, d = batch
             loss = self._calc_loss(s, a, s_, r, d)
             self.log("val_loss", loss, on_epoch=True, on_step=False)
             return loss
 
-    def _calc_loss(self, s: Dict[str, th.tensor], a: th.tensor, s_: Dict[str, th.tensor], r: th.tensor, d: th.tensor) -> th.tensor:
-        """calculate loss for a given sample
-
-        Args:
-            s (Dict[str, th.tensor]): state
-            a (th.tensor): action
-            s_ (Dict[str, th.tensor]): next state
-            r (th.tensor): reward
-            d (th.tensor): done
-
-        Returns:
-            th.tensor: loss
-        """
+    def _calc_loss(self, s, a, s_, r, d):
         # type checking
         a = a.to(th.long)
         d = d.to(th.float32)
@@ -128,15 +109,8 @@ class DQNPretrainer(pl.LightningModule):
         return loss
 
     def on_train_epoch_end(self) -> None:
-        """callback for end of training epoch
-        """
         if self.current_epoch % self.target_update_freq == 0:
             self.q2.load_state_dict(self.q1.state_dict())
     
     def configure_optimizers(self):
-        """sets up optimisers
-
-        Returns:
-            _type_: optimiser to use
-        """
         return th.optim.Adam(self.q1.parameters(), lr=self.lr)

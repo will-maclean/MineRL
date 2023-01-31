@@ -8,6 +8,7 @@ from tqdm import tqdm
 import wandb
 
 from minerl3161.agents import BaseAgent
+from minerl3161.callbacks.base_callback import BaseCallback
 from minerl3161.hyperparameters import BaseHyperparameters
 from minerl3161.buffers import ReplayBuffer
 from minerl3161.utils.termination import TerminationCondition
@@ -25,6 +26,7 @@ class BaseTrainer:
         env: gym.Env, 
         agent: BaseAgent, 
         hyperparameters: BaseHyperparameters, 
+        callbacks: List[BaseCallback] = [],
         human_dataset: Union[ReplayBuffer, None] = None, 
         use_wandb: bool = False,
         device: str = "cpu", 
@@ -56,6 +58,7 @@ class BaseTrainer:
         self.use_wandb = use_wandb
         self.device = device
         self.render = render
+        self.callbacks = callbacks
 
         if termination_conditions is not None:
             if type(termination_conditions) != list:
@@ -175,13 +178,10 @@ class BaseTrainer:
     @abstractmethod
     def _train_step(self, step: int) -> Dict[str, np.ndarray]:
         """
-        Abstract method which all subclasses MUST implement. Determines how the model is trained at each train step.
+        Abstract method which all subclasses MUST implement. Determines how the model is trained.
 
         Args:
             step (int): the current time step in the training
-        
-        Returns:
-            Dict[str, np.ndarray]: a dictionary containing data from the train step to be used for logging
         """
         raise NotImplementedError()
 
@@ -241,22 +241,19 @@ class BaseTrainer:
         return log_dict
     
     def add_transition(
+        # TODO: arg types
         self, 
-        state: Dict[str, np.ndarray],
-        action: Union[np.ndarray, float],
-        next_state: Dict[str, np.ndarray],
-        reward: Union[np.ndarray, float],
-        done: Union[np.ndarray, bool],
+        state, 
+        action, 
+        next_state, 
+        reward, 
+        done
     ) -> None:
         """
         Used to add a transition to the ReplayBuffer
 
         Args:
-            state (Dict[str, np.ndarray]): the environment state at the given time step
-            action (Union[np.ndarray, float]): the action taken in the envrionment at the given time step
-            next_state (Dict[str, np.ndarray]): the environment state the agent ends up in after taking the action
-            reward (Union[np.ndarray, float]): the reward obtained from performing the action
-            done (Union[np.ndarray, bool]): a flag that represents whether or not the taken action ended the current episode
+            TODO
         """
         self.gathered_transitions.add(state, action, next_state, reward, done)
 
@@ -276,16 +273,15 @@ class BaseTrainer:
         log_dict.update(
             self.checkpointer.step(step)
         )
+
+        for c in self.callbacks:
+            log_dict.update(c.on_end_loop(step))
         
         return log_dict
     
-    def _process_termination_conditions(self, env_interation: Dict[str, Any]) -> None:
+    def _process_termination_conditions(self, env_interation) -> None:
         """
-        Goes through all of the termination conditions with the env_interaction data, to see if training should
-        be terminated
-        
-        Args:
-            env_interation (Dict[str, Any]): the dictionary of episode interaction data
+        TODO
         """
         terminate_training = False
         for t in self.termination_conditions:
@@ -306,6 +302,6 @@ class BaseTrainer:
     
     def close(self) -> None:
         """
-        Gets called at the end of training
+        TODO: what's this for?
         """
         pass

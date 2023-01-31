@@ -1,13 +1,15 @@
-from typing import Dict, Tuple
+from typing import Tuple
 
 import torch as th
 from torch import nn
 import numpy as np
 
+from .resnet import build_ResNet
+
 
 class NothingNet(nn.Module):
     """
-    A module which can be used a placeholder of a Network is required, but we want nothing to occur in the forward pass.
+    TODO: what is this?
     """
 
     def __init__(self) -> None:
@@ -43,7 +45,8 @@ class CNN(nn.Module):
             input_shape (Dict[str, Tuple[int]]): state shape to be used
         """
         super().__init__()
-        
+
+        # TODO: modify for minerl pov
         self.cnn = nn.Sequential(
             nn.Conv2d(input_shape[0], 16, kernel_size=5),
             nn.ReLU(),
@@ -75,9 +78,54 @@ class CNN(nn.Module):
         return x
 
 
+class unCNN(nn.Module):
+    """
+    Contains the implementation for the Convolutional Nerual Network being used to extract the pov features
+    from the state space.
+    """
+
+    def __init__(self, out_channels) -> None:
+        """
+        Initialiser for CNN
+
+        Args:
+            input_shape (Dict[str, Tuple[int]]): state shape to be used
+        """
+        super().__init__()
+
+        self.cnn = nn.Sequential(
+            nn.ConvTranspose2d(32, 32, kernel_size=5),
+            nn.ReLU(),
+            nn.BatchNorm2d(32),
+            nn.ConvTranspose2d(32, 32, kernel_size=5),
+            nn.ReLU(),
+            nn.BatchNorm2d(32),
+            nn.ConvTranspose2d(32, 16, kernel_size=5),
+            nn.ReLU(),
+            nn.BatchNorm2d(16),
+            nn.ConvTranspose2d(16, out_channels, kernel_size=3),
+        )
+
+    def forward(self, x: th.Tensor) -> th.Tensor:
+        """
+        Defines the forward pass of the model
+
+        Args:
+            x (th.Tensor): state to pass forward
+
+        Returns:
+            th.Tensor: model output
+        """
+        x = x.reshape(x.shape[0], 32, 2, 2)
+        x = self.cnn(x)
+
+        return x
+
+
+
 class MLP(nn.Module):
     """
-    This class implements a configurable Multi Layer Perceptron, which is used as a building block for other networks.
+    TODO: what is this?
     """
 
     def __init__(
@@ -135,12 +183,12 @@ class MLP(nn.Module):
 
 class MineRLFeatureExtraction(nn.Module):
     """
-    Neural Network to process MineRL states. Built with classes defined above
+    TODO: description and init docstring, arg types
     """
 
     def __init__(
         self, 
-        observation_space: Dict[str, np.ndarray], 
+        observation_space, 
         feature_names: bool = None, 
         mlp_hidden_size: int = 64
     ) -> None:
@@ -148,7 +196,7 @@ class MineRLFeatureExtraction(nn.Module):
         Initialiser for MineRLFeatureExtraction
 
         Args:
-            observation_space (Dict[str, np.ndarray]): the observation space the neural network expects
+            observation_space (): 
             feature_names (bool):  the hyperparameters being used internally in this class
             mlp_hidden_size (int): the size of the network's hidden layer/s
         """

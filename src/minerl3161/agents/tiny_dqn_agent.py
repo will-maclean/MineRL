@@ -6,7 +6,7 @@ from typing import Union
 import numpy as np
 import torch as th
 import wandb
-from minerl3161.hyperparameters.minerl_dqn_hp import MineRLDQNHyperparameters
+from minerl3161.hyperparameters.dqn_hp import DQNHyperparameters
 
 from minerl3161.models.DQNNetworks import TinyDQN
 from minerl3161.utils.utils import epsilon_decay, np_dict_to_pt
@@ -25,7 +25,7 @@ class TinyDQNAgent(BaseAgent):
         obs_space: int, 
         n_actions: int, 
         device: str, 
-        hyperparams: MineRLDQNHyperparameters = None, 
+        hyperparams: DQNHyperparameters = None, 
         *args, 
         **kwargs
     ) -> None:

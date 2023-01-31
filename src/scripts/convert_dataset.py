@@ -6,9 +6,9 @@ import gym
 import minerl
 import numpy as np
 
-from minerl3161.wrappers import MineRLWrapper
+from minerl3161.utils.wrappers import MineRLWrapper
 from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer
-from minerl3161.hyperparameters import MineRLDQNHyperparameters, MineRLRainbowDQNHyperparameters
+from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
 
 def convert_dataset(env_name, out_path, hyperparams, save_every=5):
 
@@ -20,7 +20,12 @@ def convert_dataset(env_name, out_path, hyperparams, save_every=5):
     data = minerl.data.make(env_name)
     trajectory_names = data.get_trajectory_names()
 
-    action_set = MineRLWrapper.create_action_set(functional_acts=False, extracted_acts=True)
+    action_set = MineRLWrapper.create_action_set(
+        functional_acts=False, 
+        extracted_acts=True,
+        extracted_acts_filename="test.pkl",
+        functional_acts_filename=""
+    )
     
     counter = 0
 
@@ -56,6 +61,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    hyperparams = MineRLRainbowDQNHyperparameters()
+    hyperparams = RainbowDQNHyperparameters()
 
     convert_dataset(env_name=args.env_name, out_path=args.out_path, hyperparams=hyperparams, save_every=args.save_every)

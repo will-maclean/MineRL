@@ -1,5 +1,6 @@
 import argparse
 import dataclasses
+from webbrowser import get
 import torch
 import wandb
 import gym
@@ -9,30 +10,31 @@ from collections import namedtuple
 from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer
 from minerl3161.agents import DQNAgent, TinyDQNAgent, TinyRainbowDQNAgent, RainbowDQNAgent
 from minerl3161.trainers import DQNTrainer, RainbowDQNTrainer
-from minerl3161.hyperparameters import ClassicControlRainbowDQNHyperparameters, MineRLDQNHyperparameters, MineRLRainbowDQNHyperparameters, ClassicControlDQNHyperparameters
-from minerl3161.wrappers import minerlWrapper, classicControlWrapper
+from minerl3161.hyperparameters import CartPoleRainbowDQNHyperparameters, DQNHyperparameters, RainbowDQNHyperparameters, CartpoleDQNHyperparameters
+from minerl3161.utils.wrappers import minerlWrapper, cartPoleWrapper
 from minerl3161.utils.termination import get_termination_condition
+from minerl3161.hyperparameters import DQNHyperparameters, RainbowDQNHyperparameters
+from minerl3161.utils.wrappers import minerlWrapper
+from minerl3161.callbacks.base_callback import UnfreezeModelAfter
 
 
 Policy = namedtuple('Policy', ['agent', 'trainer', 'wrapper', 'params'])
 
+
 POLICIES = {
-    # MineRL Policies
-    "minerl-dqn": Policy(DQNAgent, DQNTrainer, minerlWrapper, MineRLDQNHyperparameters),
-    "minerl-rainbow-dqn": Policy(RainbowDQNAgent, RainbowDQNTrainer, minerlWrapper, MineRLRainbowDQNHyperparameters),
-    "minerl-tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, minerlWrapper, MineRLDQNHyperparameters),
-
-    # Classic Control Policies (CartPole, MountainCar etc.)
-    "cc-dqn": Policy(TinyDQNAgent, DQNTrainer, classicControlWrapper, ClassicControlDQNHyperparameters),
-    "cc-rainbow-dqn": Policy(TinyRainbowDQNAgent, RainbowDQNTrainer, classicControlWrapper, ClassicControlRainbowDQNHyperparameters),
+    "vanilla-dqn": Policy(DQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
+    "rainbow-dqn": Policy(RainbowDQNAgent, RainbowDQNTrainer, minerlWrapper, RainbowDQNHyperparameters),
+    "tiny-dqn": Policy(TinyDQNAgent, DQNTrainer, minerlWrapper, DQNHyperparameters),
+    "cartpole-dqn": Policy(TinyDQNAgent, DQNTrainer, cartPoleWrapper, CartpoleDQNHyperparameters),
+    "rainbow-cartpole-dqn": Policy(TinyRainbowDQNAgent, RainbowDQNTrainer, cartPoleWrapper, CartPoleRainbowDQNHyperparameters),
 }
-
 
 def main():
     parser = argparse.ArgumentParser('Parse configuration file')
-    parser.add_argument('--policy', type=str, default='cc-rainbow-dqn')
-    parser.add_argument('--env', type=str, default="CartPole-v1")
+    parser.add_argument('--policy', type=str, default='vanilla-dqn')
+    parser.add_argument('--env', type=str, default="MineRLNavigateDense-v0")
 
+    # Why can't argparse read bools from the command line? Who knows. Workaround:
     parser.add_argument('--wandb', action='store_true', default=True,
                         help='sets if we use wandb logging')
     parser.add_argument('--no-wandb', action='store_false', dest="wandb",
@@ -44,20 +46,20 @@ def main():
     parser.add_argument('--no-gpu', action='store_false', dest="gpu",
                         help='sets if we use gpu hardware')
 
-    parser.add_argument('--human-exp-path', type=str, default=None,
+    parser.add_argument('--human_exp_path', type=str, default=None,
                         help='pass in path to human experience pickle')
     
-    parser.add_argument('--load-path', type=str, default=None,
+    parser.add_argument('--load_path', type=str, default=None,
                         help='path to model checkpoint to load (optional)')
+    
+    parser.add_argument('--cnn_load_path', type=str, default=None)
+    
+    parser.add_argument('--unfreeze_cnn_after', type=int, default=-1)
     
     parser.add_argument('--render', action='store_true', default=False,
                         help='sets if we use gpu hardware')
 
     args = parser.parse_args()
-
-    # Ensuring human data is not being used with the RainbowDQN Policy as this is not supported
-    if 'rainbow' in args.policy and args.human_exp_path is not None:
-        raise ValueError("Using human data with a rainbow policy is not currently supported")
 
     # Loading onto appropriate device
     using_gpu = torch.cuda.is_available() and args.gpu
@@ -76,7 +78,7 @@ def main():
         extracted_acts = True,
         functional_acts = False, 
         extracted_acts_filename="test.pkl",
-        repeat_action = 5
+        repeat_action=5,
         )
     print(f"Creating a(n) {args.env} environment to train the agent in")
 
@@ -99,6 +101,14 @@ def main():
             hyperparams=hp,
             load_path=args.load_path
         )
+    
+    if args.cnn_load_path is not None:
+        loaded_state_dict = torch.load(args.cnn_load_path)
+        agent.q1.feature_extractor.layers['pov'].load_state_dict(loaded_state_dict)
+    
+    callbacks = []
+    if args.unfreeze_cnn_after > 0:
+        callbacks.append(UnfreezeModelAfter(agent.q1.feature_extractor.layers['pov'], unfreeze_after=args.unfreeze_cnn_after))
 
     if args.wandb:
         wandb.init(
@@ -122,9 +132,8 @@ def main():
         device=device,  
         use_wandb=args.wandb, 
         render=args.render, 
-        termination_conditions=termination_conditions,
-        capture_eval_video=False
-    )
+        callbacks=callbacks,
+        termination_conditions=termination_conditions)
 
     trainer.train()
 

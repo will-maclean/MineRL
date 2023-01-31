@@ -2,10 +2,10 @@ from pathlib import Path
 import gym
 
 from minerl3161.buffers import ReplayBuffer, PrioritisedReplayBuffer
-from minerl3161.wrappers import classicControlWrapper
+from minerl3161.utils.wrappers import cartPoleWrapper
 
 def gen_data(n=100):
-    env = classicControlWrapper(gym.make("CartPole-v0"))
+    env = cartPoleWrapper(gym.make("CartPole-v0"))
     b1 = ReplayBuffer(n, obs_space=env.observation_space)
     b2 = PrioritisedReplayBuffer(n, env.observation_space, alpha=0.2)
 

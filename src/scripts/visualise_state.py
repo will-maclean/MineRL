@@ -3,8 +3,8 @@ import gym
 import minerl
 import dataclasses
 
-from minerl3161.wrappers import minerlWrapper
-from minerl3161.hyperparameters import MineRLDQNHyperparameters
+from minerl3161.utils.wrappers import minerlWrapper
+from minerl3161.hyperparameters import DQNHyperparameters
 
 def main():
     print("creating env...")
@@ -17,7 +17,7 @@ def main():
     plt.imshow(state)
     plt.savefig("state.png")
     
-    wrapped_env = minerlWrapper(env, **dataclasses.asdict(MineRLDQNHyperparameters()))
+    wrapped_env = minerlWrapper(env, **dataclasses.asdict(DQNHyperparameters()))
 
     state = wrapped_env.reset()['pov'][-1]
 

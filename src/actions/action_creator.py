@@ -18,7 +18,7 @@ NULL_ACTION = {
     'sprint': 0
 }
 
-x_angles = [-30, 30]
+x_angles = [-5, 5]
 
 actions = []
 
@@ -37,5 +37,5 @@ new_action["forward"] = 1
 new_action["attack"] = 1
 actions.append(new_action)
 
-with open("custom-basic-nav.pkl", "wb") as f:
+with open("test.pkl", "wb") as f:
     dump(actions, f)

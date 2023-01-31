@@ -38,3 +38,6 @@ def notest_checkpointer_dummy():
     api = wandb.Api()
     run = api.run(f"{wandb_entity}/{wandb_project}/{run_id}")
     run.delete()
+
+
+#TODO: do we need a full test for such a basic class? I think not

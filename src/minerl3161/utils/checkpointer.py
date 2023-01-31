@@ -5,25 +5,15 @@ import wandb
 
 from pathlib import Path
 
-from minerl3161.agents import BaseAgent
-
 
 class Checkpointer:
-    def __init__(
-        self, 
-        agent: BaseAgent, 
-        checkpoint_every: int = None, 
-        use_wandb: bool = True, 
-        use_atexit: bool = True
-    ) -> None:
-        """
-        Checkpointer class manager agent checkpointing. Currently only checkpointing with wandb is supported.
+    def __init__(self, agent, checkpoint_every: int = None, use_wandb: bool = True, use_atexit=True) -> None:
+        """Checkpointer class manager agent checkpointing. Currently only checkpointing with wandb is supported.
 
         Args:
             agent (BaseAgent): The agent to checkpoint
-            checkpoint_every (int): checkpoint every n timesteps. Defaults to None.
-            use_wandb (bool): whether or not to checkpoint with wandb. Defaults to True.
-            use_atexit (bool): whether to make a checkpoint at exit
+            checkpoint_every (int, optional): checkpoint every n timesteps. Defaults to None.
+            use_wandb (bool, optional): whether or not to checkpoint with wandb. Defaults to True.
 
         Raises:
             ValueError: Throws error if checkpoint_every is set, but use_wandb == False.
@@ -46,8 +36,7 @@ class Checkpointer:
             atexit.register(self.make_checkpoint, "final.pth")
     
     def step(self, timestep: int) -> dict:
-        """
-        Decides whether or not to checkpoint, called every timestep
+        """Decides whether or not checkpoint. Called every timestep
 
         Args:
             timestep (int): the current timestep
@@ -72,8 +61,7 @@ class Checkpointer:
         return log_dict
     
     def make_checkpoint(self, pth: str) -> dict:
-        """
-        Creates a checkpoint at the specified location
+        """creates a checkpoint at the specified location
 
         Args:
             pth (str): where to make the checkpoint (full path, not just folder)

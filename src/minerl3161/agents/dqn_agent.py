@@ -6,7 +6,7 @@ import numpy as np
 import wandb
 import torch as th
 
-from minerl3161.hyperparameters import MineRLDQNHyperparameters
+from minerl3161.hyperparameters import DQNHyperparameters
 from minerl3161.models.DQNNetworks import DQNNet
 from minerl3161.pl_pretraining.pl_model import DQNPretrainer
 from minerl3161.utils import epsilon_decay, np_dict_to_pt
@@ -24,7 +24,7 @@ class DQNAgent(BaseAgent):
         obs_space: Dict[str, np.ndarray],
         n_actions: int,
         device: str,
-        hyperparams: MineRLDQNHyperparameters,
+        hyperparams: DQNHyperparameters,
         load_path: str = None,
     ) -> None:
         """
@@ -101,7 +101,7 @@ class DQNAgent(BaseAgent):
             if random.random() < eps:
                 action = th.randint(high=self.n_action, size=(1,), device=self.device)
             else:
-                action = self.q1(state).argmax(1)
+                action = self.q1(state).argmax()
 
             return action, {"epsilon": eps}
         else:
@@ -112,6 +112,7 @@ class DQNAgent(BaseAgent):
 
                 return action, {}
 
+    # TODO: Determine if pickle supports saving and loading of model weights
     def save(self, path: str) -> None:
         """
         Saves the current agent

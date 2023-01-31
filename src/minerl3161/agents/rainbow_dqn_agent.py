@@ -7,7 +7,7 @@ import numpy as np
 import torch as th
 import wandb
 
-from minerl3161.hyperparameters import MineRLRainbowDQNHyperparameters
+from minerl3161.hyperparameters import RainbowDQNHyperparameters
 from minerl3161.models.DQNNetworks import RainbowDQN
 from minerl3161.utils import epsilon_decay, np_dict_to_pt
 from minerl3161.agents import BaseAgent
@@ -29,7 +29,7 @@ class RainbowDQNAgent(BaseAgent):
         obs_space: Dict[str, np.ndarray],
         n_actions: int,
         device: str,
-        hyperparams: MineRLRainbowDQNHyperparameters,
+        hyperparams: RainbowDQNHyperparameters,
         load_path: str = None,
     ) -> None:
         """

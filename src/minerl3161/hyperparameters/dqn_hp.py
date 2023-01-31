@@ -6,7 +6,7 @@ from minerl3161.utils import linear_sampling_strategy
 
 
 @dataclass
-class MineRLDQNHyperparameters(BaseHyperparameters):
+class DQNHyperparameters(BaseHyperparameters):
     gamma: float = 0.99  # discount factor for Bellman Equation
     lr: float = 2.5e-4  # learning rate for model weights
     eps_decay: float = 300_000  # decay factor for epsilon greedy strategy

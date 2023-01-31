@@ -39,16 +39,9 @@ class ReplayBuffer:
         self.counter = 0
         self.full = False
 
-    def _create_state_buffer(self, n: int, obs_space: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    def _create_state_buffer(self, n, obs_space):
         """
-        Initialises the dictionary of zero arrays for the ReplayBuffer
-
-        Args:
-            n (int): the number of samples
-            obs_space (Dict[str, np.ndarray]): the observation space being stored
-        
-        Returns:
-            Dict[str, np.ndarray]: a dictionary of zeros 
+        TODO
         """
         buf = {}
 
@@ -59,22 +52,25 @@ class ReplayBuffer:
 
     def add(
         self,
-        state: Dict[str, np.ndarray],
-        action: Union[np.ndarray, float],
-        next_state: Dict[str, np.ndarray],
-        reward: Union[np.ndarray, float],
-        done: Union[np.ndarray, bool],
+        state: np.ndarray,
+        action: np.ndarray,
+        next_state: np.ndarray,
+        reward: np.ndarray,
+        done: np.ndarray,
     ) -> None:
         """
         Adds a single timestep of experience (transition) to the experience buffer
 
+        TODO: are these arg types right?
+
         Args:
-            state (Dict[str, np.ndarray]): the environment state at the given time step
-            action (Union[np.ndarray, float]): the action taken in the envrionment at the given time step
-            next_state (Dict[str, np.ndarray]): the environment state the agent ends up in after taking the action
-            reward (Union[np.ndarray, float]): the reward obtained from performing the action
-            done (Union[np.ndarray, bool]): a flag that represents whether or not the taken action ended the current episode
+            state (np.ndarray): the environment state at the given time step
+            action (np.ndarray): the action taken in the envrionment at the given time step
+            next_state (np.ndarray): the environment state the agent ends up in after taking the action
+            reward (np.ndarray): the reward obtained from performing the action
+            done (np.ndarray): a flag that represents whether or not the taken action ended the current episode
         """
+        #TODO: is this comment needed?
         # this has potential to fail hard, but that's good - we want
         # the code to fail if the observation shape starts changing
         try:

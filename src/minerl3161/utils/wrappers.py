@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict
 import os
 import pickle
 
@@ -9,6 +9,7 @@ import gym
 import cv2
 
 import minerl3161
+
 
 def decode_action(obj: dict, camera_shrink_factor: int = 100) -> dict:
     """
@@ -49,19 +50,7 @@ def decode_action(obj: dict, camera_shrink_factor: int = 100) -> dict:
     return proc
 
 
-def obs_grayscale(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, gym.Space] = None, img_feature_name: str = 'pov', *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """
-    Applies grayscale effect to an image feature in an observation
-
-    Args:
-        state (Dict[str, np.ndarray], optional): state to apply effect to. Defaults to None.
-        observation_space (Dict[str, np.ndarray], optional): observation space to be modified. Defaults to None.
-        img_feature_name (str, optional): name of image feature. Defaults to 'pov'.
-
-    Returns:
-        Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]: modified action, modified observation space
-    """
-
+def obs_grayscale(state=None, observation_space=None, img_feature_name='pov', *args, **kwargs):
     if observation_space is not None:
         observation_space.spaces[img_feature_name] = gym.spaces.Box(
             low=0,
@@ -77,21 +66,7 @@ def obs_grayscale(state: Dict[str, np.ndarray] = None, observation_space: Dict[s
     return state, observation_space
 
 
-def obs_resize(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, np.ndarray] = None, 
-                img_feature_name: str = 'pov', resize_w: int = 64, resize_h: int = 64, *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """
-    Resizes an image observation in a state
-
-    Args:
-        state (Dict[str, np.ndarray], optional): state to modify. Defaults to None.
-        observation_space (Dict[str, np.ndarray], optional): observation space to modify. Defaults to None.
-        img_feature_name (str, optional): name of image feature. Defaults to 'pov'.
-        resize_w (int, optional): width to resize to. Defaults to 64.
-        resize_h (int, optional): height to resize to. Defaults to 64.
-
-    Returns:
-        Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]: modified state, modified observation space
-    """
+def obs_resize(state=None, observation_space=None, img_feature_name='pov', resize_w=64, resize_h=64, *args, **kwargs):
     if observation_space is not None:
         observation_space.spaces[img_feature_name] = gym.spaces.Box(
             low=0,
@@ -106,18 +81,7 @@ def obs_resize(state: Dict[str, np.ndarray] = None, observation_space: Dict[str,
     return state, observation_space
 
 
-def obs_pytorch_image(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, np.ndarray] = None, img_feature_name: str = 'pov', *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """
-    Modifies an image in np format (W, H, C) to be in PyTorch format (C, W, H)
-
-    Args:
-        state (Dict[str, np.ndarray], optional): state to modify. Defaults to None.
-        observation_space (Dict[str, np.ndarray], optional): observation space to modify. Defaults to None.
-        img_feature_name (str, optional): name of image feature. Defaults to 'pov'.
-
-    Returns:
-        Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]: modified state, modified observation space
-    """
+def obs_pytorch_image(state=None, observation_space=None, img_feature_name='pov', *args, **kwargs):
     if observation_space is not None:
         observation_space.spaces[img_feature_name] = gym.spaces.Box(
             low=0,
@@ -131,21 +95,7 @@ def obs_pytorch_image(state: Dict[str, np.ndarray] = None, observation_space: Di
     return state, observation_space
 
 
-def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, np.ndarray] = None, img_feature_name: str = 'pov', 
-                    state_buffer: Union[np.ndarray, None] = None, n_stack: int = 4, *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """
-    Stacks last n_stack images into a single image observation
-
-    Args:
-        state (Dict[str, np.ndarray], optional): state to modify. Defaults to None.
-        observation_space (Dict[str, np.ndarray], optional): observation space to modify. Defaults to None.
-        img_feature_name (str, optional): name of image feature. Defaults to 'pov'.
-        state_buffer (Union[np.ndarray, None], optional): buffer of the last n_stack observations. Defaults to None.
-        n_stack (int, optional): hot many images to stack. Defaults to 4.
-
-    Returns:
-        Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]: mopdified state, modified observation space
-    """
+def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space=None, img_feature_name='pov', state_buffer=None, n_stack=4, *args, **kwargs):
     if observation_space is not None:
         observation_space.spaces[img_feature_name] = gym.spaces.Box(
             low=0,
@@ -168,20 +118,7 @@ def obs_stack_image(state: Dict[str, np.ndarray] = None, observation_space: Dict
     return state, observation_space, state_buffer
 
 
-def obs_inventory_filter(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, np.ndarray] = None, inventory_feature_names: Union[List[str], None] = None, 
-                        inv_feature_max: int = 16, *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """
-    Processes an inventory observation to be a single vector, and also appled clipping and scaling
-
-    Args:
-        state (Dict[str, np.ndarray], optional): state to modify. Defaults to None.
-        observation_space (Dict[str, np.ndarray], optional): observation space to modfy. Defaults to None.
-        inventory_feature_names (Union[List[str], None], optional): name of inventory featuer to include. Set to ["all"] to use all features. Defaults to None.
-        inv_feature_max (int, optional): max value to clip to. Defaults to 16.
-
-    Returns:
-        Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]: modified state, modified observation space
-    """
+def obs_inventory_filter(state=None, observation_space=None, inventory_feature_names=None, inv_feature_max=16, *args, **kwargs):
     if observation_space is not None:
         if len(inventory_feature_names) == 1 and inventory_feature_names[0] == "all":
             # return all the items
@@ -225,19 +162,7 @@ def obs_inventory_filter(state: Dict[str, np.ndarray] = None, observation_space:
     return state, observation_space
 
 
-def obs_toggle_equipped_items(state: Optional[Dict[str, np.ndarray]] = None, observation_space: Dict[str, np.ndarray] = None, 
-                                include_equipped_items: Optional[List[str]] = False, *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """
-    Controls whether the equipped_items feature should be included in the observation
-
-    Args:
-        state (Optional[Dict[str, np.ndarray]], optional): state to modify. Defaults to None.
-        observation_space (Dict[str, np.ndarray], optional): observation space to modify. Defaults to None.
-        include_equipped_items (Optional[List[str]], optional): whether to include equipped_items. Defaults to False.
-
-    Returns:
-        Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]: modified state, modified actions
-    """
+def obs_toggle_equipped_items(state=None, observation_space=None, include_equipped_items=False, *args, **kwargs):
     if observation_space is not None:
         if not include_equipped_items:
             # we need to make a copy of the observation space and use that instead so that we don't modify the original
@@ -263,19 +188,7 @@ def obs_toggle_equipped_items(state: Optional[Dict[str, np.ndarray]] = None, obs
     return state, observation_space
 
 
-def obs_compass(state: Dict[str, np.ndarray] = None, observation_space: Dict[str, np.ndarray] = None, 
-                compass_name: str = "compass", *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]:
-    """
-    Processes compass observation by converting to np.ndarray and applying scaling
-
-    Args:
-        state (Dict[str, np.ndarray], optional): state to modify. Defaults to None.
-        observation_space (Dict[str, np.ndarray], optional): observation space to modify. Defaults to None.
-        compass_name (str, optional): name of compass feature. Defaults to "compass".
-
-    Returns:
-        Tuple[Optional[Dict[str, np.ndarray]], Optional[Dict[str, gym.Space]]]: modified state, modified observation space
-    """
+def obs_compass(state=None, observation_space=None, compass_name="compass", *args, **kwargs):
     if observation_space is not None:
         if "compass" in observation_space.spaces.keys():
             observation_space.spaces[compass_name] = gym.spaces.Box(
@@ -293,10 +206,10 @@ def obs_compass(state: Dict[str, np.ndarray] = None, observation_space: Dict[str
             del observation_space.spaces["compassAngle"]
         
     if state is not None:
-        # try:
-        #     state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
-        # except KeyError:
-        #     pass
+        try:
+            state[compass_name] = np.atleast_1d(state[compass_name]["angle"] / 180)
+        except KeyError:
+            pass
         
         if "compass" in state.keys():
             if type(state[compass_name]) == np.ndarray:
@@ -314,43 +227,22 @@ def obs_compass(state: Dict[str, np.ndarray] = None, observation_space: Dict[str
 
 
 class MineRLWrapper(gym.Wrapper):
-    """
-    Wraps a MineRL environment. Can handle all MineRL environments.
-    """
-
     def __init__(self, 
-                env: gym.Env, 
-                extracted_acts_filename: str = "extracted-actions.pickle", 
-                functional_acts_filename: str = "functional-actions.pickle",
-                functional_acts: bool = True,
-                extracted_acts: bool = True,
-                inventory_feature_names: Optional[List[str]] = None, 
-                include_equipped_items: bool = False, 
-                resize_w: int = 64, 
-                resize_h: int = 64, 
-                img_feature_name: str = "pov", 
-                n_stack: int = 4,
-                repeat_action: int = 1,
+                env, 
+                extracted_acts_filename = "extracted-actions.pickle", 
+                functional_acts_filename = "functional-actions.pickle",
+                functional_acts = True,
+                extracted_acts = True,
+                inventory_feature_names=None, 
+                include_equipped_items=False, 
+                resize_w=64, 
+                resize_h=64, 
+                img_feature_name="pov", 
+                n_stack=4,
+                repeat_action = 1,
                 *args,
                 **kwargs,
         ) -> None:
-        """
-        Constructor
-
-        Args:
-            env (gym.Env): env to wrap
-            extracted_acts_filename (str, optional): path to extracted actions pickle. Defaults to "extracted-actions.pickle".
-            functional_acts_filename (str, optional): path to function actions pickle. Defaults to "functional-actions.pickle".
-            functional_acts (bool, optional): whether to use functional actions. Defaults to True.
-            extracted_acts (bool, optional): whether to use extracted actions. Defaults to True.
-            inventory_feature_names (Optional[List[str]], optional): inventory features to include. Defaults to None.
-            include_equipped_items (bool, optional): whether to use equiped_items feature. Defaults to False.
-            resize_w (int, optional): resize width for image scaling. Defaults to 64.
-            resize_h (int, optional): resize height for image scaling. Defaults to 64.
-            img_feature_name (str, optional): name of image feature. Defaults to "pov".
-            n_stack (int, optional): stack last n images. Defaults to 4.
-            repeat_action (int, optional): repeat the specified action n times. Defaults to 1.
-        """
         super().__init__(env)
 
         self.repeat_action = repeat_action
@@ -372,34 +264,19 @@ class MineRLWrapper(gym.Wrapper):
             extracted_acts=extracted_acts, 
             functional_acts_filename=functional_acts_filename, 
             extracted_acts_filename=extracted_acts_filename
-        )
+            )
         _, self.action_space = MineRLWrapper.convert_action(action_space=self.action_space, action_set=self.action_set)
 
         # update observation space
         _, self.observation_space, _ = MineRLWrapper.convert_state(observation_space=deepcopy(self.observation_space), **self.obs_kwargs)
     
-    def reset(self) -> Dict[str, np.ndarray]:
-        """
-        Reset environment
-
-        Returns:
-            Dict[str, np.ndarray]: processed state
-        """
+    def reset(self):
         self.obs_kwargs["state_buffer"] = np.zeros_like(self.obs_kwargs["state_buffer"])
         self.obs_kwargs["last_unprocessed_state"] = self.env.reset()
         state, _, self.obs_kwargs["state_buffer"] = MineRLWrapper.convert_state(state=self.obs_kwargs["last_unprocessed_state"], **self.obs_kwargs)
         return state
     
-    def step(self, action: int) -> Tuple[Dict[str, np.ndarray], float, bool, Dict[str, Any]]:
-        """
-        Step environment
-
-        Args:
-            action (int): action for environment
-
-        Returns:
-            Tuple[Dict[str, np.ndarray], float, bool, Dict[str, Any]]: next state, reward, done, info
-        """
+    def step(self, action):
         action, _ = MineRLWrapper.convert_action(action=action, last_unprocessed_state=self.obs_kwargs["last_unprocessed_state"], action_set=self.action_set)
 
         reward_sum = 0
@@ -416,9 +293,8 @@ class MineRLWrapper(gym.Wrapper):
         return state, reward_sum, done, info
 
     @staticmethod
-    def map_action(obs:Dict[str, np.ndarray], action_set: dict) -> int:
-        """
-        Maps an observation from the env/dataset to an action index in our action set
+    def map_action(obs:dict, action_set: list) -> int:
+        """ Maps an observation from the env/dataset to an action index in our action set
         Args:
             obs (dict): A single action from the env/dataset in dictionary form
             action_set (dict): The action set initialised by the MineRLWrapper
@@ -444,17 +320,7 @@ class MineRLWrapper(gym.Wrapper):
         return np.argmin(distances)
 
     @staticmethod
-    def convert_state(state: Optional[Dict[str, np.ndarray]] = None, observation_space: Optional[Dict[str, np.ndarray]] = None, *args, **kwargs) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[gym.Space]]:
-        """
-        Converts state/observation space
-
-        Args:
-            state (Optional[Dict[str, np.ndarray]], optional): state to modify. Defaults to None.
-            observation_space (Optional[Dict[str, np.ndarray]], optional): observation space to modify. Defaults to None.
-
-        Returns:
-            Tuple[Optional[Dict[str, np.ndarray]], Optional[gym.Space]]: modified state, modified observation space
-        """
+    def convert_state(state=None, observation_space=None, *args, **kwargs):
         state, observation_space = obs_compass(state=state, observation_space=observation_space, *args, **kwargs)
         state, observation_space = obs_inventory_filter(state=state, observation_space=observation_space, *args, **kwargs)
         state, observation_space = obs_toggle_equipped_items(state=state, observation_space=observation_space, *args, **kwargs)
@@ -471,19 +337,7 @@ class MineRLWrapper(gym.Wrapper):
         extracted_acts: bool, 
         extracted_acts_filename: str, 
         functional_acts_filename: str
-    ) -> Dict[str, Any]:
-        """
-        Creates action space for suppled action pickles
-
-        Args:
-            functional_acts (bool): whether to use functional actions
-            extracted_acts (bool): whether to use extracted actions
-            extracted_acts_filename (str): path to extracted actions
-            functional_acts_filename (str): path to functional actions
-
-        Returns:
-            Dict[str, Any]: created action set
-        """
+    ):
         action_set = []
 
         if extracted_acts:
@@ -499,20 +353,7 @@ class MineRLWrapper(gym.Wrapper):
         return action_set
 
     @staticmethod
-    def convert_action(action: Optional[int] = None, action_space: Any = None, 
-                        action_set: Optional[dict]=None, last_unprocessed_state: Optional[Dict[str, np.ndarray]] = None) -> Tuple[Optional[Dict[str, np.ndarray]], Optional[gym.Space]]:
-        """
-        Converts an action/action space
-
-        Args:
-            action (Optional[int], optional): action to modify. Defaults to None.
-            action_space (Any, optional): action space to modify. Defaults to None.
-            action_set (Optional[dict], optional): action set to use. Defaults to None.
-            last_unprocessed_state (Optional[Dict[str, np.ndarray]], optional): last unprocessed state is required for some transforms. Defaults to None.
-
-        Returns:
-            Tuple[Optional[Dict[str, np.ndarray]], Optional[gym.Space]]: converted action, converted action space
-        """
+    def convert_action(action: int = None, action_space=None, action_set=None, last_unprocessed_state=None,):
         if action_space is not None:
             action_space = gym.spaces.Discrete(len(action_set))
 
@@ -525,17 +366,7 @@ class MineRLWrapper(gym.Wrapper):
         return action, action_space
     
     @staticmethod
-    def _get_navigate_block(action: Dict[str, str], last_unprocessed_obs: Dict[str, np.ndarray]) -> Dict[str, str]:
-        """
-        Utility function to determine which block should be placed, based on last state
-
-        Args:
-            action (Dict[str, str]): action to modify
-            last_unprocessed_obs (Dict[str, np.ndarray]): last env observation
-
-        Returns:
-            Dict[str, str]: modified action
-        """
+    def _get_navigate_block(action: Dict[str, str], last_unprocessed_obs) -> Dict[str, str]:
         navigate_blocks = ["dirt", "cobblestone", "stone"]
 
         for block in navigate_blocks:
@@ -549,14 +380,31 @@ class MineRLWrapper(gym.Wrapper):
         return action
 
 
-def minerlWrapper(env: gym.Env, *args, **kwargs) -> MineRLWrapper:
+class CartpoleWrapper(gym.ObservationWrapper):
+    def __init__(self, env, *args, **kwargs):
+        super().__init__(env)
+        self.observation_space = {"state": self.observation_space}
+    
+    def observation(self, observation):
+        return {"state": observation}
+
+
+def cartPoleWrapper(env, *args, **kwargs):
+    return CartpoleWrapper(env, *args, **kwargs)
+
+def minerlWrapper(env, *args, **kwargs):
     """
-    Wraps a MineRL environment in our wrappers
-
-    Args:
-        env (gym.env): env to wrap
-
-    Returns:
-        MineRLWrapper: wrapped env
+    Parameters:
+        features=None, 
+        include_equipped_items=False, 
+        resize_w=64, 
+        resize_h=64, 
+        img_feature_name="pov", 
+        n_stack=4,
+        functional_acts=True,
+        extracted_acts=True,
+        extracted_acts_filename = "extracted-actions.pickle", 
+        functional_acts_filename = "functional-actions.pickle",
+        repeat_action = 1
     """
     return MineRLWrapper(env, *args, **kwargs)
